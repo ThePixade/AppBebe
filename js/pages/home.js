@@ -179,6 +179,7 @@ function openFeed(c, initialMode) {
   let mode = initialMode || (breastOf(s0, c.id) ? 'breast' : lastBottle && (!lastBreast || lastBottle.at > lastBreast.at) ? 'bottle' : 'breast');
   let ml = '';
   let milk = lastBottle?.milk || 'infantile';
+  let bottleAt = null; // null = maintenant
   const hint = lastBreast?.last === 'L' ? 'R' : 'L';
 
   openSheet({
@@ -211,7 +212,9 @@ function openFeed(c, initialMode) {
             <div class="keypad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => `<button class="key num" data-act="key" data-v="${n}">${n}</button>`).join('')}
               <button class="key fn" data-act="clear">Effacer</button><button class="key num" data-act="key" data-v="0">0</button><button class="key fn" data-act="back" aria-label="Supprimer le dernier chiffre">⌫</button></div>
             ${seg('milk', [['infantile', 'Lait infantile'], ['maternel', 'Lait maternel']], milk)}
-            <div class="tone-salmon mt-16"><button class="btn btn-primary btn-block btn-lg" data-act="save-bottle" ${+ml > 0 ? '' : 'disabled'}>Enregistrer${+ml > 0 ? ` ${ml} ml` : ''}</button></div>`}`;
+            <label class="field mt-16"><span class="row-between">Heure du biberon${bottleAt ? '<button type="button" class="link" data-act="now">Maintenant</button>' : '<span class="faint">Maintenant</span>'}</span>
+              <input class="input" type="datetime-local" name="bottleAt" value="${toLocalInput(bottleAt ?? Date.now())}" max="${toLocalInput()}"></label>
+            <div class="tone-salmon"><button class="btn btn-primary btn-block btn-lg" data-act="save-bottle" ${+ml > 0 ? '' : 'disabled'}>Enregistrer${+ml > 0 ? ` ${ml} ml` : ''}</button></div>`}`;
       };
 
       body.addEventListener('click', (e) => {
@@ -227,10 +230,17 @@ function openFeed(c, initialMode) {
           case 'back': ml = ml.slice(0, -1); break;
           case 'clear': ml = ''; break;
           case 'preset': ml = b.dataset.v; break;
+          case 'now': bottleAt = null; break;
           case 'save-bottle':
-            addEvent({ childId: c.id, type: 'feed', kind: 'bottle', ml: +ml, milk });
-            api.close(); toast(`Biberon de ${ml} ml enregistré`); return;
+            addEvent({ childId: c.id, type: 'feed', kind: 'bottle', ml: +ml, milk, ...(bottleAt ? { at: bottleAt } : {}) });
+            api.close(); toast(`Biberon de ${ml} ml enregistré${bottleAt ? ` à ${time(bottleAt)}` : ''}`); return;
         }
+        draw();
+      });
+      body.addEventListener('change', (e) => {
+        if (e.target.name !== 'bottleAt') return;
+        const ts = fromLocalInput(e.target.value);
+        bottleAt = Date.now() - ts > 60e3 ? Math.min(ts, Date.now()) : null;
         draw();
       });
       api.onTick(() => {
