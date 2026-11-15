@@ -1,4 +1,4 @@
-import { store, eventsOf, updateEvent, removeEvent, restoreEvent } from '../store.js';
+import { store, eventsOf, updateEvent, removeEvent, restoreEvent, feedingOf } from '../store.js';
 import { icon } from '../icons.js';
 import { esc, fmtDur, time, dayLabel, startOfDay, openSheet, toast, seg, emptyState, toLocalInput, fromLocalInput, $, $$ } from '../ui.js';
 import { describe, eventRow, STOOL_COLORS, TEXTURES, VACCINES, MEDS } from './home.js';
@@ -42,12 +42,18 @@ export function openEvent(id) {
 }
 
 /* ---------- Modification ---------- */
+/** Le choix du lait n'est proposé que s'il a un sens pour ce bébé (ou si la saisie existante le contredit). */
+function milkChoice(e) {
+  const f = feedingOf(store.state, store.state.children.find((c) => c.id === e.childId));
+  const milk = e.milk || 'infantile';
+  return !f || f === 'mixed' || (f === 'breast' && milk !== 'maternel') || (f === 'formula' && milk === 'maternel');
+}
 function fields(e) {
   switch (e.type) {
     case 'feed':
       if (e.kind === 'bottle') return `
         ${numIn('ml', 'Quantité (ml)', e.ml, 'min="1" max="500" step="5"')}
-        <div class="field"><span>Lait</span>${seg('milk', [['infantile', 'Lait infantile'], ['maternel', 'Lait maternel']], e.milk || 'infantile')}</div>
+        ${milkChoice(e) ? `<div class="field"><span>Lait</span>${seg('milk', [['infantile', 'Lait infantile'], ['maternel', 'Lait maternel']], e.milk || 'infantile')}</div>` : ''}
         ${dt('at', 'Heure du biberon', e.at)}`;
       return `
         ${dt('at', 'Début de la tétée', e.at)}

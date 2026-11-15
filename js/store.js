@@ -84,5 +84,22 @@ export function resolvedTheme(s = state) {
   return h >= 19 || h < 8 ? 'dark' : 'light';
 }
 
+/* ---------- Mode d'alimentation (adapte ce qui est proposé) ---------- */
+export const FEEDING = { breast: 'Allaitement', formula: 'Biberon', mixed: 'Mixte' };
+/** Choix du profil ; à défaut, déduit du journal ; null = inconnu (on propose tout). */
+export function feedingOf(s, c) {
+  if (!c) return null;
+  if (c.feeding) return c.feeding;
+  let breast = false, formula = false;
+  for (const e of s.events) {
+    if (e.childId !== c.id || e.type !== 'feed') continue;
+    if (e.kind === 'breast' || e.milk === 'maternel') breast = true; else if (e.kind === 'bottle') formula = true;
+  }
+  return breast && formula ? 'mixed' : breast ? 'breast' : formula ? 'formula' : null;
+}
+/** Au moins un enfant reçoit du lait infantile (ou on ne sait pas). */
+export const usesFormula = (s) => !s.children.length || s.children.some((c) => feedingOf(s, c) !== 'breast');
+export const usesBreast = (s) => !s.children.length || s.children.some((c) => feedingOf(s, c) !== 'formula');
+
 /** Le co-parent « naturel » de l'utilisateur courant. */
 export const partnerOf = (me) => (me === 'Papa' ? 'Maman' : 'Papa');

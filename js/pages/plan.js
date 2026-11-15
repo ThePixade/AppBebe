@@ -1,8 +1,8 @@
-import { store } from '../store.js';
+import { store, activeChild, feedingOf, usesFormula, usesBreast, FEEDING } from '../store.js';
 import { icon } from '../icons.js';
-import { esc, fmtNum, uid, openSheet, toast, seg, emptyState, $, $$ } from '../ui.js';
+import { esc, fmtNum, uid, ageMonths, openSheet, toast, seg, emptyState, $, $$ } from '../ui.js';
 import { appHeader } from '../profiles.js';
-import { TEMPLATES, KIND_LABEL } from '../data/templates.js';
+import { TEMPLATES, KIND_LABEL, buildItems, questionsFor } from '../data/templates.js';
 import * as sup from '../supplies.js';
 
 /*
@@ -32,7 +32,7 @@ export function render(s) {
 
 /* ---------- Stock ---------- */
 function stockView(s) {
-  const missing = Object.entries(sup.PRESETS).filter(([, p]) => !s.supplies.some((i) => i.auto === p.auto));
+  const missing = Object.entries(sup.PRESETS).filter(([, p]) => !s.supplies.some((i) => i.auto === p.auto) && (p.auto !== 'formula' || usesFormula(s)));
   const cards = s.supplies.map((it) => supplyCard(s, it)).join('');
   return `
     ${cards || `<div class="card">${emptyState('box', 'Aucun stock suivi', 'Indiquez ce que vous avez en réserve : chaque change et chaque biberon sera décompté tout seul.')}</div>`}
@@ -40,7 +40,7 @@ function stockView(s) {
       ${missing.map(([k, p]) => `<button class="btn btn-ghost btn-block" data-act="new-preset" data-k="${k}">${icon(p.icon, 18)} Suivre ${p.auto === 'diaper' ? 'les couches' : 'le lait infantile'}</button>`).join('')}
       <button class="btn btn-ghost btn-block" data-act="new-custom">${icon('plus', 18)} Autre article (lingettes, coton…)</button>
     </div>
-    <p class="small faint mt-16">Le décompte vient du journal : si vous modifiez ou supprimez un change ou un biberon, le stock se corrige tout seul. Le lait maternel n'est pas décompté.</p>`;
+    <p class="small faint mt-16">Le décompte vient du journal : si vous modifiez ou supprimez un change ou un biberon, le stock se corrige tout seul. Le lait maternel n'est pas décompté.${usesFormula(s) ? '' : ' Le lait infantile n\'est pas proposé car bébé est allaité (modifiable dans le profil).'}</p>`;
 }
 
 function supplyCard(s, it) {
@@ -170,6 +170,10 @@ function listsView(s) {
 }
 
 function newList() {
+  const s0 = store.state, child = activeChild(s0);
+  const f = feedingOf(s0, child);
+  const ctx = { formula: usesFormula(s0), breast: usesBreast(s0), ageMonths: child ? ageMonths(child.birth) : 12 };
+  const note = f ? `Adapté au profil de ${child.name} : ${FEEDING[f].toLowerCase()}.` : '';
   openSheet({
     title: 'Nouvelle liste',
     subtitle: 'Partez d\'un modèle ou d\'une liste vide.',
@@ -182,25 +186,54 @@ function newList() {
           <button type="button" class="chip" data-v="shop">Courses</button>
           ${TEMPLATES.map((t) => `<button type="button" class="chip" data-v="${t.id}" data-name="${esc(t.name)}">${esc(t.name)}</button>`).join('')}
         </div>
+        <div class="js-q"></div>
         <div class="actions tone-salmon"><button type="button" class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-primary" type="submit">Créer</button></div>
       </form>`,
     onMount(body, api) {
-      let tpl = '';
+      let tpl = '', answers = {};
       const name = body.querySelector('[name=name]');
+      const qBox = body.querySelector('.js-q');
       let auto = true;
       name.addEventListener('input', () => { auto = false; });
       body.querySelector('[data-close]').addEventListener('click', () => api.close());
+
+      const drawQuestions = () => {
+        const t = TEMPLATES.find((x) => x.id === tpl);
+        const qs = questionsFor(t, ctx);
+        qBox.innerHTML = qs.length ? `
+          <div class="questions">
+            <p class="label">Pour adapter la liste <small class="faint">(facultatif)</small></p>
+            ${note ? `<p class="small faint">${esc(note)}</p>` : ''}
+            ${qs.map((q) => `
+              <div class="q" data-q="${q.id}">
+                <p class="q-ask">${esc(q.ask)}</p>
+                <div class="seg" role="group">
+                  <button type="button" class="${answers[q.id] === 'yes' ? 'is-on' : ''}" data-a="yes">Oui</button>
+                  <button type="button" class="${answers[q.id] === 'no' ? 'is-on' : ''}" data-a="no">Non</button>
+                </div>
+              </div>`).join('')}
+          </div>` : (t && note ? `<p class="small faint mt-12">${esc(note)}</p>` : '');
+      };
+      qBox.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-a]');
+        if (!b) return;
+        const id = b.closest('[data-q]').dataset.q;
+        answers[id] = answers[id] === b.dataset.a ? undefined : b.dataset.a; // un second toucher annule
+        b.parentElement.querySelectorAll('button').forEach((x) => x.classList.toggle('is-on', answers[id] === x.dataset.a));
+      });
+
       body.querySelectorAll('[data-pick] .chip').forEach((b) => b.addEventListener('click', () => {
-        tpl = b.dataset.v;
+        tpl = b.dataset.v; answers = {};
         body.querySelectorAll('[data-pick] .chip').forEach((x) => x.classList.toggle('is-on', x === b));
         if (auto || !name.value) { name.value = tpl === 'shop' ? 'Courses' : b.dataset.name || ''; auto = true; }
+        drawQuestions();
       }));
       body.querySelector('form').addEventListener('submit', (e) => {
         e.preventDefault();
         const nm = name.value.trim();
         if (!nm) return;
         const t = TEMPLATES.find((x) => x.id === tpl);
-        const items = t ? Object.entries(t.groups).flatMap(([cat, arr]) => arr.map((text) => ({ id: uid(), text, ...(cat ? { cat } : {}), done: false }))) : [];
+        const items = t ? buildItems(t, answers, ctx, (text, cat) => ({ id: uid(), text, ...(cat ? { cat } : {}), done: false })) : [];
         const l = { id: uid(), name: nm, kind: tpl === 'shop' ? 'shop' : t ? t.kind : 'custom', created: Date.now(), items };
         store.update((s) => { s.lists.push(l); });
         openId = l.id;

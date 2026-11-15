@@ -797,3 +797,8 @@ a.org.is-warn .org-body small { color: var(--brick); font-weight: 700; }
 .ev-body small.faint { color: var(--text-3); font-weight: 500; }
 .ev-note { white-space: pre-wrap; }
 .ev-card > .i { color: var(--text-3); align-self: center; flex: none; }
+
+.questions { margin-top: 18px; padding: 14px; border-radius: var(--r-lg); background: var(--surface-2); }
+.q { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.q-ask { font-size: .9rem; font-weight: 600; }
+.q .seg { max-width: 220px; }

@@ -1,4 +1,4 @@
-import { store, activeChild, resolvedTheme } from './store.js';
+import { store, activeChild, resolvedTheme, FEEDING, feedingOf } from './store.js';
 import { icon } from './icons.js';
 import { esc, uid, ageLabel, dayKey, ago, openSheet, closeSheet, toast, seg, $ } from './ui.js';
 import { sync, syncNow } from './sync.js';
@@ -43,6 +43,7 @@ function childFormHtml(c = {}, { onboarding = false, me = 'Maman' } = {}) {
     <label class="field"><span>Prénom</span><input class="input" name="name" value="${esc(c.name || '')}" placeholder="Ex. Léa" autocomplete="off" required maxlength="30"></label>
     <label class="field"><span>Date de naissance</span><input class="input" type="date" name="birth" value="${esc(c.birth || '')}" max="${dayKey()}" required></label>
     <div class="field"><span>Sexe <small class="faint">(pour les courbes de croissance)</small></span>${seg('sex', [['F', 'Fille'], ['M', 'Garçon']], c.sex || 'F')}</div>
+    <div class="field"><span>Alimentation <small class="faint">(pour ne proposer que ce qui vous concerne)</small></span>${seg('feeding', Object.entries(FEEDING), feedingOf(store.state, c.id ? c : null) || 'mixed')}</div>
     ${onboarding ? `<div class="field"><span>Vous êtes</span>${seg('me', ROLES.map((r) => [r, r]), me)}</div>` : ''}
     <button class="btn btn-primary btn-block btn-lg mt-8" type="submit">${c.id ? 'Enregistrer' : onboarding ? 'Commencer' : 'Ajouter le profil'}</button>
     ${c.id && store.state.children.length > 1 ? `<button class="btn btn-danger btn-block mt-12" type="button" data-del>${icon('trash', 18)} Supprimer ce profil</button>` : ''}
@@ -68,7 +69,7 @@ function readPhoto(file) {
 
 function bindChildForm(root, c, onDone) {
   const form = $('.child-form', root);
-  const values = { sex: c.sex || 'F', me: store.state.me, photo: c.photo || null };
+  const values = { feeding: feedingOf(store.state, c.id ? c : null) || 'mixed', sex: c.sex || 'F', me: store.state.me, photo: c.photo || null };
   form.addEventListener('click', (e) => {
     const b = e.target.closest('[data-seg]');
     if (b) {
@@ -103,10 +104,10 @@ function bindChildForm(root, c, onDone) {
     if (!name) { form.name.focus(); toast('Indiquez un prénom'); return; }
     if (!birth) { form.birth.focus(); toast('Indiquez la date de naissance'); return; }
     store.update((s) => {
-      if (c.id) Object.assign(s.children.find((x) => x.id === c.id), { name, birth, sex: values.sex, photo: values.photo });
+      if (c.id) Object.assign(s.children.find((x) => x.id === c.id), { name, birth, sex: values.sex, photo: values.photo, feeding: values.feeding });
       else {
         const id = uid();
-        s.children.push({ id, name, birth, sex: values.sex, photo: values.photo, hue: [18, 200, 140, 260, 330][s.children.length % 5] });
+        s.children.push({ id, name, birth, sex: values.sex, photo: values.photo, feeding: values.feeding, hue: [18, 200, 140, 260, 330][s.children.length % 5] });
         s.activeChild = id;
       }
       if (root.dataset.onboarding) s.me = values.me;

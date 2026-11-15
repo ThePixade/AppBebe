@@ -1,4 +1,4 @@
-import { store, activeChild, eventsOf, addEvent, removeEvent, restoreEvent } from '../store.js';
+import { store, activeChild, eventsOf, addEvent, removeEvent, restoreEvent, feedingOf } from '../store.js';
 import { icon } from '../icons.js';
 import { esc, fmtClock, fmtDur, fmtNum, ago, time, startOfDay, dayLabel, openSheet, closeSheet, toast, seg, emptyState, toLocalInput, fromLocalInput, $, $$ } from '../ui.js';
 import { appHeader } from '../profiles.js';
@@ -202,9 +202,10 @@ function openFeed(c, initialMode) {
   const s0 = store.state;
   const lastBottle = eventsOf(s0, c.id).find((e) => e.type === 'feed' && e.kind === 'bottle');
   const lastBreast = eventsOf(s0, c.id).find((e) => e.type === 'feed' && e.kind === 'breast');
-  let mode = initialMode || (breastOf(s0, c.id) ? 'breast' : lastBottle && (!lastBreast || lastBottle.at > lastBreast.at) ? 'bottle' : 'breast');
+  const feeding = feedingOf(s0, c);
+  let mode = feeding === 'formula' ? 'bottle' : initialMode || (breastOf(s0, c.id) ? 'breast' : lastBottle && (!lastBreast || lastBottle.at > lastBreast.at) ? 'bottle' : 'breast');
   let ml = '';
-  let milk = lastBottle?.milk || 'infantile';
+  let milk = feeding === 'breast' ? 'maternel' : feeding === 'formula' ? 'infantile' : lastBottle?.milk || 'infantile';
   let bottleAt = null; // null = maintenant
   const hint = lastBreast?.last === 'L' ? 'R' : 'L';
   // Tétée oubliée : saisie après coup (début + minutes par côté)
@@ -217,7 +218,7 @@ function openFeed(c, initialMode) {
       const draw = () => {
         const t = breastOf(store.state, c.id);
         body.innerHTML = `
-          ${seg('mode', [['breast', 'Allaitement'], ['bottle', 'Biberon']], mode, 'seg-lg')}
+          ${feeding === 'formula' ? '' : seg('mode', [['breast', 'Allaitement'], ['bottle', 'Biberon']], mode, 'seg-lg')}
           ${mode === 'breast' && past ? pastBreastHtml(pb) : mode === 'breast' ? `
             <div class="timer-display">
               <span class="timer-big num" data-t="total">${fmtClock(t ? breastTotal(t) : 0)}</span>
@@ -241,7 +242,7 @@ function openFeed(c, initialMode) {
             <div class="chips tone-salmon" style="justify-content:center">${[60, 90, 120, 150, 180, 210].map((v) => `<button class="chip ${+ml === v ? 'is-on' : ''}" data-act="preset" data-v="${v}">${v}</button>`).join('')}</div>
             <div class="keypad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => `<button class="key num" data-act="key" data-v="${n}">${n}</button>`).join('')}
               <button class="key fn" data-act="clear">Effacer</button><button class="key num" data-act="key" data-v="0">0</button><button class="key fn" data-act="back" aria-label="Supprimer le dernier chiffre">⌫</button></div>
-            ${seg('milk', [['infantile', 'Lait infantile'], ['maternel', 'Lait maternel']], milk)}
+            ${feeding === 'mixed' || !feeding ? seg('milk', [['infantile', 'Lait infantile'], ['maternel', 'Lait maternel']], milk) : `<p class="small faint">${milk === 'maternel' ? 'Lait maternel (tire-lait)' : 'Lait infantile'}</p>`}
             <label class="field mt-16"><span class="row-between">Heure du biberon${bottleAt ? '<button type="button" class="link" data-act="now">Maintenant</button>' : '<span class="faint">Maintenant</span>'}</span>
               <input class="input" type="datetime-local" name="bottleAt" value="${toLocalInput(bottleAt ?? Date.now())}" max="${toLocalInput()}"></label>
             <div class="tone-salmon"><button class="btn btn-primary btn-block btn-lg" data-act="save-bottle" ${+ml > 0 ? '' : 'disabled'}>Enregistrer${+ml > 0 ? ` ${ml} ml` : ''}</button></div>`}`;

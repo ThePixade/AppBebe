@@ -1,5 +1,5 @@
 // Service worker : app disponible hors-ligne (mode avion compris).
-const VERSION = 'appbebe-v2.6.0';
+const VERSION = 'appbebe-v2.7.0';
 const SHELL = [
   './', './index.html', './manifest.webmanifest', './css/styles.css',
   './js/app.js', './js/store.js', './js/ui.js', './js/icons.js', './js/profiles.js', './js/audio.js', './js/sync.js',
