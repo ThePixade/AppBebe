@@ -3,6 +3,7 @@ import { icon } from '../icons.js';
 import { esc, fmtClock, fmtDur, fmtNum, ago, time, startOfDay, dayLabel, openSheet, closeSheet, toast, seg, emptyState, toLocalInput, fromLocalInput, $, $$ } from '../ui.js';
 import { appHeader } from '../profiles.js';
 import { homeSummary } from '../supplies.js';
+import { nextEventLine } from './agenda.js';
 import { openGrowth } from './growth.js';
 import { openEvent, openHistory } from './edit.js';
 
@@ -63,6 +64,15 @@ function sideMs(t, side, now = Date.now()) { return (t.acc[side] || 0) + (t.side
 const breastTotal = (t) => sideMs(t, 'L') + sideMs(t, 'R');
 
 /* ---------- Rendu ---------- */
+function agendaCard(s) {
+  const n = nextEventLine(s);
+  return `
+    <a class="card org org-agenda" href="#/agenda" aria-label="Agenda commun">
+      <span class="dot-ic" ${n ? `style="--tone:var(--${n.tone})"` : ''}>${icon('calendar', 18)}</span>
+      <span class="org-body"><b>Agenda</b><small>${n ? esc(n.text) : 'Rien de prévu'}</small></span>
+      ${icon('chevronRight', 16)}
+    </a>`;
+}
 function orgCard(s) {
   const o = homeSummary(s);
   return `
@@ -123,7 +133,7 @@ export function render(s) {
       <span class="stats-more">${icon('chart', 15)} Statistiques ${icon('chevronRight', 14)}</span>
     </a>
 
-    ${orgCard(s)}
+    <div class="org-row">${orgCard(s)}${agendaCard(s)}</div>
 
     <section class="action-grid" aria-label="Actions rapides">
       ${card('feed', 'salmon', 'bottle', 'Tétée / Biberon', feedMeta, !!breast)}

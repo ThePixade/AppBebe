@@ -51,7 +51,7 @@ export function addShopping(text) {
     if (!l) { l = { id: uid(), name: 'Courses', kind: 'shop', created: Date.now(), items: [] }; s.lists.push(l); }
     const key = text.trim().toLowerCase();
     if (l.items.some((i) => !i.done && i.text.trim().toLowerCase() === key)) { added = false; return; }
-    l.items.push({ id: uid(), text: text.trim(), done: false });
+    l.items.push({ id: uid(), text: text.trim(), done: false, by: s.me });
   });
   return added;
 }

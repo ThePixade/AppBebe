@@ -8,8 +8,9 @@ import * as parents from './pages/parents.js';
 import * as sleep from './pages/sleep.js';
 import * as stats from './pages/stats.js';
 import * as plan from './pages/plan.js';
+import * as agenda from './pages/agenda.js';
 
-const routes = { home, food, parents, sleep, stats, plan };
+const routes = { home, food, parents, sleep, stats, plan, agenda };
 const scope = createScope();
 let currentRoute = null;
 
@@ -57,7 +58,7 @@ function render() {
   window.scrollTo(0, scrollY);
   currentRoute = name;
   $$('.tab').forEach((t) => {
-    const on = t.dataset.tab === (name === 'stats' || name === 'plan' ? 'home' : name);
+    const on = t.dataset.tab === (name === 'stats' || name === 'plan' || name === 'agenda' ? 'home' : name);
     t.classList.toggle('is-active', on);
     on ? t.setAttribute('aria-current', 'page') : t.removeAttribute('aria-current');
   });

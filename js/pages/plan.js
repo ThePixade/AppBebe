@@ -218,7 +218,7 @@ function listView(l) {
     <div class="li-row ${i.done ? 'is-done' : ''}">
       <button class="check ${i.done ? 'is-done' : ''}" data-act="toggle" data-id="${i.id}" aria-pressed="${!!i.done}">
         <span class="check-box">${icon('check', 16)}</span>
-        <span class="check-text">${esc(i.text)}${i.qty ? ` <span class="qty-tag">× ${esc(i.qty)}</span>` : ''}</span>
+        <span class="check-text">${esc(i.text)}${i.qty ? ` <span class="qty-tag">× ${esc(i.qty)}</span>` : ''}${i.done && i.doneBy ? `<small>Coché par ${esc(i.doneBy)}</small>` : i.by ? `<small>Ajouté par ${esc(i.by)}</small>` : ''}</span>
       </button>
       <button class="icon-btn icon-btn-sm" data-act="edit-item" data-id="${i.id}" aria-label="Modifier ${esc(i.text)}">${icon('edit', 16)}</button>
     </div>`;
@@ -314,7 +314,7 @@ export function mount(el) {
     const text = f.elements.text.value.trim();
     if (!text) return;
     focusAdd = true;
-    store.update((s) => { s.lists.find((l) => l.id === openId)?.items.push({ id: uid(), text, done: false }); });
+    store.update((s) => { s.lists.find((l) => l.id === openId)?.items.push({ id: uid(), text, done: false, by: s.me }); });
   });
 
   el.addEventListener('click', (e) => {
@@ -345,10 +345,10 @@ export function mount(el) {
       case 'close-list': openId = null; tab = 'lists'; store.refresh(); break;
       case 'list-menu': listMenu(listOf()); break;
       case 'toggle':
-        store.update((s) => { const x = s.lists.find((l) => l.id === openId)?.items.find((i) => i.id === id); if (x) x.done = !x.done; });
+        store.update((s) => { const x = s.lists.find((l) => l.id === openId)?.items.find((i) => i.id === id); if (x) { x.done = !x.done; if (x.done) x.doneBy = s.me; else delete x.doneBy; } });
         break;
       case 'edit-item': editItem(listOf(), listOf().items.find((i) => i.id === id)); break;
-      case 'uncheck': store.update((s) => { s.lists.find((l) => l.id === openId)?.items.forEach((i) => { i.done = false; }); }); break;
+      case 'uncheck': store.update((s) => { s.lists.find((l) => l.id === openId)?.items.forEach((i) => { i.done = false; delete i.doneBy; }); }); break;
       case 'clear-done': {
         const l = listOf(), removed = l.items.filter((i) => i.done);
         store.update((s) => { const x = s.lists.find((y) => y.id === openId); if (x) x.items = x.items.filter((i) => !i.done); });

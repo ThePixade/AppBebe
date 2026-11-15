@@ -1,9 +1,9 @@
 // Service worker : app disponible hors-ligne (mode avion compris).
-const VERSION = 'appbebe-v2.5.0';
+const VERSION = 'appbebe-v2.6.0';
 const SHELL = [
   './', './index.html', './manifest.webmanifest', './css/styles.css',
   './js/app.js', './js/store.js', './js/ui.js', './js/icons.js', './js/profiles.js', './js/audio.js', './js/sync.js',
-  './js/pages/home.js', './js/pages/edit.js', './js/pages/stats.js', './js/pages/plan.js', './js/supplies.js', './js/data/templates.js', './js/pages/growth.js', './js/pages/food.js', './js/pages/parents.js', './js/pages/sleep.js',
+  './js/pages/home.js', './js/pages/edit.js', './js/pages/stats.js', './js/pages/plan.js', './js/pages/agenda.js', './js/supplies.js', './js/data/templates.js', './js/pages/growth.js', './js/pages/food.js', './js/pages/parents.js', './js/pages/sleep.js',
   './js/data/foods.js', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png',
 ];
 

@@ -21,6 +21,7 @@ const defaults = () => ({
   stock: [],              // { id, at, ml, place: 'fridge'|'freezer' }
   supplies: [],           // { id, name, auto: 'diaper'|'formula'|null, unit, qty, since, low, yield?, icon, tone }
   lists: [],              // { id, name, kind: 'shop'|'trip'|'custom', created, items: [{ id, text, qty?, cat?, done }] }
+  agenda: [],             // { id, title, kind: 'rdv'|'trip'|'family'|'other', allDay, start, end, place, note, by }
   tasks: [],              // { id, text, from, to, at, done }
   audio: { sound: 'white', timer: 30, volume: 0.7, fade: true },
   premium: false,
