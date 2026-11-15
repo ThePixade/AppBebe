@@ -23,6 +23,7 @@ const defaults = () => ({
   lists: [],              // { id, name, kind: 'shop'|'trip'|'custom', created, items: [{ id, text, qty?, cat?, done }] }
   agenda: [],             // { id, title, kind: 'rdv'|'trip'|'family'|'other', allDay, start, end, place, note, by }
   tasks: [],              // { id, text, from, to, at, done }
+  breastInput: null,      // saisie des tétées sur CET appareil : 'manual' | 'timer' | null (à demander)
   audio: { sound: 'white', timer: 30, volume: 0.7, fade: true },
   premium: false,
 });
@@ -100,6 +101,17 @@ export function feedingOf(s, c) {
 /** Au moins un enfant reçoit du lait infantile (ou on ne sait pas). */
 export const usesFormula = (s) => !s.children.length || s.children.some((c) => feedingOf(s, c) !== 'breast');
 export const usesBreast = (s) => !s.children.length || s.children.some((c) => feedingOf(s, c) !== 'formula');
+
+/** Active / désactive l'allaitement (tous les profils). On garde le mode précédent pour le rétablir. */
+export function setBreastfeeding(on) {
+  store.update((s) => {
+    for (const c of s.children) {
+      const f = feedingOf(s, c);
+      if (on && f === 'formula') { c.feeding = c.feedingPrev || 'mixed'; delete c.feedingPrev; }
+      else if (!on && f !== 'formula') { c.feedingPrev = f || 'mixed'; c.feeding = 'formula'; }
+    }
+  });
+}
 
 /** Le co-parent « naturel » de l'utilisateur courant. */
 export const partnerOf = (me) => (me === 'Papa' ? 'Maman' : 'Papa');

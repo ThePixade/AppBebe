@@ -7,7 +7,8 @@ Application web progressive (PWA) installable sur téléphone, **sans serveur ni
 
 **Accueil & Suivi**
 - Profils multiples (jumeaux, fratrie) avec photo, prénom et âge
-- Tétée avec chronomètre gauche / droite et côté conseillé, biberon avec pavé numérique
+- Tétée : durée saisie à la main (par défaut) ou chronomètre gauche / droite avec côté conseillé, au choix de chaque appareil ; biberon avec pavé numérique
+- Interrupteur « Allaitement » dans Parents › Pour Maman : désactivé, tétées, tire-lait et stock de lait sont masqués
 - Couches en 2 touches (mouillée, sale, mixte) avec couleur et texture des selles, et alertes (selles décolorées, sang)
 - Chronomètre de sommeil, courbes de poids et de taille avec repères OMS
 - Bouton « + » central : note, vaccin, médicament, température, sieste passée, mesure

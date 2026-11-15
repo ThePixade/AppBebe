@@ -802,3 +802,8 @@ a.org.is-warn .org-body small { color: var(--brick); font-weight: 700; }
 .q { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
 .q-ask { font-size: .9rem; font-weight: 600; }
 .q .seg { max-width: 220px; }
+
+.pref { display: flex; flex-direction: column; gap: 10px; }
+.pref .q-ask { font-size: 1rem; font-weight: 700; }
+.pref-opt { display: flex; flex-direction: column; gap: 4px; width: 100%; text-align: left; padding: 16px; margin-top: 0 !important; }
+.pref-opt small { font-size: .8rem; font-weight: 500; color: var(--text-2); }

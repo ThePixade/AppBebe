@@ -1,4 +1,4 @@
-import { store, activeChild, eventsOf, partnerOf } from '../store.js';
+import { store, activeChild, eventsOf, partnerOf, usesBreast, setBreastfeeding } from '../store.js';
 import { icon } from '../icons.js';
 import { esc, uid, dayKey, dateShort, ago, DAY, openSheet, toast, seg, emptyState, $ } from '../ui.js';
 import { appHeader } from '../profiles.js';
@@ -91,7 +91,7 @@ export function render(s) {
       </div>
     </section>
 
-    ${who === 'Maman' ? breastfeedingSection(s) : relaySection(s)}
+    ${who === 'Maman' ? breastToggle(s) + (usesBreast(s) ? breastfeedingSection(s) : '') : relaySection(s)}
 
     <section class="section">
       <div class="section-head"><h2>${icon('breath', 20)} Espace mental</h2></div>
@@ -108,6 +108,20 @@ export function render(s) {
     </section>
 
     ${tasksSection(s)}`;
+}
+
+function breastToggle(s) {
+  const on = usesBreast(s);
+  return `
+    <section class="section">
+      <div class="card">
+        <div class="row-between">
+          <span class="grow"><b style="display:block">Allaitement</b><span class="small muted">Tétées, tire-lait et stock de lait</span></span>
+          <label class="switch" aria-label="Activer l'allaitement"><input type="checkbox" data-breast-toggle ${on ? 'checked' : ''}><span class="track"></span></label>
+        </div>
+        ${on ? `<div class="field mt-16" style="margin-bottom:0"><span>Noter les tétées</span>${seg('binput', [['manual', 'Durée à la main'], ['timer', 'Chronomètre']], s.breastInput || '')}${s.breastInput ? '' : '<small class="faint">Ce choix vous sera demandé à la prochaine tétée.</small>'}</div>` : '<p class="small faint mt-12">Désactivé : les tétées, le tire-lait et le stock de lait sont masqués.</p>'}
+      </div>
+    </section>`;
 }
 
 function breastfeedingSection(s) {
@@ -177,11 +191,15 @@ function tasksSection(s) {
 }
 
 export function mount(el) {
+  el.addEventListener('change', (e) => {
+    if (e.target.matches('[data-breast-toggle]')) setBreastfeeding(e.target.checked);
+  });
   el.addEventListener('click', (e) => {
     const b = e.target.closest('button');
     if (!b) return;
     const who = tab;
     if (b.dataset.seg === 'who') { tab = b.dataset.v; store.refresh(); }
+    else if (b.dataset.seg === 'binput') store.update((s) => { s.breastInput = b.dataset.v; });
     else if (b.dataset.mood) {
       const v = +b.dataset.mood;
       store.update((s) => { const k = dayKey(); s.moods[who] ||= {}; s.moods[who][k] = s.moods[who][k] === v ? undefined : v; });
