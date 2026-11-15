@@ -2,6 +2,7 @@ import { store, activeChild, eventsOf, addEvent, removeEvent, restoreEvent } fro
 import { icon } from '../icons.js';
 import { esc, fmtClock, fmtDur, fmtNum, ago, time, startOfDay, dayLabel, openSheet, closeSheet, toast, seg, emptyState, toLocalInput, fromLocalInput, $, $$ } from '../ui.js';
 import { appHeader } from '../profiles.js';
+import { homeSummary } from '../supplies.js';
 import { openGrowth } from './growth.js';
 import { openEvent, openHistory } from './edit.js';
 
@@ -62,6 +63,16 @@ function sideMs(t, side, now = Date.now()) { return (t.acc[side] || 0) + (t.side
 const breastTotal = (t) => sideMs(t, 'L') + sideMs(t, 'R');
 
 /* ---------- Rendu ---------- */
+function orgCard(s) {
+  const o = homeSummary(s);
+  return `
+    <a class="card org ${o.warn ? 'is-warn' : ''}" href="#/plan" aria-label="Stock et listes">
+      <span class="dot-ic">${icon(o.warn ? 'alert' : 'box', 18)}</span>
+      <span class="org-body"><b>Stock &amp; listes</b><small>${esc(o.text)}</small></span>
+      ${icon('chevronRight', 16)}
+    </a>`;
+}
+
 export function render(s) {
   const c = activeChild(s);
   const evs = eventsOf(s, c.id);
@@ -111,6 +122,8 @@ export function render(s) {
       <div class="stat"><span class="stat-v num" data-live="sleepTotal" data-base="${sleepMs}">${fmtDur(sleepMs + (sleeping ? Date.now() - Math.max(sleeping, t0) : 0)).replace('< 1 min', '0 min')}</span><span class="stat-l">Sommeil</span></div>
       <span class="stats-more">${icon('chart', 15)} Statistiques ${icon('chevronRight', 14)}</span>
     </a>
+
+    ${orgCard(s)}
 
     <section class="action-grid" aria-label="Actions rapides">
       ${card('feed', 'salmon', 'bottle', 'Tétée / Biberon', feedMeta, !!breast)}

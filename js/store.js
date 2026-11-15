@@ -19,6 +19,8 @@ const defaults = () => ({
   checks: {},
   pumps: [],              // { id, at, ml, side }
   stock: [],              // { id, at, ml, place: 'fridge'|'freezer' }
+  supplies: [],           // { id, name, auto: 'diaper'|'formula'|null, unit, qty, since, low, yield?, icon, tone }
+  lists: [],              // { id, name, kind: 'shop'|'trip'|'custom', created, items: [{ id, text, qty?, cat?, done }] }
   tasks: [],              // { id, text, from, to, at, done }
   audio: { sound: 'white', timer: 30, volume: 0.7, fade: true },
   premium: false,

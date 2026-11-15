@@ -14,6 +14,8 @@ Application web progressive (PWA) installable sur téléphone, **sans serveur ni
 - Fil de la journée et bannière de la dernière action du co-parent ou de la nounou
 - Tout est modifiable après coup (heure, quantité, durée…), avec historique jour par jour
 - Statistiques sur 7, 14 ou 30 jours : moyennes par jour, graphiques repas / couches / sommeil, rythme sur 24 h
+- Stock de couches et de lait infantile décompté automatiquement depuis le journal (en ml pour le lait), prévision en jours restants et alerte « stock bas »
+- Listes partagées : courses, voyage, sac à langer, valise maternité (modèles prêts à l'emploi), avec ajout en un clic depuis le stock
 
 **Diversification**
 - Recherche d'aliment avec vérification de l'âge adapté
@@ -79,7 +81,8 @@ api.php               API de synchronisation (côté NAS)
 js/ui.js              Utilitaires, bottom sheets, toasts
 js/audio.js           Moteur audio génératif (Web Audio)
 js/profiles.js        Profils, onboarding, réglages, import / export
-js/pages/             Accueil, croissance, diversification, parents, sommeil
+js/supplies.js        Calcul du stock (consommation tirée du journal)
+js/pages/             Accueil, croissance, diversification, parents, sommeil, statistiques, stock et listes
 js/data/foods.js      Catalogue d'aliments et recettes
 sw.js                 Service worker (hors-ligne)
 ```
