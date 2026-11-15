@@ -91,7 +91,7 @@ export function render(s) {
       </div>
     </section>
 
-    ${who === 'Maman' ? breastToggle(s) + (usesBreast(s) ? breastfeedingSection(s) : '') : relaySection(s)}
+    ${who === 'Maman' ? breastToggle(s) + (usesBreast(s) && pumpEnabled(s) ? breastfeedingSection(s) : '') : relaySection(s)}
 
     <section class="section">
       <div class="section-head"><h2>${icon('breath', 20)} Espace mental</h2></div>
@@ -110,16 +110,23 @@ export function render(s) {
     ${tasksSection(s)}`;
 }
 
+/** Le tirage est une option : affichée seulement si activée, ou si des tirages existent déjà. */
+const pumpEnabled = (s) => s.pumpOn ?? (s.pumps.length > 0 || s.stock.length > 0);
+
 function breastToggle(s) {
   const on = usesBreast(s);
   return `
     <section class="section">
       <div class="card">
         <div class="row-between">
-          <span class="grow"><b style="display:block">Allaitement</b><span class="small muted">Tétées, tire-lait et stock de lait</span></span>
+          <span class="grow"><b style="display:block">Allaitement</b><span class="small muted">Tétées et suivi de l'allaitement</span></span>
           <label class="switch" aria-label="Activer l'allaitement"><input type="checkbox" data-breast-toggle ${on ? 'checked' : ''}><span class="track"></span></label>
         </div>
-        ${on ? `<div class="field mt-16" style="margin-bottom:0"><span>Noter les tétées</span>${seg('binput', [['manual', 'Durée à la main'], ['timer', 'Chronomètre']], s.breastInput || '')}${s.breastInput ? '' : '<small class="faint">Ce choix vous sera demandé à la prochaine tétée.</small>'}</div>` : '<p class="small faint mt-12">Désactivé : les tétées, le tire-lait et le stock de lait sont masqués.</p>'}
+        ${on ? `<div class="field mt-16" style="margin-bottom:0"><span>Noter les tétées</span>${seg('binput', [['manual', 'Durée à la main'], ['timer', 'Chronomètre']], s.breastInput || '')}${s.breastInput ? '' : '<small class="faint">Ce choix vous sera demandé à la prochaine tétée.</small>'}</div>
+          <div class="row-between mt-16">
+            <span class="grow"><b style="display:block;font-size:.95rem">Tirage du lait</b><span class="small muted">Tire-lait et stock frigo / congélateur (option)</span></span>
+            <label class="switch" aria-label="Activer le tirage du lait"><input type="checkbox" data-pump-toggle ${pumpEnabled(s) ? 'checked' : ''}><span class="track"></span></label>
+          </div>` : '<p class="small faint mt-12">Désactivé : les tétées et le suivi de l’allaitement sont masqués.</p>'}
       </div>
     </section>`;
 }
@@ -193,6 +200,7 @@ function tasksSection(s) {
 export function mount(el) {
   el.addEventListener('change', (e) => {
     if (e.target.matches('[data-breast-toggle]')) setBreastfeeding(e.target.checked);
+    else if (e.target.matches('[data-pump-toggle]')) store.update((s) => { s.pumpOn = e.target.checked; });
   });
   el.addEventListener('click', (e) => {
     const b = e.target.closest('button');

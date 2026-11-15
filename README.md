@@ -8,7 +8,7 @@ Application web progressive (PWA) installable sur téléphone, **sans serveur ni
 **Accueil & Suivi**
 - Profils multiples (jumeaux, fratrie) avec photo, prénom et âge
 - Tétée : durée saisie à la main (par défaut) ou chronomètre gauche / droite avec côté conseillé, au choix de chaque appareil ; biberon avec pavé numérique
-- Interrupteur « Allaitement » dans Parents › Pour Maman : désactivé, tétées, tire-lait et stock de lait sont masqués
+- Interrupteur « Allaitement » dans Parents › Pour Maman : désactivé, les tétées sont masquées ; le tirage du lait (tire-lait et stock frigo / congélateur) est une option à activer
 - Couches en 2 touches (mouillée, sale, mixte) avec couleur et texture des selles, et alertes (selles décolorées, sang)
 - Chronomètre de sommeil, courbes de poids et de taille avec repères OMS
 - Bouton « + » central : note, vaccin, médicament, température, sieste passée, mesure
@@ -36,6 +36,7 @@ Application web progressive (PWA) installable sur téléphone, **sans serveur ni
 **Détente & sommeil**
 - 13 sons générés en temps réel (bruits blancs, pluie, vagues, battements de cœur, berceuses) : aucun fichier audio, fonctionne en mode avion
 - Minuteur intelligent avec baisse progressive du volume
+- Mini-lecteur Lecture / Pause visible sur toutes les pages tant qu'un son est lancé
 - Veilleuse plein écran à lueur chaude réglable
 
 ## Design

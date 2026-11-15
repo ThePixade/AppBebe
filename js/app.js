@@ -9,6 +9,7 @@ import * as sleep from './pages/sleep.js';
 import * as stats from './pages/stats.js';
 import * as plan from './pages/plan.js';
 import * as agenda from './pages/agenda.js';
+import { initMiniPlayer } from './miniplayer.js';
 
 const routes = { home, food, parents, sleep, stats, plan, agenda };
 const scope = createScope();
@@ -76,6 +77,7 @@ document.addEventListener('click', (e) => {
   else if (act === 'add-child') openChildForm();
 });
 
+initMiniPlayer();
 $('#fab').addEventListener('click', () => home.openQuickAdd());
 
 window.addEventListener('hashchange', () => { closeSheet(true); render(); });
