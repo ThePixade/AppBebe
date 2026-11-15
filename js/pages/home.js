@@ -104,12 +104,13 @@ export function render(s) {
       <h1 class="title">La journée de ${esc(c.name)}</h1>
     </section>
 
-    <section class="card stats" aria-label="Résumé du jour">
+    <a class="card stats" href="#/stats" aria-label="Résumé du jour, voir les statistiques">
       <div class="stat"><span class="stat-v num">${feeds.length}</span><span class="stat-l">Repas</span></div>
       <div class="stat"><span class="stat-v num">${ml}<small>ml</small></span><span class="stat-l">Lait</span></div>
       <div class="stat"><span class="stat-v num">${diapers}</span><span class="stat-l">Couches</span></div>
       <div class="stat"><span class="stat-v num" data-live="sleepTotal" data-base="${sleepMs}">${fmtDur(sleepMs + (sleeping ? Date.now() - Math.max(sleeping, t0) : 0)).replace('< 1 min', '0 min')}</span><span class="stat-l">Sommeil</span></div>
-    </section>
+      <span class="stats-more">${icon('chart', 15)} Statistiques ${icon('chevronRight', 14)}</span>
+    </a>
 
     <section class="action-grid" aria-label="Actions rapides">
       ${card('feed', 'salmon', 'bottle', 'Tétée / Biberon', feedMeta, !!breast)}

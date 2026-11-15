@@ -6,8 +6,9 @@ import * as home from './pages/home.js';
 import * as food from './pages/food.js';
 import * as parents from './pages/parents.js';
 import * as sleep from './pages/sleep.js';
+import * as stats from './pages/stats.js';
 
-const routes = { home, food, parents, sleep };
+const routes = { home, food, parents, sleep, stats };
 const scope = createScope();
 let currentRoute = null;
 
@@ -55,7 +56,7 @@ function render() {
   window.scrollTo(0, scrollY);
   currentRoute = name;
   $$('.tab').forEach((t) => {
-    const on = t.dataset.tab === name;
+    const on = t.dataset.tab === (name === 'stats' ? 'home' : name);
     t.classList.toggle('is-active', on);
     on ? t.setAttribute('aria-current', 'page') : t.removeAttribute('aria-current');
   });

@@ -12,6 +12,8 @@ Application web progressive (PWA) installable sur téléphone, **sans serveur ni
 - Chronomètre de sommeil, courbes de poids et de taille avec repères OMS
 - Bouton « + » central : note, vaccin, médicament, température, sieste passée, mesure
 - Fil de la journée et bannière de la dernière action du co-parent ou de la nounou
+- Tout est modifiable après coup (heure, quantité, durée…), avec historique jour par jour
+- Statistiques sur 7, 14 ou 30 jours : moyennes par jour, graphiques repas / couches / sommeil, rythme sur 24 h
 
 **Diversification**
 - Recherche d'aliment avec vérification de l'âge adapté
