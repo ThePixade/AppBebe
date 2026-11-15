@@ -3,11 +3,12 @@ import { icon } from '../icons.js';
 import { esc, fmtClock, fmtDur, fmtNum, ago, time, startOfDay, dayLabel, openSheet, closeSheet, toast, seg, emptyState, toLocalInput, fromLocalInput, $, $$ } from '../ui.js';
 import { appHeader } from '../profiles.js';
 import { openGrowth } from './growth.js';
+import { openEvent, openHistory } from './edit.js';
 
 const SIDE = { L: 'gauche', R: 'droit' };
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 const DIAPER = { wet: 'Mouillée', dirty: 'Sale', mixed: 'Mixte' };
-const STOOL_COLORS = [
+export const STOOL_COLORS = [
   { id: 'jaune', label: 'Jaune', c: '#E6C14F' },
   { id: 'moutarde', label: 'Moutarde', c: '#C99A2E' },
   { id: 'vert', label: 'Verte', c: '#7F9A4A' },
@@ -16,9 +17,9 @@ const STOOL_COLORS = [
   { id: 'pale', label: 'Blanche / grise', c: '#DAD6CB', warn: 'Selles décolorées : contactez rapidement votre médecin (voir la carte de couleur des selles du carnet de santé).', urgent: true },
   { id: 'rouge', label: 'Rouge', c: '#B5473A', warn: 'Présence possible de sang : demandez un avis médical.', urgent: true },
 ];
-const TEXTURES = ['Liquide', 'Grumeleuse', 'Molle', 'Pâteuse', 'Dure'];
-const VACCINES = ['Hexavalent (DTCaP-Hib-HepB)', 'Pneumocoque', 'Méningocoque B', 'Méningocoque C', 'ROR', 'Rotavirus', 'Autre'];
-const MEDS = ['Vitamine D', 'Paracétamol', 'Vitamine K', 'Fer'];
+export const TEXTURES = ['Liquide', 'Grumeleuse', 'Molle', 'Pâteuse', 'Dure'];
+export const VACCINES = ['Hexavalent (DTCaP-Hib-HepB)', 'Pneumocoque', 'Méningocoque B', 'Méningocoque C', 'ROR', 'Rotavirus', 'Autre'];
+export const MEDS = ['Vitamine D', 'Paracétamol', 'Vitamine K', 'Fer'];
 
 /* ---------- Description d'un événement ---------- */
 export function describe(e) {
@@ -122,11 +123,12 @@ export function render(s) {
       <div class="card timeline">
         ${today.length ? today.map((e) => eventRow(e)).join('') : emptyState('clock', 'Rien pour le moment', 'Les actions de la journée apparaîtront ici.')}
       </div>
+      <button class="past-link" data-act="history">${icon('clock', 18)} Jours précédents</button>
     </section>
     ${feedBanner(s)}`;
 }
 
-function eventRow(e) {
+export function eventRow(e) {
   const d = describe(e);
   return `
     <button class="event tone-${d.tone}" data-act="event" data-id="${e.id}">
@@ -158,7 +160,7 @@ export function mount(el, scope) {
     const b = e.target.closest('[data-act]');
     if (!b) return;
     const c = activeChild(store.state);
-    ({ feed: () => openFeed(c), diaper: () => openDiaper(c), sleep: () => toggleSleep(c), growth: () => openGrowth(c), event: () => openEvent(b.dataset.id) })[b.dataset.act]?.();
+    ({ feed: () => openFeed(c), diaper: () => openDiaper(c), sleep: () => toggleSleep(c), growth: () => openGrowth(c), event: () => openEvent(b.dataset.id), history: () => openHistory(c) })[b.dataset.act]?.();
   });
   scope.onTick(() => {
     const s = store.state, c = activeChild(s);
@@ -399,26 +401,6 @@ function openSleepRunning(c) {
         api.close();
       });
       api.onTick(() => { const st = sleepOf(store.state, c.id); const n = $('[data-t="sleep"]', body); if (st && n) n.textContent = fmtClock(Date.now() - st); });
-    },
-  });
-}
-
-/* ---------- Détail d'un événement ---------- */
-function openEvent(id) {
-  const e = store.state.events.find((x) => x.id === id);
-  if (!e) return;
-  const d = describe(e);
-  openSheet({
-    title: d.title, subtitle: `${time(e.at)} · ajouté par ${e.by}`,
-    content: `
-      <div class="row tone-${d.tone}"><span class="ac-icon">${icon(d.icon, 24)}</span><p class="muted">${esc(d.detail) || '—'}</p></div>
-      <button class="btn btn-danger btn-block mt-24" data-del>${icon('trash', 18)} Supprimer</button>`,
-    onMount(body, api) {
-      body.querySelector('[data-del]').addEventListener('click', () => {
-        const ev = removeEvent(id);
-        api.close();
-        toast('Événement supprimé', { action: 'Annuler', onAction: () => restoreEvent(ev) });
-      });
     },
   });
 }

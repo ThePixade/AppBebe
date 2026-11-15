@@ -672,3 +672,8 @@ input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* ---------- Historique ---------- */
+.day-nav { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; text-align: center; font-size: 1.02rem; }
+.day-nav .icon-btn:disabled { opacity: .3; pointer-events: none; }
+button.list-row { color: inherit; font: inherit; }

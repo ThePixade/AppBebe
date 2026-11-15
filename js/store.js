@@ -70,6 +70,9 @@ export function removeEvent(id) {
   store.update((s) => { s.events = s.events.filter((e) => e.id !== id); });
   return ev;
 }
+export function updateEvent(id, patch) {
+  store.update((s) => { const e = s.events.find((x) => x.id === id); if (e) Object.assign(e, patch); });
+}
 export function restoreEvent(ev) { store.update((s) => { s.events.push(ev); }); }
 
 export function resolvedTheme(s = state) {

@@ -1,4 +1,5 @@
 import { store, eventsOf, addEvent } from '../store.js';
+import { openEdit } from './edit.js';
 import { icon } from '../icons.js';
 import { esc, fmtNum, dateShort, ageMonthsExact, openSheet, toast, seg, emptyState, toLocalInput, fromLocalInput, $ } from '../ui.js';
 
@@ -93,7 +94,7 @@ export function openGrowth(child, initialTab = 'chart') {
             ${points.length ? '' : `<p class="small faint mt-8">Ajoutez une première mesure pour tracer la courbe.</p>`}
             <div class="section-head mt-24"><h2>Historique</h2></div>
             <div class="card" style="padding:4px 16px">
-              ${list.length ? list.map((e) => `<div class="list-row"><span class="muted">${dateShort(e.at)}</span><b class="num">${[e.weight && `${fmtNum(e.weight, 2)} kg`, e.height && `${fmtNum(e.height)} cm`, e.head && `PC ${fmtNum(e.head)} cm`].filter(Boolean).join(' · ')}</b></div>`).join('') : emptyState('growth', 'Aucune mesure')}
+              ${list.length ? list.map((e) => `<button class="list-row" data-ev="${e.id}" style="width:100%;text-align:left"><span class="muted">${dateShort(e.at)}</span><b class="num">${[e.weight && `${fmtNum(e.weight, 2)} kg`, e.height && `${fmtNum(e.height)} cm`, e.head && `PC ${fmtNum(e.head)} cm`].filter(Boolean).join(' · ')} <span class="faint">${icon('edit', 14)}</span></b></button>`).join('') : emptyState('growth', 'Aucune mesure')}
             </div>
             <p class="small faint mt-12">Repères indicatifs inspirés des standards OMS. Votre médecin et le carnet de santé font référence.</p>` : `
             <form class="js-growth" novalidate>
@@ -123,6 +124,7 @@ export function openGrowth(child, initialTab = 'chart') {
         if (!b) return;
         if (b.dataset.seg === 'tab') { tab = b.dataset.v; draw(); }
         if (b.dataset.metric) { metric = b.dataset.metric; draw(); }
+        if (b.dataset.ev) openEdit(b.dataset.ev);
       });
       draw();
     },
