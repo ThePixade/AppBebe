@@ -1,6 +1,7 @@
 import { store, activeChild, resolvedTheme } from './store.js';
 import { icon } from './icons.js';
-import { esc, uid, ageLabel, dayKey, openSheet, closeSheet, toast, seg, $ } from './ui.js';
+import { esc, uid, ageLabel, dayKey, ago, openSheet, closeSheet, toast, seg, $ } from './ui.js';
+import { sync, syncNow } from './sync.js';
 
 export const ROLES = ['Maman', 'Papa', 'Nounou'];
 
@@ -171,7 +172,7 @@ export function openProfiles() {
               <label class="btn btn-sm">${icon('upload', 16)} Importer<input type="file" accept="application/json" data-import hidden></label>
             </div>
           </div>
-          <p class="small faint">Vos données sont stockées uniquement sur cet appareil. Exportez-les pour les transférer sur le téléphone du co-parent.</p>`;
+          ${syncBlock()}`;
       };
       body.addEventListener('click', (e) => {
         const t = e.target.closest('button');
@@ -182,11 +183,24 @@ export function openProfiles() {
         else if (t.dataset.seg === 'me') { store.update((s) => { s.me = t.dataset.v; }); draw(); }
         else if (t.dataset.seg === 'theme') { store.update((s) => { s.theme = t.dataset.v; }); draw(); }
         else if (t.hasAttribute('data-export')) exportData();
+        else if (t.hasAttribute('data-sync')) syncNow().then(draw);
       });
       body.addEventListener('change', (e) => { if (e.target.matches('[data-import]')) importData(e.target.files[0]); });
       draw();
     },
   });
+}
+
+function syncBlock() {
+  if (!sync.available) {
+    return `<p class="small faint">Vos données sont stockées uniquement sur cet appareil. Installez l’app sur votre NAS pour les partager automatiquement, ou utilisez Exporter / Importer.</p>`;
+  }
+  const ok = sync.status !== 'error';
+  return `
+    <div class="notice tone-${ok ? 'sage' : 'brick'} mt-8">${icon(ok ? 'check' : 'alert', 18)}
+      <span class="grow" style="flex:1">${ok ? `<b>Partagé via le NAS.</b> Dernière synchro ${sync.lastSync ? ago(sync.lastSync) : 'en cours'}.` : `<b>Synchro en pause.</b> ${esc(sync.error)}`}</span>
+      <button class="btn btn-sm" data-sync>Synchroniser</button>
+    </div>`;
 }
 
 function exportData() {

@@ -1,8 +1,8 @@
 // Service worker : app disponible hors-ligne (mode avion compris).
-const VERSION = 'appbebe-v2.0.0';
+const VERSION = 'appbebe-v2.1.0';
 const SHELL = [
   './', './index.html', './manifest.webmanifest', './css/styles.css',
-  './js/app.js', './js/store.js', './js/ui.js', './js/icons.js', './js/profiles.js', './js/audio.js',
+  './js/app.js', './js/store.js', './js/ui.js', './js/icons.js', './js/profiles.js', './js/audio.js', './js/sync.js',
   './js/pages/home.js', './js/pages/growth.js', './js/pages/food.js', './js/pages/parents.js', './js/pages/sleep.js',
   './js/data/foods.js', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png',
 ];
@@ -29,7 +29,7 @@ self.addEventListener('fetch', (e) => {
     }));
     return;
   }
-  if (url.origin !== location.origin) return;
+  if (url.origin !== location.origin || url.pathname.endsWith('.php')) return;
 
   // App : réseau d'abord (mises à jour), cache en secours.
   e.respondWith(

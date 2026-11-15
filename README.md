@@ -47,9 +47,23 @@ python -m http.server 5173
 
 Puis ouvrir http://localhost:5173.
 
+## Installer sur un NAS (partage entre parents)
+
+Hébergée sur un serveur web avec PHP (ex. NAS QNAP / Synology), l'app synchronise automatiquement les données entre tous les téléphones grâce à `api.php`.
+
+1. Activer le serveur web du NAS (QNAP : Panneau de configuration → Applications → Serveur Web).
+2. Copier le dossier de l'app dans le partage `Web` (ex. `Web/appbebe`).
+3. Ouvrir `http://IP-DU-NAS/appbebe/` sur chaque téléphone connecté au Wi-Fi de la maison.
+
+Les données partagées sont stockées dans `appbebe-data.php` (créé automatiquement, non lisible depuis le navigateur). Les réglages propres à chaque téléphone (thème, « je suis », sons) restent locaux. Si deux personnes saisissent en même temps, les deux saisies sont conservées.
+
+Si l'app indique « Le NAS ne peut pas écrire dans le dossier », donner les droits en écriture sur le dossier de l'app (l'utilisateur du serveur web QNAP est `httpdusr`).
+
+Pour un accès hors de la maison, préférer un VPN (Tailscale, QVPN) plutôt que d'ouvrir des ports sur la box.
+
 ## Publier avec GitHub Pages
 
-Settings → Pages → Deploy from a branch → `main` / `(root)`. L'app est ensuite installable depuis le navigateur du téléphone (« Ajouter à l'écran d'accueil »).
+Settings → Pages → Deploy from a branch → `main` / `(root)`. Sans PHP, l'app fonctionne en mode local (pas de partage).
 
 ## Structure
 
@@ -58,6 +72,8 @@ index.html            Coquille de l'app et barre d'onglets
 css/styles.css        Design system (tokens clair / sombre / nuit) et composants
 js/app.js             Routeur, thème, rendu
 js/store.js           État persistant (localStorage)
+js/sync.js            Synchronisation via le NAS (fusion à trois voies)
+api.php               API de synchronisation (côté NAS)
 js/ui.js              Utilitaires, bottom sheets, toasts
 js/audio.js           Moteur audio génératif (Web Audio)
 js/profiles.js        Profils, onboarding, réglages, import / export
@@ -68,6 +84,7 @@ sw.js                 Service worker (hors-ligne)
 
 ## Limites actuelles
 
-- Les données sont locales à chaque téléphone. Pour partager entre parents, utiliser Exporter / Importer dans « Profils & réglages ». Une vraie synchronisation demanderait un backend.
+- Sans NAS (GitHub Pages), les données restent sur chaque téléphone : utiliser Exporter / Importer pour les transférer.
+- L'API du NAS n'a pas de mot de passe : elle est prévue pour le réseau de la maison.
 - Le partage de tâche passe par le partage natif du téléphone (SMS, WhatsApp…), pas par une notification push.
 - Les repères de croissance et conseils sont indicatifs et ne remplacent pas un avis médical.

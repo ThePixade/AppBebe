@@ -1,4 +1,5 @@
 import { store, resolvedTheme } from './store.js';
+import { initSync } from './sync.js';
 import { $, $$, createScope, closeSheet } from './ui.js';
 import { renderOnboarding, mountOnboarding, openProfiles, openChildForm } from './profiles.js';
 import * as home from './pages/home.js';
@@ -79,7 +80,9 @@ store.subscribe(render);
 // Le thème « auto » suit l'heure : on vérifie chaque minute.
 setInterval(() => { if (store.state.theme === 'auto') applyTheme(); }, 60000);
 
-render();
+// Nouveau téléphone : on attend les données du NAS avant d'afficher l'accueil.
+if (store.state.children.length) { render(); initSync(); }
+else initSync().finally(render);
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
