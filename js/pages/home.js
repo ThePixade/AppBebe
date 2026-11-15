@@ -181,6 +181,9 @@ function openFeed(c, initialMode) {
   let milk = lastBottle?.milk || 'infantile';
   let bottleAt = null; // null = maintenant
   const hint = lastBreast?.last === 'L' ? 'R' : 'L';
+  // Tétée oubliée : saisie après coup (début + minutes par côté)
+  let past = false;
+  const pb = { at: Date.now() - 3600e3, L: hint === 'L' ? 10 : 0, R: hint === 'R' ? 10 : 0, last: hint };
 
   openSheet({
     title: 'Repas', subtitle: c.name,
@@ -189,7 +192,7 @@ function openFeed(c, initialMode) {
         const t = breastOf(store.state, c.id);
         body.innerHTML = `
           ${seg('mode', [['breast', 'Allaitement'], ['bottle', 'Biberon']], mode, 'seg-lg')}
-          ${mode === 'breast' ? `
+          ${mode === 'breast' && past ? pastBreastHtml(pb) : mode === 'breast' ? `
             <div class="timer-display">
               <span class="timer-big num" data-t="total">${fmtClock(t ? breastTotal(t) : 0)}</span>
               <span class="timer-sub">${t ? (t.side ? `Côté ${SIDE[t.side]} en cours` : 'En pause · touchez un côté pour reprendre') : `Conseillé : commencer côté ${SIDE[hint]}`}</span>
@@ -206,7 +209,8 @@ function openFeed(c, initialMode) {
             <div class="actions tone-salmon">
               <button class="btn btn-ghost" data-act="cancel" ${t ? '' : 'disabled'}>Annuler</button>
               <button class="btn btn-primary" data-act="save-breast" ${t ? '' : 'disabled'}>${icon('check', 20)} Terminer</button>
-            </div>` : `
+            </div>
+            ${t ? '' : `<button class="past-link" data-act="past">${icon('clock', 18)} Tétée oubliée ? L’ajouter après coup</button>`}` : `
             <div class="amount mt-20"><span class="amount-value num">${ml || '0'}</span><span class="amount-unit">ml</span></div>
             <div class="chips tone-salmon" style="justify-content:center">${[60, 90, 120, 150, 180, 210].map((v) => `<button class="chip ${+ml === v ? 'is-on' : ''}" data-act="preset" data-v="${v}">${v}</button>`).join('')}</div>
             <div class="keypad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => `<button class="key num" data-act="key" data-v="${n}">${n}</button>`).join('')}
@@ -231,6 +235,23 @@ function openFeed(c, initialMode) {
           case 'clear': ml = ''; break;
           case 'preset': ml = b.dataset.v; break;
           case 'now': bottleAt = null; break;
+          case 'past': past = true; break;
+          case 'live': past = false; break;
+          case 'step': {
+            const sd = b.dataset.side;
+            pb[sd] = Math.max(0, Math.min(90, pb[sd] + +b.dataset.v));
+            if (pb[sd] > 0 && !pb[sd === 'L' ? 'R' : 'L']) pb.last = sd;
+            break;
+          }
+          case 'past-last': pb.last = b.dataset.side; break;
+          case 'save-past': {
+            const L = pb.L * 60e3, R = pb.R * 60e3;
+            if (!L && !R) { toast('Indiquez la durée d’au moins un côté'); return; }
+            if (pb.at > Date.now()) { toast('Le début ne peut pas être dans le futur'); return; }
+            const last = !L ? 'R' : !R ? 'L' : pb.last;
+            addEvent({ childId: c.id, type: 'feed', kind: 'breast', at: pb.at, end: pb.at + L + R, L, R, last, late: true });
+            api.close(); toast(`Tétée de ${fmtDur(L + R)} ajoutée · ${dayLabel(pb.at)} ${time(pb.at)}`); return;
+          }
           case 'save-bottle':
             addEvent({ childId: c.id, type: 'feed', kind: 'bottle', ml: +ml, milk, ...(bottleAt ? { at: bottleAt } : {}) });
             api.close(); toast(`Biberon de ${ml} ml enregistré${bottleAt ? ` à ${time(bottleAt)}` : ''}`); return;
@@ -238,6 +259,11 @@ function openFeed(c, initialMode) {
         draw();
       });
       body.addEventListener('change', (e) => {
+        if (e.target.name === 'pastAt') {
+          const ts = fromLocalInput(e.target.value);
+          if (ts) pb.at = Math.min(ts, Date.now());
+          return draw();
+        }
         if (e.target.name !== 'bottleAt') return;
         const ts = fromLocalInput(e.target.value);
         bottleAt = Date.now() - ts > 60e3 ? Math.min(ts, Date.now()) : null;
@@ -252,6 +278,31 @@ function openFeed(c, initialMode) {
       draw();
     },
   });
+}
+
+function pastBreastHtml(pb) {
+  const total = pb.L + pb.R;
+  const stepper = (sd) => `
+    <div class="stepper ${pb[sd] ? 'is-on' : ''}">
+      <span class="stepper-label">${sd === 'L' ? 'Gauche' : 'Droit'}</span>
+      <span class="stepper-value num">${pb[sd]}<small> min</small></span>
+      <div class="stepper-btns">
+        <button class="key fn" data-act="step" data-side="${sd}" data-v="-1" aria-label="Moins une minute">−</button>
+        <button class="key fn" data-act="step" data-side="${sd}" data-v="1" aria-label="Plus une minute">+</button>
+      </div>
+      <div class="chips stepper-quick">${[5, 10, 15].map((v) => `<button class="chip" data-act="step" data-side="${sd}" data-v="${v}">+${v}</button>`).join('')}</div>
+    </div>`;
+  return `
+    <label class="field mt-16"><span>Début de la tétée</span>
+      <input class="input" type="datetime-local" name="pastAt" value="${toLocalInput(pb.at)}" max="${toLocalInput()}"></label>
+    <div class="side-pick">${stepper('L')}${stepper('R')}</div>
+    ${pb.L && pb.R ? `<div class="field mt-16"><span>Terminée côté <small class="faint">(pour le côté conseillé la prochaine fois)</small></span>
+      <div class="seg">${['L', 'R'].map((sd) => `<button class="${pb.last === sd ? 'is-on' : ''}" data-act="past-last" data-side="${sd}">${sd === 'L' ? 'Gauche' : 'Droit'}</button>`).join('')}</div></div>` : ''}
+    <p class="small muted mt-12" style="text-align:center">${total ? `Durée totale ${fmtDur(total * 60e3)} · fin à ${time(pb.at + total * 60e3)}` : 'Indiquez la durée de chaque côté'}</p>
+    <div class="actions tone-salmon">
+      <button class="btn btn-ghost" data-act="live">Retour</button>
+      <button class="btn btn-primary" data-act="save-past" ${total ? '' : 'disabled'}>${icon('check', 20)} Ajouter</button>
+    </div>`;
 }
 
 function tapSide(childId, side) {

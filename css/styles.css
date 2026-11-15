@@ -399,6 +399,17 @@ textarea.input { height: auto; min-height: 110px; padding: 14px 16px; resize: ve
 .side-btn { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; background: var(--salmon); color: var(--on-accent); }
 .side:not(.is-active) .side-btn { background: color-mix(in srgb, var(--salmon) 20%, transparent); color: var(--salmon); }
 .side-hint { position: absolute; top: -11px; left: 50%; transform: translateX(-50%); }
+.past-link { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 48px; margin-top: 10px; font-size: .88rem; font-weight: 700; color: var(--text-2); }
+.past-link svg { color: var(--salmon); }
+.stepper { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 16px 10px 14px; border-radius: var(--r-lg); background: var(--surface-2); border: 2px solid transparent; transition: border-color .2s, background .2s; }
+.stepper.is-on { border-color: color-mix(in srgb, var(--salmon) 55%, transparent); background: color-mix(in srgb, var(--salmon) 9%, var(--surface-2)); }
+.stepper-label { font-size: .85rem; font-weight: 700; color: var(--text-2); }
+.stepper-value { font-size: 2rem; font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+.stepper-value small { font-size: .9rem; font-weight: 700; color: var(--text-2); }
+.stepper-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
+.stepper-btns .key { height: 52px; font-size: 1.5rem; background: var(--surface); }
+.stepper-quick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; width: 100%; }
+.stepper-quick .chip { height: 34px; padding: 0; justify-content: center; font-size: .8rem; background: var(--surface); }
 
 .amount { text-align: center; padding: 6px 0 14px; }
 .amount-value { font-size: 3.6rem; font-weight: 800; letter-spacing: -.035em; line-height: 1; }
