@@ -17,6 +17,7 @@ Application web progressive (PWA) installable sur téléphone, **sans serveur ni
 - Statistiques sur 7, 14 ou 30 jours : moyennes par jour, graphiques repas / couches / sommeil, rythme sur 24 h
 - Stock de couches et de lait infantile décompté automatiquement depuis le journal (en ml pour le lait), prévision en jours restants et alerte « stock bas »
 - Profil d'alimentation (allaitement, biberon, mixte) : l'app ne propose que ce qui vous concerne (pas de lait infantile ni de choix du lait si bébé est allaité), et les listes s'adaptent
+- Un biberon de lait maternel est retiré automatiquement du stock du frigo (pot le plus ancien d'abord) ; modifier ou supprimer le biberon remet le lait dans le stock
 - Listes partagées : courses, voyage, sac à langer, valise maternité (modèles prêts à l'emploi qui se règlent avec quelques questions : « de quoi faire dormir bébé sur place ? » retire le lit parapluie), avec ajout en un clic depuis le stock ; chaque article indique qui l'a ajouté et qui l'a coché
 - Agenda commun (rendez-vous, départs en vacances, fêtes) : vue mensuelle, événements sur plusieurs jours, qui l'a ajouté, prochain événement sur l'accueil
 

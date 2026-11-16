@@ -1,6 +1,7 @@
 import { store, eventsOf, updateEvent, removeEvent, restoreEvent, feedingOf } from '../store.js';
 import { icon } from '../icons.js';
 import { esc, fmtDur, time, dayLabel, startOfDay, openSheet, toast, seg, emptyState, toLocalInput, fromLocalInput, $, $$ } from '../ui.js';
+import { takeFromFridge, giveBack, takenMl } from '../milk.js';
 import { describe, eventRow, STOOL_COLORS, TEXTURES, VACCINES, MEDS } from './home.js';
 
 /*
@@ -34,8 +35,11 @@ export function openEvent(id) {
       body.querySelector('[data-edit]').addEventListener('click', () => openEdit(id));
       body.querySelector('[data-del]').addEventListener('click', () => {
         const ev = removeEvent(id);
+        if (ev?.taken?.length) giveBack(ev.taken); // le lait retiré du frigo y retourne
         api.close();
-        toast('Événement supprimé', { action: 'Annuler', onAction: () => restoreEvent(ev) });
+        toast('Événement supprimé', { action: 'Annuler', onAction: () => {
+          restoreEvent(ev.taken?.length ? { ...ev, taken: takeFromFridge(takenMl(ev.taken)).taken } : ev);
+        } });
       });
     },
   });
@@ -129,6 +133,11 @@ export function openEdit(id) {
               const ml = num(F('ml').value);
               if (!(ml > 0 && ml <= 500)) return toast('Quantité invalide');
               patch = { ...patch, ml: Math.round(ml), milk: v.milk };
+              // Bouteille déjà prélevée sur le stock : on rend l'ancien prélèvement puis on prélève le nouveau.
+              if (e.taken?.length) {
+                giveBack(e.taken);
+                patch.taken = v.milk === 'maternel' ? takeFromFridge(patch.ml).taken : [];
+              }
             } else {
               const L = Math.max(0, num(F('L').value) || 0) * 60e3, R = Math.max(0, num(F('R').value) || 0) * 60e3;
               if (!L && !R) return toast('Indiquez la durée d’au moins un côté');
@@ -169,7 +178,11 @@ export function openEdit(id) {
         const before = { ...e };
         updateEvent(id, { ...patch, editedBy: store.state.me });
         api.close();
-        toast('Modification enregistrée', { action: 'Annuler', onAction: () => store.update((s) => { const i = s.events.findIndex((x) => x.id === id); if (i >= 0) s.events[i] = before; }) });
+        toast('Modification enregistrée', { action: 'Annuler', onAction: () => {
+          let prev = before;
+          if (patch.taken !== undefined && before.taken?.length) { giveBack(patch.taken); prev = { ...before, taken: takeFromFridge(takenMl(before.taken)).taken }; }
+          store.update((s) => { const i = s.events.findIndex((x) => x.id === id); if (i >= 0) s.events[i] = prev; });
+        } });
       });
     },
   });

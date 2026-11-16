@@ -3,6 +3,7 @@ import { icon } from '../icons.js';
 import { esc, fmtClock, fmtDur, fmtNum, ago, time, startOfDay, dayLabel, openSheet, closeSheet, toast, seg, emptyState, toLocalInput, fromLocalInput, $, $$ } from '../ui.js';
 import { appHeader } from '../profiles.js';
 import { homeSummary } from '../supplies.js';
+import { fridgeMl, takeFromFridge, giveBack } from '../milk.js';
 import { nextEventLine } from './agenda.js';
 import { openGrowth } from './growth.js';
 import { openEvent, openHistory } from './edit.js';
@@ -247,6 +248,7 @@ function openFeed(c, initialMode) {
             <div class="keypad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => `<button class="key num" data-act="key" data-v="${n}">${n}</button>`).join('')}
               <button class="key fn" data-act="clear">Effacer</button><button class="key num" data-act="key" data-v="0">0</button><button class="key fn" data-act="back" aria-label="Supprimer le dernier chiffre">⌫</button></div>
             ${feeding === 'mixed' || !feeding ? seg('milk', [['infantile', 'Lait infantile'], ['maternel', 'Lait maternel']], milk) : `<p class="small faint">${milk === 'maternel' ? 'Lait maternel (tire-lait)' : 'Lait infantile'}</p>`}
+            ${milk === 'maternel' && fridgeMl() > 0 ? `<p class="small faint mt-8">Sera retiré du stock du frigo (${fridgeMl()} ml disponibles).</p>` : ''}
             <label class="field mt-16"><span class="row-between">Heure du biberon${bottleAt ? '<button type="button" class="link" data-act="now">Maintenant</button>' : '<span class="faint">Maintenant</span>'}</span>
               <input class="input" type="datetime-local" name="bottleAt" value="${toLocalInput(bottleAt ?? Date.now())}" max="${toLocalInput()}"></label>
             <div class="tone-salmon"><button class="btn btn-primary btn-block btn-lg" data-act="save-bottle" ${+ml > 0 ? '' : 'disabled'}>Enregistrer${+ml > 0 ? ` ${ml} ml` : ''}</button></div>`}`;
@@ -288,8 +290,16 @@ function openFeed(c, initialMode) {
             api.close(); toast(`Tétée de ${fmtDur(L + R)} enregistrée`); return;
           }
           case 'save-bottle':
-            addEvent({ childId: c.id, type: 'feed', kind: 'bottle', ml: +ml, milk, ...(bottleAt ? { at: bottleAt } : {}) });
-            api.close(); toast(`Biberon de ${ml} ml enregistré${bottleAt ? ` à ${time(bottleAt)}` : ''}`); return;
+          {
+            // Lait maternel : on le retire du stock du frigo (s'il y en a un).
+            const fromFridge = milk === 'maternel' && fridgeMl() > 0 ? takeFromFridge(+ml) : null;
+            const ev = addEvent({ childId: c.id, type: 'feed', kind: 'bottle', ml: +ml, milk, ...(bottleAt ? { at: bottleAt } : {}), ...(fromFridge ? { taken: fromFridge.taken } : {}) });
+            const used = fromFridge ? fromFridge.taken.reduce((a, t) => a + t.ml, 0) : 0;
+            api.close();
+            toast(`Biberon de ${ml} ml enregistré${bottleAt ? ` à ${time(bottleAt)}` : ''}${used ? ` · ${used} ml retirés du frigo${fromFridge.short ? ` (il en manquait ${fromFridge.short})` : ''}` : ''}`,
+              fromFridge ? { action: 'Annuler', onAction: () => { removeEvent(ev.id); giveBack(fromFridge.taken); } } : {});
+            return;
+          }
         }
         draw();
       });
