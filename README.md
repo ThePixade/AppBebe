@@ -70,6 +70,15 @@ Si l'app indique « Le NAS ne peut pas écrire dans le dossier », donner les dr
 
 Pour un accès hors de la maison, préférer un VPN (Tailscale, QVPN) plutôt que d'ouvrir des ports sur la box.
 
+## Installer comme une appli sur Android (Chrome)
+
+Chrome n'installe une vraie appli (icône dans le tiroir, plein écran, hors-ligne) que depuis une adresse sécurisée. Sur le NAS en `http://`, deux solutions :
+
+- **Simple, sur chaque téléphone** : dans Chrome, ouvrir `chrome://flags/#unsafely-treat-insecure-origin-as-secure`, passer le réglage sur « Enabled », saisir `http://IP-DU-NAS` (l'adresse exacte utilisée pour l'app), puis relancer Chrome. Ouvrir ensuite l'app, menu ⋮ → « Installer l'application ».
+- **Propre** : mettre le NAS en HTTPS (Tailscale ou certificat Let's Encrypt). L'installation est alors proposée directement.
+
+Sans l'une de ces deux options, « Ajouter à l'écran d'accueil » crée seulement un raccourci.
+
 ## Publier avec GitHub Pages
 
 Settings → Pages → Deploy from a branch → `main` / `(root)`. Sans PHP, l'app fonctionne en mode local (pas de partage).
