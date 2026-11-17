@@ -15,11 +15,10 @@ header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
 
-// Mode test : si le fichier vide « link-appbebe » existe à côté de api.php, on lit et écrit
-// directement les données d'AppBébé (../appbebe/appbebe-data.php) au lieu de celles d'AppFamille.
-// Pour revenir à des données séparées : supprimer ce fichier « link-appbebe ».
+// Mode test : si le dossier ../appbebe contient déjà des données, AppFamille les utilise directement
+// (même fichier qu'AppBébé). Pour des données séparées : créer un fichier vide « no-link-appbebe » à côté de api.php.
 $linked = dirname(__DIR__) . '/appbebe/appbebe-data.php';
-define('DATA_FILE', (is_file(__DIR__ . '/link-appbebe') && is_file($linked)) ? $linked : __DIR__ . '/appfamille-data.php');
+define('DATA_FILE', (is_file($linked) && !is_file(__DIR__ . '/no-link-appbebe')) ? $linked : __DIR__ . '/appfamille-data.php');
 define('GUARD', "<?php http_response_code(403); exit; ?>\n");
 define('MAX_BYTES', 8 * 1024 * 1024);
 
