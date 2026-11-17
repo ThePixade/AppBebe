@@ -11,9 +11,9 @@ import { esc } from './ui.js';
 export const MODULES = [
   { id: 'baby',      label: 'Bébé',               desc: 'Repas, couches, sommeil, croissance, diversification, espace parents', icon: 'baby',     tone: 'salmon', ready: true,  route: 'home', routes: ['home', 'food', 'parents', 'sleep', 'stats', 'plan'] },
   { id: 'agenda',    label: 'Agenda',             desc: 'Rendez-vous, fêtes et départs partagés en famille',                    icon: 'calendar', tone: 'slate',  ready: true,  route: 'agenda', routes: ['agenda'] },
-  { id: 'finance',   label: 'Budget',             desc: 'Dépenses, budget du mois, qui doit quoi',                              icon: 'wallet',   tone: 'sage',   ready: false },
-  { id: 'medical',   label: 'Santé',              desc: 'Carnet de santé de chacun, vaccins, ordonnances, rendez-vous médicaux', icon: 'stetho',   tone: 'brick',  ready: false },
-  { id: 'vacation',  label: 'Vacances',           desc: 'Préparer un voyage : itinéraire, valises, budget',                     icon: 'plane',    tone: 'gold',   ready: false },
+  { id: 'finance',   label: 'Budget',             desc: 'Dépenses, budget du mois, qui doit quoi',                              icon: 'wallet',   tone: 'sage',   ready: true,  route: 'budget', routes: ['budget'] },
+  { id: 'medical',   label: 'Santé',              desc: 'Carnet de santé de chacun, vaccins, ordonnances, rendez-vous médicaux', icon: 'stetho',   tone: 'brick',  ready: true,  route: 'sante', routes: ['sante'] },
+  { id: 'vacation',  label: 'Vacances',           desc: 'Préparer un voyage : itinéraire, valises, budget',                     icon: 'plane',    tone: 'gold',   ready: true,  route: 'vacances', routes: ['vacances'] },
   { id: 'maison',    label: 'Maison',             desc: 'Courses, tâches ménagères, menus de la semaine',                       icon: 'home',     tone: 'peach',  ready: true,  route: 'maison', routes: ['maison'] },
 ];
 

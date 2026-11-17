@@ -18,9 +18,9 @@ Le choix se fait au premier démarrage et reste modifiable dans Réglages. Les m
 |---|---|
 | Bébé (suivi, repas, sommeil, croissance, parents, stock & listes) | ✅ repris tel quel |
 | Agenda commun | ✅ repris tel quel |
-| Budget | 🔜 |
-| Santé | 🔜 |
-| Vacances | 🔜 |
+| Budget (dépenses, budget mensuel, charges fixes, qui doit quoi) | ✅ v0.3 |
+| Santé (carnet par membre, vaccins + rappels, traitements, lien agenda) | ✅ v0.3 |
+| Vacances (valises générées, programme, budget, lien agenda et Budget) | ✅ v0.3 |
 | Maison (courses, tâches ménagères, menus de la semaine) | ✅ v0.2 |
 
 ## Contenu envisagé des prochains modules

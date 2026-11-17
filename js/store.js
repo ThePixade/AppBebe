@@ -24,6 +24,12 @@ const defaults = () => ({
   supplies: [],           // { id, name, auto: 'diaper'|'formula'|null, unit, qty, since, low, yield?, icon, tone }
   lists: [],              // { id, name, kind: 'shop'|'trip'|'custom', created, items: [{ id, text, qty?, cat?, done }] }
   agenda: [],             // { id, title, kind: 'rdv'|'trip'|'family'|'other', allDay, start, end, place, note, by }
+  expenses: [],           // { id, at, amount, cat, note, by, shared, tripId? }
+  fixed: [],              // charges fixes mensuelles : { id, name, amount, cat }
+  budget: { monthly: null },
+  members: [],            // santé : { id, name, birth, blood, allergies, doctor, notes }
+  health: [],             // { id, memberId, type: 'rdv'|'vaccin'|'traitement'|'note', title, at, end?, next?, place, note }
+  trips: [],              // { id, name, dest, start, end, budget, lodging, ref, notes, items[], plan[], spend[], agendaId? }
   chores: [],             // { id, name, every (jours, 0 = une fois), who: ''|'tour'|prénom, turn, last, lastBy, created }
   menus: {},              // { [AAAA-MM-JJ]: { lunch, dinner } }
   tasks: [],              // { id, text, from, to, at, done }

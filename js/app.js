@@ -5,6 +5,9 @@ import { renderOnboarding, mountOnboarding, openProfiles, openChildForm } from '
 import { renderModuleSetup, mountModuleSetup, moduleOfRoute, defaultRoute } from './modules.js';
 import * as hub from './pages/hub.js';
 import * as maison from './pages/maison.js';
+import * as budget from './pages/budget.js';
+import * as sante from './pages/sante.js';
+import * as vacances from './pages/vacances.js';
 import * as home from './pages/home.js';
 import * as food from './pages/food.js';
 import * as parents from './pages/parents.js';
@@ -14,7 +17,7 @@ import * as plan from './pages/plan.js';
 import * as agenda from './pages/agenda.js';
 import { initMiniPlayer } from './miniplayer.js';
 
-const routes = { hub, maison, home, food, parents, sleep, stats, plan, agenda };
+const routes = { hub, maison, budget, sante, vacances, home, food, parents, sleep, stats, plan, agenda };
 const scope = createScope();
 let currentRoute = null;
 

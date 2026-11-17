@@ -9,6 +9,7 @@ export const pad = (n) => String(n).padStart(2, '0');
 export const norm = (s) => String(s).normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
 export const fmtNum = (n, d = 1) => Number(n).toLocaleString('fr-FR', { maximumFractionDigits: d });
 export const DAY = 864e5;
+export const eur = (n) => Number(n || 0).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
 export function fmtClock(ms) {
   const s = Math.max(0, Math.floor(ms / 1000));

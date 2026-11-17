@@ -4,6 +4,9 @@ import { esc, dayLabel, ageLabel, ago, startOfDay } from '../ui.js';
 import { enabledModules } from '../modules.js';
 import { nextEventLine } from './agenda.js';
 import { maisonSummary } from './maison.js';
+import { budgetSummary } from './budget.js';
+import { santeSummary } from './sante.js';
+import { vacancesSummary } from './vacances.js';
 import { resolvedTheme } from '../store.js';
 
 /** En-tête de l'espace commun (hub, pages sans enfant) : thème et réglages. */
@@ -31,6 +34,9 @@ function summary(s, m) {
   }
   if (m.id === 'agenda') return nextEventLine(s)?.text || 'Rien de prévu';
   if (m.id === 'maison') return maisonSummary(s);
+  if (m.id === 'finance') return budgetSummary(s);
+  if (m.id === 'medical') return santeSummary(s);
+  if (m.id === 'vacation') return vacancesSummary(s);
   return m.desc;
 }
 

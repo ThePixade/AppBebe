@@ -864,3 +864,21 @@ a.hub-tile > .i:last-child { color: var(--text-3); flex: none; }
 .menu-lbl { width: 44px; flex: none; font-size: .74rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--text-3); }
 .menu-txt { flex: 1; font-size: .92rem; font-weight: 600; }
 .menu-txt.is-empty { color: var(--text-3); font-weight: 500; }
+
+/* ---------- Budget, Santé, Vacances ---------- */
+.big-amount { font-size: 2.2rem; font-weight: 800; letter-spacing: -.03em; line-height: 1.1; margin-top: 4px; }
+.text-brick { color: var(--brick); }
+.bar-row { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; align-items: center; margin-top: 14px; font-size: .88rem; font-weight: 600; }
+.bar-track { grid-column: 1 / -1; height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+.bar-track > span { display: block; height: 100%; border-radius: 4px; background: var(--tone, var(--salmon)); }
+.entry { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 0; border-top: 1px solid var(--border); text-align: left; color: inherit; font: inherit; }
+.list-group > .entry:first-child, .cat-title + .entry { border-top: 0; }
+.entry-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.entry-body b { font-size: .94rem; }
+.entry-body small { color: var(--text-2); font-size: .78rem; font-weight: 600; }
+.entry-amt { font-weight: 800; font-variant-numeric: tabular-nums; flex: none; }
+.chips-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.chips-row .pill-btn { flex: none; }
+.pill-btn.is-on { background: var(--text); color: var(--bg); }
+.fiche p { margin: 0 0 10px; font-size: .9rem; }
+.fiche .faint { font-size: .74rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
