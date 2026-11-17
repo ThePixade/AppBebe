@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="Suivi quotidien de bébé, diversification, espace parents et sons apaisants — 100 % sur votre appareil.">
+  <meta name="description" content="L'application de toute la famille : bébé, agenda, budget, santé, vacances… vous activez ce dont vous avez besoin.">
   <meta name="theme-color" content="#1A2235">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="AppBébé">
-  <title>AppBébé</title>
+  <meta name="apple-mobile-web-app-title" content="AppFamille">
+  <title>AppFamille</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -21,7 +21,7 @@
     // Applique le thème avant le premier rendu (pas de flash).
     (function () {
       var t = 'auto';
-      try { t = (JSON.parse(localStorage.getItem('appbebe:v2')) || {}).theme || 'auto'; } catch (e) {}
+      try { t = (JSON.parse(localStorage.getItem('appfamille:v1')) || {}).theme || 'auto'; } catch (e) {}
       if (t === 'auto') { var h = new Date().getHours(); t = (h >= 19 || h < 8) ? 'dark' : 'light'; }
       document.documentElement.dataset.theme = t;
     })();

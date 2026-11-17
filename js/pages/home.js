@@ -1,4 +1,4 @@
-import { store, activeChild, eventsOf, addEvent, removeEvent, restoreEvent, feedingOf } from '../store.js';
+import { store, moduleOn, activeChild, eventsOf, addEvent, removeEvent, restoreEvent, feedingOf } from '../store.js';
 import { icon } from '../icons.js';
 import { esc, fmtClock, fmtDur, fmtNum, ago, time, startOfDay, dayLabel, openSheet, closeSheet, toast, seg, emptyState, toLocalInput, fromLocalInput, $, $$ } from '../ui.js';
 import { appHeader } from '../profiles.js';
@@ -134,7 +134,7 @@ export function render(s) {
       <span class="stats-more">${icon('chart', 15)} Statistiques ${icon('chevronRight', 14)}</span>
     </a>
 
-    <div class="org-row">${orgCard(s)}${agendaCard(s)}</div>
+    <div class="org-row">${orgCard(s)}${moduleOn(s, 'agenda') ? agendaCard(s) : ''}</div>
 
     <section class="action-grid" aria-label="Actions rapides">
       ${card('feed', 'salmon', 'bottle', 'Repas', feedMeta, !!breast)}

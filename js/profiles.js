@@ -2,6 +2,7 @@ import { store, activeChild, resolvedTheme, FEEDING, feedingOf } from './store.j
 import { icon } from './icons.js';
 import { esc, uid, ageLabel, dayKey, ago, openSheet, closeSheet, toast, seg, $ } from './ui.js';
 import { sync, syncNow } from './sync.js';
+import { modulePickerHtml, readPicker } from './modules.js';
 
 export const ROLES = ['Maman', 'Papa', 'Nounou'];
 
@@ -26,6 +27,7 @@ export function appHeader(s) {
       </span>
     </button>
     <div class="header-actions">
+      <a class="icon-btn" href="#/hub" aria-label="Retour à l'accueil de l'application">${icon('grid', 20)}</a>
       <button class="icon-btn" data-global="theme" aria-label="${dark ? 'Passer en mode clair' : 'Passer en mode sombre'}">${icon(dark ? 'sun' : 'moon', 20)}</button>
       <button class="pill-btn" data-global="add-child">${icon('plus', 16)}Profils</button>
     </div>
@@ -150,18 +152,21 @@ export function openProfiles() {
       const draw = () => {
         const s = store.state;
         const cur = activeChild(s);
+        const baby = !!s.modules?.baby;
         body.innerHTML = `
-          <div class="stack" style="gap:4px">
+          <div class="field"><span>Modules activés</span>${modulePickerHtml(s)}</div>
+          ${baby ? `<div class="field mt-24"><span>Enfants</span></div>` : ''}
+          <div class="stack" style="gap:4px" ${baby ? '' : 'hidden'}>
             ${s.children.map((c) => `
-              <div class="profile-row ${c.id === cur.id ? 'is-active' : ''}">
+              <div class="profile-row ${c.id === cur?.id ? 'is-active' : ''}">
                 <button class="row grow" data-pick="${c.id}" style="text-align:left">${avatar(c, 44)}
                   <span class="grow"><b>${esc(c.name)}</b><br><span class="small muted">${ageLabel(c.birth)}</span></span>
                 </button>
-                ${c.id === cur.id ? `<span class="badge tone-sage">${icon('check', 14)} Actif</span>` : ''}
+                ${c.id === cur?.id ? `<span class="badge tone-sage">${icon('check', 14)} Actif</span>` : ''}
                 <button class="icon-btn icon-btn-sm" data-edit="${c.id}" aria-label="Modifier ${esc(c.name)}">${icon('edit', 16)}</button>
               </div>`).join('')}
           </div>
-          <button class="btn btn-ghost btn-block mt-12" data-add>${icon('plus', 18)} Ajouter un enfant</button>
+          ${baby ? `<button class="btn btn-ghost btn-block mt-12" data-add>${icon('plus', 18)} Ajouter un enfant</button>` : ''}
 
           <div class="field mt-24"><span>J'utilise l'app en tant que</span>${seg('me', ROLES.map((r) => [r, r]), s.me)}</div>
           <div class="field"><span>Apparence</span>${seg('theme', [['auto', 'Auto'], ['dark', 'Sombre'], ['light', 'Clair']], s.theme)}</div>
@@ -186,7 +191,17 @@ export function openProfiles() {
         else if (t.hasAttribute('data-export')) exportData();
         else if (t.hasAttribute('data-sync')) syncNow().then(draw);
       });
-      body.addEventListener('change', (e) => { if (e.target.matches('[data-import]')) importData(e.target.files[0]); });
+      body.addEventListener('change', (e) => {
+        if (e.target.matches('[data-import]')) importData(e.target.files[0]);
+        else if (e.target.matches('[data-module]')) {
+          const next = readPicker(body);
+          if (!Object.keys(next).length) { e.target.checked = true; toast('Gardez au moins un module'); return; }
+          store.update((s) => { s.modules = next; });
+          // Bébé activé sans enfant : l'app passe à la création du profil.
+          if (next.baby && !store.state.children.length) { closeSheet(); return; }
+          draw();
+        }
+      });
       draw();
     },
   });
@@ -208,7 +223,7 @@ function exportData() {
   const blob = new Blob([JSON.stringify(store.state, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `appbebe-${dayKey()}.json`;
+  a.download = `appfamille-${dayKey()}.json`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   toast('Sauvegarde exportée');

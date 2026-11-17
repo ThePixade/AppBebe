@@ -1,7 +1,7 @@
 {
-  "name": "AppBébé — Suivi & sommeil de bébé",
-  "short_name": "AppBébé",
-  "description": "Suivi quotidien de bébé, diversification, espace parents et sons apaisants.",
+  "name": "AppFamille — La vie de famille, simplifiée",
+  "short_name": "AppFamille",
+  "description": "Bébé, agenda, budget, santé, vacances : les modules dont votre famille a besoin.",
   "lang": "fr",
   "start_url": "./#/home",
   "scope": "./",

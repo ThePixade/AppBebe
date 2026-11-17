@@ -1,7 +1,7 @@
 import { store } from '../store.js';
 import { icon } from '../icons.js';
 import { esc, uid, time, startOfDay, dayKey, dayLabel, toLocalInput, openSheet, toast, seg, emptyState, DAY } from '../ui.js';
-import { appHeader } from '../profiles.js';
+import { hubHeader } from './hub.js';
 
 /*
  * Agenda commun : rendez-vous, départs en vacances, fêtes de famille…
@@ -73,8 +73,7 @@ export function render(s) {
   const mLabel = first.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
 
   return `
-    ${appHeader(s)}
-    <a class="back-link" href="#/home">${icon('chevronLeft', 16)} Accueil</a>
+    ${hubHeader(s, { back: true })}
     <section class="hero"><p class="eyebrow">Agenda commun</p><h1 class="title">Rendez-vous &amp; vacances</h1></section>
 
     <section class="card cal">

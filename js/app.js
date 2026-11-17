@@ -1,7 +1,9 @@
-import { store, resolvedTheme } from './store.js';
+import { store, resolvedTheme, moduleOn } from './store.js';
 import { initSync } from './sync.js';
 import { $, $$, createScope, closeSheet } from './ui.js';
 import { renderOnboarding, mountOnboarding, openProfiles, openChildForm } from './profiles.js';
+import { renderModuleSetup, mountModuleSetup, moduleOfRoute, defaultRoute } from './modules.js';
+import * as hub from './pages/hub.js';
 import * as home from './pages/home.js';
 import * as food from './pages/food.js';
 import * as parents from './pages/parents.js';
@@ -11,7 +13,7 @@ import * as plan from './pages/plan.js';
 import * as agenda from './pages/agenda.js';
 import { initMiniPlayer } from './miniplayer.js';
 
-const routes = { home, food, parents, sleep, stats, plan, agenda };
+const routes = { hub, home, food, parents, sleep, stats, plan, agenda };
 const scope = createScope();
 let currentRoute = null;
 
@@ -23,8 +25,11 @@ function applyTheme() {
 }
 
 function routeName() {
-  const name = location.hash.replace(/^#\/?/, '') || 'home';
-  return routes[name] ? name : 'home';
+  const s = store.state;
+  const name = location.hash.replace(/^#\/?/, '') || defaultRoute(s);
+  if (!routes[name]) return defaultRoute(s);
+  const owner = moduleOfRoute(name);
+  return owner && !moduleOn(s, owner) ? 'hub' : name;
 }
 
 function render() {
@@ -32,7 +37,15 @@ function render() {
   const main = $('#main');
   scope.dispose();
 
-  if (!s.children.length) {
+  if (!s.modules) {
+    document.body.dataset.page = 'onboarding';
+    applyTheme();
+    main.innerHTML = renderModuleSetup(s);
+    mountModuleSetup(main);
+    currentRoute = 'onboarding';
+    return;
+  }
+  if (moduleOn(s, 'baby') && !s.children.length) {
     document.body.dataset.page = 'onboarding';
     applyTheme();
     main.innerHTML = renderOnboarding(s);
@@ -47,6 +60,7 @@ function render() {
   const scrollY = same ? window.scrollY : 0;
 
   document.body.dataset.page = name;
+  document.body.dataset.space = moduleOfRoute(name) === 'baby' ? 'baby' : 'general';
   applyTheme();
 
   const el = document.createElement('div');
@@ -75,6 +89,7 @@ document.addEventListener('click', (e) => {
     store.update((s) => { s.theme = next; });
   } else if (act === 'profiles') openProfiles();
   else if (act === 'add-child') openChildForm();
+  else if (act === 'settings') openProfiles();
 });
 
 initMiniPlayer();
@@ -86,7 +101,7 @@ store.subscribe(render);
 setInterval(() => { if (store.state.theme === 'auto') applyTheme(); }, 60000);
 
 // Nouveau téléphone : on attend les données du NAS avant d'afficher l'accueil.
-if (store.state.children.length) { render(); initSync(); }
+if (store.state.modules) { render(); initSync(); }
 else initSync().finally(render);
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {

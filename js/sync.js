@@ -9,8 +9,8 @@ import { store } from './store.js';
  */
 
 const API = 'api.php';
-const META_KEY = 'appbebe:sync';
-const SHARED = ['children', 'events', 'timers', 'foods', 'moods', 'checks', 'pumps', 'stock', 'tasks', 'supplies', 'lists', 'agenda'];
+const META_KEY = 'appfamille:sync';
+const SHARED = ['children', 'events', 'timers', 'foods', 'moods', 'checks', 'pumps', 'stock', 'tasks', 'supplies', 'lists', 'agenda', 'modules'];
 const POLL_MS = 10000;
 
 export const sync = { available: false, status: 'off', lastSync: 0, error: null };
@@ -80,7 +80,7 @@ async function call(method, body, rev) {
   });
   let json;
   try { json = JSON.parse(await res.text()); } catch { throw Object.assign(new Error('no-api'), { code: 'no-api' }); }
-  if (json?.app !== 'appbebe') throw Object.assign(new Error('no-api'), { code: 'no-api' });
+  if (json?.app !== 'appfamille') throw Object.assign(new Error('no-api'), { code: 'no-api' });
   if (json.error) throw Object.assign(new Error(json.error), { code: json.error });
   return { status: res.status, json };
 }

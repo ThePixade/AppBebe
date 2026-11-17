@@ -1,5 +1,9 @@
 // Jeu d'icônes linéaires (grille 24 px, trait 1.8) — cohérent et léger.
 const P = {
+  grid: '<rect x="4" y="4" width="6.5" height="6.5" rx="1.8"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.8"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.8"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.8"/>',
+  wallet: '<path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3"/><path d="M4 7.5V17a2.5 2.5 0 0 0 2.5 2.5h12a1.5 1.5 0 0 0 1.5-1.5V9.5a1.5 1.5 0 0 0-1.5-1.5h-12A2.5 2.5 0 0 1 4 7.5z"/><path d="M16 13.5h.01"/>',
+  plane: '<path d="M21 3 10 14"/><path d="M21 3 14.5 21 10 14 3 9.5z"/>',
+  stetho: '<path d="M6 3.5v6a4 4 0 0 0 8 0v-6"/><path d="M10 13.5v1.5a4.5 4.5 0 0 0 9 0v-2"/><circle cx="19" cy="11" r="2"/>',
   home: '<path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z"/>',
   bottle: '<path d="M9.5 2.5h5"/><path d="M10 2.5V5L8.5 7.5A3 3 0 0 0 8 9.2V19a2.5 2.5 0 0 0 2.5 2.5h3A2.5 2.5 0 0 0 16 19V9.2a3 3 0 0 0-.5-1.7L14 5V2.5"/><path d="M8 12h3M8 15.5h3"/>',
   drop: '<path d="M12 3.5s6 6.4 6 10.5a6 6 0 0 1-12 0c0-4.1 6-10.5 6-10.5z"/>',

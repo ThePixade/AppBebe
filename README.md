@@ -1,4 +1,6 @@
-# AppBébé
+# AppFamille (version annexe d'AppBébé)
+
+> Cette branche est une évolution d'AppBébé vers une application de famille **modulaire** (Bébé, Agenda, puis Budget, Santé, Vacances…). `main` garde AppBébé d'origine. Voir [ROADMAP.md](ROADMAP.md).
 
 Le carnet de bord des jeunes parents : suivi quotidien de bébé, diversification alimentaire, espace parents et sons apaisants.
 Application web progressive (PWA) installable sur téléphone, **sans serveur ni compte** : toutes les données restent sur l'appareil.

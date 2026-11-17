@@ -4,10 +4,12 @@ import { uid } from './ui.js';
  * État unique de l'application, persisté en local (localStorage).
  * Aucune donnée ne quitte l'appareil.
  */
-const KEY = 'appbebe:v2';
+const KEY = 'appfamille:v1';
+const LEGACY_KEY = 'appbebe:v2'; // version d'origine : lue une seule fois pour reprendre les données, jamais modifiée
 
 const defaults = () => ({
-  version: 2,
+  version: 1,
+  modules: null,          // { baby, agenda, … } : null = choix des modules pas encore fait
   theme: 'auto',          // auto | dark | light
   me: 'Maman',            // qui utilise l'appareil : Maman | Papa | Nounou
   children: [],           // { id, name, birth, sex: 'F'|'M', photo, hue }
@@ -38,6 +40,22 @@ function load() {
       return { ...d, ...data, timers: { ...d.timers, ...data.timers }, audio: { ...d.audio, ...data.audio }, moods: { ...d.moods, ...data.moods } };
     }
   } catch (e) { console.warn('Lecture des données impossible', e); }
+  return migrateLegacy();
+}
+
+/** Première ouverture : reprend une copie des données de l'app AppBébé d'origine (qui reste intacte). */
+function migrateLegacy() {
+  try {
+    const raw = localStorage.getItem(LEGACY_KEY);
+    if (raw) {
+      const data = JSON.parse(raw);
+      if (Array.isArray(data.children) && data.children.length) {
+        const d = defaults();
+        return { ...d, ...data, version: 1, modules: { baby: true, agenda: true },
+          timers: { ...d.timers, ...data.timers }, audio: { ...d.audio, ...data.audio }, moods: { ...d.moods, ...data.moods } };
+      }
+    }
+  } catch (e) { console.warn('Reprise des données impossible', e); }
   return defaults();
 }
 
@@ -113,6 +131,9 @@ export function setBreastfeeding(on) {
     }
   });
 }
+
+/** Un module est-il activé ? */
+export const moduleOn = (s, id) => !!s.modules?.[id];
 
 /** Le co-parent « naturel » de l'utilisateur courant. */
 export const partnerOf = (me) => (me === 'Papa' ? 'Maman' : 'Papa');

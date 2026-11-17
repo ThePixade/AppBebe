@@ -289,7 +289,9 @@ h1, h2, h3, p { margin: 0; }
 }
 .fab:active { transform: translateY(-14px) scale(.92); }
 body[data-page="sleep"] .fab { background: var(--gold); box-shadow: 0 0 0 5px var(--bg), 0 14px 28px -8px rgba(233, 195, 124, .45); }
-body[data-page="onboarding"] .tabbar { display: none; }
+body[data-page="onboarding"] .tabbar,
+body[data-space="general"] .tabbar { display: none; }
+body[data-space="general"] .app { padding-bottom: calc(env(safe-area-inset-bottom) + 40px); }
 
 /* ---------- Bottom sheet ---------- */
 #sheet-root { position: fixed; inset: 0; z-index: 100; pointer-events: none; }
@@ -826,3 +828,24 @@ body[data-page="sleep"] .miniplayer, body[data-page="onboarding"] .miniplayer { 
 .mp-btn:active { transform: scale(.92); }
 .miniplayer.is-paused .mp-btn { background: var(--surface-2); color: var(--text); }
 .mp-close { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; flex: none; color: var(--text-3); }
+
+/* ---------- Modules & hub ---------- */
+.hub-brand { display: flex; align-items: center; gap: 10px; font-size: 1.05rem; letter-spacing: -.01em; }
+.ob-logo-sm { width: 38px; height: 38px; border-radius: 13px; margin: 0; box-shadow: none; }
+.hub-grid { display: flex; flex-direction: column; gap: 12px; }
+a.hub-tile { display: flex; align-items: center; gap: 14px; color: inherit; text-decoration: none; padding: 16px; transition: transform .15s var(--ease); }
+a.hub-tile + a.hub-tile { margin-top: 0; }
+a.hub-tile:active { transform: scale(.985); }
+.hub-ic { width: 48px; height: 48px; border-radius: 16px; flex: none; }
+.hub-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.hub-text b { font-size: 1.05rem; }
+.hub-text small { color: var(--text-2); font-size: .8rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+a.hub-tile > .i:last-child { color: var(--text-3); flex: none; }
+.module-list { display: flex; flex-direction: column; }
+.module-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--border); cursor: pointer; }
+.module-row:first-child { border-top: 0; }
+.module-row.is-soon { opacity: .55; cursor: default; }
+.module-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.module-text b { display: flex; align-items: center; gap: 8px; font-size: .98rem; }
+.module-text small { color: var(--text-2); font-size: .78rem; line-height: 1.35; }
+.module-row .switch { position: relative; flex: none; }
