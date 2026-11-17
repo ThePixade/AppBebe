@@ -5,7 +5,7 @@ Cette version utilise ses propres clés de stockage (`appfamille:*`), son propre
 À la première ouverture, les données d'AppBébé présentes sur l'appareil sont **copiées** (jamais modifiées).
 
 ## Mode test : données partagées avec AppBébé (NAS)
-Automatique : si `../appbebe/appbebe-data.php` existe, AppFamille lit et écrit ce fichier (même synchro qu'AppBébé).
+Automatique : si un dossier voisin `appbebe` (casse indifférente) contient `appbebe-data.php`, AppFamille lit et écrit ce fichier (même synchro qu'AppBébé).
 Pour des données séparées : créer un fichier vide `no-link-appbebe` dans le dossier d'AppFamille (`touch /share/Web/appfamille/no-link-appbebe`), le supprimer pour relier à nouveau.
 AppBébé ignore les champs ajoutés par AppFamille (modules, tâches, menus) mais les conserve.
 

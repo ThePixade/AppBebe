@@ -15,10 +15,16 @@ header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
 
-// Mode test : si le dossier ../appbebe contient déjà des données, AppFamille les utilise directement
-// (même fichier qu'AppBébé). Pour des données séparées : créer un fichier vide « no-link-appbebe » à côté de api.php.
-$linked = dirname(__DIR__) . '/appbebe/appbebe-data.php';
-define('DATA_FILE', (is_file($linked) && !is_file(__DIR__ . '/no-link-appbebe')) ? $linked : __DIR__ . '/appfamille-data.php');
+// Mode test : si un dossier « appbebe » (majuscules indifférentes : AppBebe, appbebe…) voisin contient déjà
+// des données, AppFamille les utilise directement (même fichier qu'AppBébé).
+// Pour des données séparées : créer un fichier vide « no-link-appbebe » à côté de api.php.
+$linked = null;
+$parent = dirname(__DIR__);
+foreach ((array) @scandir($parent) as $d) {
+    $dir = $parent . '/' . $d;
+    if (strtolower($d) === 'appbebe' && is_dir($dir) && realpath($dir) !== realpath(__DIR__) && is_file($dir . '/appbebe-data.php')) { $linked = $dir . '/appbebe-data.php'; break; }
+}
+define('DATA_FILE', ($linked && !is_file(__DIR__ . '/no-link-appbebe')) ? $linked : __DIR__ . '/appfamille-data.php');
 define('GUARD', "<?php http_response_code(403); exit; ?>\n");
 define('MAX_BYTES', 8 * 1024 * 1024);
 
