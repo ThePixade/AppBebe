@@ -10,7 +10,7 @@ import { store } from './store.js';
 
 const API = 'api.php';
 const META_KEY = 'appfamille:sync';
-const SHARED = ['children', 'events', 'timers', 'foods', 'moods', 'checks', 'pumps', 'stock', 'tasks', 'supplies', 'lists', 'agenda', 'modules'];
+const SHARED = ['children', 'events', 'timers', 'foods', 'moods', 'checks', 'pumps', 'stock', 'tasks', 'supplies', 'lists', 'agenda', 'modules', 'chores', 'menus'];
 const POLL_MS = 10000;
 
 export const sync = { available: false, status: 'off', lastSync: 0, error: null };

@@ -24,6 +24,8 @@ const defaults = () => ({
   supplies: [],           // { id, name, auto: 'diaper'|'formula'|null, unit, qty, since, low, yield?, icon, tone }
   lists: [],              // { id, name, kind: 'shop'|'trip'|'custom', created, items: [{ id, text, qty?, cat?, done }] }
   agenda: [],             // { id, title, kind: 'rdv'|'trip'|'family'|'other', allDay, start, end, place, note, by }
+  chores: [],             // { id, name, every (jours, 0 = une fois), who: ''|'tour'|prénom, turn, last, lastBy, created }
+  menus: {},              // { [AAAA-MM-JJ]: { lunch, dinner } }
   tasks: [],              // { id, text, from, to, at, done }
   pumpOn: null,           // tire-lait affiché dans Parents › Pour Maman (sur CET appareil) : true | false | null (selon les données)
   breastInput: null,      // saisie des tétées sur CET appareil : 'manual' | 'timer' | null (à demander)

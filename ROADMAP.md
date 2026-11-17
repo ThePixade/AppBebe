@@ -16,7 +16,7 @@ Le choix se fait au premier démarrage et reste modifiable dans Réglages. Les m
 | Budget | 🔜 |
 | Santé | 🔜 |
 | Vacances | 🔜 |
-| Maison (courses, tâches, menus) | 🔜 |
+| Maison (courses, tâches ménagères, menus de la semaine) | ✅ v0.2 |
 
 ## Contenu envisagé des prochains modules
 - **Budget** : dépenses par catégorie, budget mensuel, « qui a payé quoi / qui doit combien » entre parents, dépenses récurrentes (abonnements, crèche, assurances), alerte de dépassement.

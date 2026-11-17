@@ -4,6 +4,7 @@ import { $, $$, createScope, closeSheet } from './ui.js';
 import { renderOnboarding, mountOnboarding, openProfiles, openChildForm } from './profiles.js';
 import { renderModuleSetup, mountModuleSetup, moduleOfRoute, defaultRoute } from './modules.js';
 import * as hub from './pages/hub.js';
+import * as maison from './pages/maison.js';
 import * as home from './pages/home.js';
 import * as food from './pages/food.js';
 import * as parents from './pages/parents.js';
@@ -13,7 +14,7 @@ import * as plan from './pages/plan.js';
 import * as agenda from './pages/agenda.js';
 import { initMiniPlayer } from './miniplayer.js';
 
-const routes = { hub, home, food, parents, sleep, stats, plan, agenda };
+const routes = { hub, maison, home, food, parents, sleep, stats, plan, agenda };
 const scope = createScope();
 let currentRoute = null;
 

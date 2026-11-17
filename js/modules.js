@@ -14,7 +14,7 @@ export const MODULES = [
   { id: 'finance',   label: 'Budget',             desc: 'Dépenses, budget du mois, qui doit quoi',                              icon: 'wallet',   tone: 'sage',   ready: false },
   { id: 'medical',   label: 'Santé',              desc: 'Carnet de santé de chacun, vaccins, ordonnances, rendez-vous médicaux', icon: 'stetho',   tone: 'brick',  ready: false },
   { id: 'vacation',  label: 'Vacances',           desc: 'Préparer un voyage : itinéraire, valises, budget',                     icon: 'plane',    tone: 'gold',   ready: false },
-  { id: 'home',      label: 'Maison',             desc: 'Courses, tâches ménagères, menus de la semaine',                       icon: 'home',     tone: 'peach',  ready: false },
+  { id: 'maison',    label: 'Maison',             desc: 'Courses, tâches ménagères, menus de la semaine',                       icon: 'home',     tone: 'peach',  ready: true,  route: 'maison', routes: ['maison'] },
 ];
 
 export const moduleById = (id) => MODULES.find((m) => m.id === id);

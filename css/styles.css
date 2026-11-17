@@ -849,3 +849,18 @@ a.hub-tile > .i:last-child { color: var(--text-3); flex: none; }
 .module-text b { display: flex; align-items: center; gap: 8px; font-size: .98rem; }
 .module-text small { color: var(--text-2); font-size: .78rem; line-height: 1.35; }
 .module-row .switch { position: relative; flex: none; }
+
+/* ---------- Module Maison ---------- */
+.chore { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-left: 4px solid var(--tone, var(--sage)); }
+.chore + .chore { margin-top: 0; }
+.chore-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; text-align: left; color: inherit; font: inherit; }
+.chore-main b { font-size: .98rem; }
+.chore-main small { color: var(--text-2); font-size: .78rem; font-weight: 600; }
+.chore-due { color: var(--tone); font-weight: 800; }
+.menu-day { padding: 14px 16px; }
+.menu-day.is-today { border-color: var(--salmon); }
+.menu-day + .menu-day { margin-top: 0; }
+.menu-meal { display: flex; align-items: baseline; gap: 12px; width: 100%; padding: 9px 0; border-top: 1px solid var(--border); text-align: left; color: inherit; font: inherit; }
+.menu-lbl { width: 44px; flex: none; font-size: .74rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--text-3); }
+.menu-txt { flex: 1; font-size: .92rem; font-weight: 600; }
+.menu-txt.is-empty { color: var(--text-3); font-weight: 500; }

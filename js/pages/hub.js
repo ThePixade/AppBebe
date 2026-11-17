@@ -3,6 +3,7 @@ import { icon } from '../icons.js';
 import { esc, dayLabel, ageLabel, ago, startOfDay } from '../ui.js';
 import { enabledModules } from '../modules.js';
 import { nextEventLine } from './agenda.js';
+import { maisonSummary } from './maison.js';
 import { resolvedTheme } from '../store.js';
 
 /** En-tête de l'espace commun (hub, pages sans enfant) : thème et réglages. */
@@ -29,6 +30,7 @@ function summary(s, m) {
     return `${c.name} · ${ageLabel(c.birth)}${last ? ` · ${ago(last.at)}` : ''}`;
   }
   if (m.id === 'agenda') return nextEventLine(s)?.text || 'Rien de prévu';
+  if (m.id === 'maison') return maisonSummary(s);
   return m.desc;
 }
 
