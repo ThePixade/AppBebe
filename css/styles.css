@@ -882,3 +882,6 @@ a.hub-tile > .i:last-child { color: var(--text-3); flex: none; }
 .pill-btn.is-on { background: var(--text); color: var(--bg); }
 .fiche p { margin: 0 0 10px; font-size: .9rem; }
 .fiche .faint { font-size: .74rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+
+.plain-item { flex: 1; display: flex; align-items: center; gap: 14px; padding: 13px 0; min-width: 0; }
+.plain-item .bullet { width: 8px; height: 8px; border-radius: 50%; background: var(--border-strong); flex: none; margin: 0 9px; }

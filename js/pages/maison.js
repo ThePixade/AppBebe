@@ -1,6 +1,7 @@
 import { store, partnerOf } from '../store.js';
 import { icon } from '../icons.js';
 import { esc, uid, startOfDay, dayKey, openSheet, toast, seg, emptyState, DAY, $ } from '../ui.js';
+import { openForm } from '../forms.js';
 import { hubHeader } from './hub.js';
 import { addShopping } from '../supplies.js';
 
@@ -10,6 +11,7 @@ import { addShopping } from '../supplies.js';
  */
 
 let tab = 'shop';
+let openList = null; // id de la liste ouverte (onglet Listes)
 let weekOffset = 0;
 let focusAdd = false;
 
@@ -36,8 +38,8 @@ export function render(s) {
   return `
     ${hubHeader(s, { back: true })}
     <section class="hero"><p class="eyebrow">Maison</p><h1 class="title">Courses, tâches &amp; menus</h1></section>
-    ${seg('mtab', [['shop', 'Courses'], ['chores', 'Tâches'], ['menus', 'Menus']], tab)}
-    <div class="mt-16">${tab === 'shop' ? shopView(s) : tab === 'chores' ? choresView(s) : menusView(s)}</div>`;
+    ${seg('mtab', [['shop', 'Courses'], ['lists', 'Listes'], ['chores', 'Tâches'], ['menus', 'Menus']], tab)}
+    <div class="mt-16">${tab === 'shop' ? shopView(s) : tab === 'lists' ? listsView(s) : tab === 'chores' ? choresView(s) : menusView(s)}</div>`;
 }
 
 /* ----- Courses ----- */
@@ -64,6 +66,79 @@ function shopView(s) {
     ${done ? `<div class="grid-2 mt-16">
       <button class="btn btn-ghost btn-sm" data-act="uncheck">Tout décocher</button>
       <button class="btn btn-ghost btn-sm" data-act="clear-done">${icon('trash', 16)} Vider les cochés</button></div>` : ''}`;
+}
+
+/* ----- Listes (à cocher ou non) ----- */
+const hlist = (s, id = openList) => (s.homeLists || []).find((l) => l.id === id);
+
+function listsView(s) {
+  const l = openList && hlist(s);
+  if (openList && !l) openList = null;
+  return l ? listDetail(l) : listsOverview(s);
+}
+
+function listsOverview(s) {
+  const lists = s.homeLists || [];
+  const card = (l) => {
+    const n = l.items.length, done = l.items.filter((i) => i.done).length;
+    return `
+    <article class="card chore tone-${l.check ? 'sage' : 'slate'}" data-id="${l.id}">
+      <button class="chore-main" data-act="open-hlist" data-id="${l.id}">
+        <b>${esc(l.name)}</b>
+        <small>${l.check ? `À cocher · ${n ? `${done}/${n}` : 'vide'}` : `Liste simple · ${n} élément${n > 1 ? 's' : ''}`}</small>
+      </button>${icon('chevronRight', 16)}
+    </article>`;
+  };
+  return `
+    <p class="small muted">Idées de cadeaux, bricolage, films à voir, check-list de départ… Chaque liste peut être « à cocher » (avec cases) ou simple (sans cases).</p>
+    <div class="stack mt-12" style="gap:10px">${lists.length ? lists.map(card).join('') : `<div class="card">${emptyState('list', 'Aucune liste', 'Créez votre première liste.')}</div>`}</div>
+    <button class="btn btn-primary btn-block mt-16" data-act="new-hlist">${icon('plus', 18)} Nouvelle liste</button>`;
+}
+
+function listDetail(l) {
+  const n = l.items.length, done = l.items.filter((i) => i.done).length;
+  const row = (i) => l.check
+    ? `<div class="li-row ${i.done ? 'is-done' : ''}">
+        <button class="check ${i.done ? 'is-done' : ''}" data-act="h-toggle" data-id="${i.id}" aria-pressed="${!!i.done}"><span class="check-box">${icon('check', 16)}</span><span class="check-text">${esc(i.text)}${i.done && i.doneBy ? `<small>Coché par ${esc(i.doneBy)}</small>` : i.by ? `<small>Ajouté par ${esc(i.by)}</small>` : ''}</span></button>
+        <button class="icon-btn icon-btn-sm" data-act="h-del" data-id="${i.id}" aria-label="Retirer ${esc(i.text)}">${icon('x', 16)}</button></div>`
+    : `<div class="li-row"><span class="plain-item"><span class="bullet"></span><span class="check-text">${esc(i.text)}${i.by ? `<small>Ajouté par ${esc(i.by)}</small>` : ''}</span></span>
+        <button class="icon-btn icon-btn-sm" data-act="h-del" data-id="${i.id}" aria-label="Retirer ${esc(i.text)}">${icon('x', 16)}</button></div>`;
+  const items = l.check ? [...l.items].sort((a, b) => !!a.done - !!b.done) : l.items;
+  return `
+    <button class="back-link" data-act="close-hlist">${icon('chevronLeft', 16)} Listes</button>
+    <div class="row-between mt-8"><div><h2 class="title" style="font-size:1.4rem">${esc(l.name)}</h2><p class="small faint">${l.check ? `À cocher · ${n ? `${done} / ${n}` : 'vide'}` : `Liste simple · ${n} élément${n > 1 ? 's' : ''}`}</p></div>
+      <button class="icon-btn" data-act="hlist-menu" aria-label="Options de la liste">${icon('settings', 20)}</button></div>
+    ${l.check && n ? `<div class="progress mt-8"><span style="width:${Math.round((done / n) * 100)}%"></span></div>` : ''}
+    <form class="add-line mt-16" data-form="hitem"><input class="input" name="text" placeholder="Ajouter un élément…" autocomplete="off" enterkeyhint="done" maxlength="80"><button class="btn btn-primary" type="submit" aria-label="Ajouter">${icon('plus', 20)}</button></form>
+    <div class="mt-16">${n ? `<div class="card list-group">${items.map(row).join('')}</div>` : `<div class="card">${emptyState('list', 'Liste vide', 'Tapez un élément ci-dessus.')}</div>`}</div>
+    ${l.check && done ? `<div class="grid-2 mt-16"><button class="btn btn-ghost btn-sm" data-act="h-uncheck">Tout décocher</button><button class="btn btn-ghost btn-sm" data-act="h-clear">${icon('trash', 16)} Vider les cochés</button></div>` : ''}`;
+}
+
+function hlistForm(l = null) {
+  openForm({
+    title: l ? 'Options de la liste' : 'Nouvelle liste',
+    fields: [
+      { name: 'name', label: 'Nom de la liste', value: l?.name || '', placeholder: 'Ex. Idées cadeaux, Bricolage…', required: true, maxlength: 50 },
+      { name: 'check', label: 'À cocher', hint: 'Avec des cases à cocher. Désactivé : simple liste, sans cases.', type: 'check', value: l ? l.check : true },
+    ],
+    submit: l ? 'Enregistrer' : 'Créer',
+    onDelete: l && ((api) => {
+      const copy = JSON.parse(JSON.stringify(l));
+      store.update((s) => { s.homeLists = s.homeLists.filter((x) => x.id !== l.id); });
+      openList = null; api.close();
+      toast('Liste supprimée', { action: 'Annuler', onAction: () => store.update((s) => { s.homeLists.push(copy); }) });
+    }),
+    onSubmit(f, api) {
+      let newId = null;
+      if (!l) { newId = uid(); openList = newId; } // ouvre la nouvelle liste directement
+      store.update((s) => {
+        s.homeLists = s.homeLists || [];
+        if (l) Object.assign(s.homeLists.find((x) => x.id === l.id) || {}, { name: f.name, check: f.check });
+        else s.homeLists.push({ id: newId, name: f.name, check: f.check, created: Date.now(), items: [] });
+      });
+      api.close();
+    },
+  });
 }
 
 /* ----- Tâches ----- */
@@ -238,6 +313,15 @@ export function mount(el) {
   if (focusAdd) { focusAdd = false; $('[name=text]', el)?.focus(); }
 
   el.addEventListener('submit', (e) => {
+    const h = e.target.closest('[data-form="hitem"]');
+    if (h) {
+      e.preventDefault();
+      const text = h.elements.text.value.trim();
+      if (!text) return;
+      focusAdd = true;
+      store.update((s) => { hlist(s)?.items.push({ id: uid(), text, ...(hlist(s)?.check ? { done: false } : {}), by: s.me }); });
+      return;
+    }
     const f = e.target.closest('[data-form="shop"]');
     if (!f) return;
     e.preventDefault();
@@ -249,7 +333,7 @@ export function mount(el) {
 
   el.addEventListener('click', (e) => {
     const sg = e.target.closest('[data-seg="mtab"]');
-    if (sg) { tab = sg.dataset.v; store.refresh(); return; }
+    if (sg) { tab = sg.dataset.v; openList = null; store.refresh(); return; }
     const b = e.target.closest('[data-act]');
     if (!b) return;
     const id = b.dataset.id || b.closest('[data-id]')?.dataset.id;
@@ -267,6 +351,24 @@ export function mount(el) {
         const removed = shopOf(store.state).items.filter((i) => i.done);
         upd((l) => { l.items = l.items.filter((i) => !i.done); });
         toast(`${removed.length} article${removed.length > 1 ? 's' : ''} retiré${removed.length > 1 ? 's' : ''}`, { action: 'Annuler', onAction: () => upd((l) => { l.items.push(...removed); }) });
+        break;
+      }
+      case 'new-hlist': hlistForm(); break;
+      case 'open-hlist': openList = id; window.scrollTo(0, 0); store.refresh(); break;
+      case 'close-hlist': openList = null; store.refresh(); break;
+      case 'hlist-menu': hlistForm(hlist(store.state)); break;
+      case 'h-toggle': store.update((s) => { const x = hlist(s)?.items.find((i) => i.id === id); if (x) { x.done = !x.done; if (x.done) x.doneBy = s.me; else delete x.doneBy; } }); break;
+      case 'h-del': {
+        const it = hlist(store.state)?.items.find((i) => i.id === id), lid = openList;
+        store.update((s) => { const l = hlist(s); if (l) l.items = l.items.filter((i) => i.id !== id); });
+        if (it) toast('Élément retiré', { action: 'Annuler', onAction: () => store.update((s) => { hlist(s, lid)?.items.push(it); }) });
+        break;
+      }
+      case 'h-uncheck': store.update((s) => hlist(s)?.items.forEach((i) => { i.done = false; delete i.doneBy; })); break;
+      case 'h-clear': {
+        const lid = openList, removed = hlist(store.state).items.filter((i) => i.done);
+        store.update((s) => { const l = hlist(s); if (l) l.items = l.items.filter((i) => !i.done); });
+        toast(`${removed.length} élément${removed.length > 1 ? 's' : ''} retiré${removed.length > 1 ? 's' : ''}`, { action: 'Annuler', onAction: () => store.update((s) => { hlist(s, lid)?.items.push(...removed); }) });
         break;
       }
       case 'new-chore': choreForm(); break;

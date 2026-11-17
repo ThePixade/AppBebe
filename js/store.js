@@ -30,6 +30,7 @@ const defaults = () => ({
   members: [],            // santé : { id, name, birth, blood, allergies, doctor, notes }
   health: [],             // { id, memberId, type: 'rdv'|'vaccin'|'traitement'|'note', title, at, end?, next?, place, note }
   trips: [],              // { id, name, dest, start, end, budget, lodging, ref, notes, items[], plan[], spend[], agendaId? }
+  homeLists: [],          // module Maison › Listes : { id, name, check (à cocher ?), created, items: [{ id, text, done?, by }] }
   chores: [],             // { id, name, every (jours, 0 = une fois), who: ''|'tour'|prénom, turn, last, lastBy, created }
   menus: {},              // { [AAAA-MM-JJ]: { lunch, dinner } }
   tasks: [],              // { id, text, from, to, at, done }
