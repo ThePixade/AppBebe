@@ -15,7 +15,11 @@ header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
 
-define('DATA_FILE', __DIR__ . '/appfamille-data.php');
+// Mode test : si le fichier vide « link-appbebe » existe à côté de api.php, on lit et écrit
+// directement les données d'AppBébé (../appbebe/appbebe-data.php) au lieu de celles d'AppFamille.
+// Pour revenir à des données séparées : supprimer ce fichier « link-appbebe ».
+$linked = dirname(__DIR__) . '/appbebe/appbebe-data.php';
+define('DATA_FILE', (is_file(__DIR__ . '/link-appbebe') && is_file($linked)) ? $linked : __DIR__ . '/appfamille-data.php');
 define('GUARD', "<?php http_response_code(403); exit; ?>\n");
 define('MAX_BYTES', 8 * 1024 * 1024);
 
@@ -38,7 +42,7 @@ function state_json($rev, $data) {
     return '{"app":"appfamille","rev":' . (int) $rev . ',"data":' . $data . '}';
 }
 
-if (!file_exists(DATA_FILE) && !is_writable(__DIR__)) {
+if (!file_exists(DATA_FILE) && !is_writable(dirname(DATA_FILE))) {
     reply(500, '{"app":"appfamille","error":"not_writable"}');
 }
 

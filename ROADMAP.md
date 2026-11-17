@@ -4,6 +4,11 @@ Version « annexe » d'AppBébé : la branche `main` (AppBébé d'origine) n'est
 Cette version utilise ses propres clés de stockage (`appfamille:*`), son propre cache hors-ligne et son propre fichier de données NAS (`appfamille-data.php`) : les deux apps peuvent coexister sans se marcher dessus.
 À la première ouverture, les données d'AppBébé présentes sur l'appareil sont **copiées** (jamais modifiées).
 
+## Mode test : partager les données avec AppBébé (NAS)
+Pour que AppFamille lise et écrive les mêmes données qu'AppBébé pendant les tests :
+`touch /share/Web/appfamille/link-appbebe` (activer) · `rm /share/Web/appfamille/link-appbebe` (désactiver, retour à des données séparées).
+Les deux apps se synchronisent alors via `appbebe/appbebe-data.php`. AppBébé ignore les champs ajoutés par AppFamille (modules, tâches, menus) mais les conserve.
+
 ## Principe : des modules à activer
 Registre dans `js/modules.js`. Un module = une entrée du registre + une page dans `js/pages/` + une route dans `js/app.js`.
 Le choix se fait au premier démarrage et reste modifiable dans Réglages. Les modules « Bientôt » sont visibles mais non activables.
