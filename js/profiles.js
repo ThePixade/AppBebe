@@ -3,6 +3,7 @@ import { icon } from './icons.js';
 import { esc, uid, ageLabel, dayKey, ago, openSheet, closeSheet, toast, seg, $ } from './ui.js';
 import { sync, syncNow } from './sync.js';
 import { modulePickerHtml, readPicker } from './modules.js';
+import { APP_VERSION } from './version.js';
 
 export const ROLES = ['Maman', 'Papa', 'Nounou'];
 
@@ -178,7 +179,8 @@ export function openProfiles() {
               <label class="btn btn-sm">${icon('upload', 16)} Importer<input type="file" accept="application/json" data-import hidden></label>
             </div>
           </div>
-          ${syncBlock()}`;
+          ${syncBlock()}
+          <p class="small faint mt-16" style="text-align:center">AppFamille · version ${APP_VERSION}</p>`;
       };
       body.addEventListener('click', (e) => {
         const t = e.target.closest('button');

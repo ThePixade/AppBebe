@@ -109,5 +109,9 @@ if (store.state.modules) { render(); initSync(); }
 else initSync().finally(render);
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  // Mise à jour : quand une nouvelle version prend le relais, on recharge une fois pour l'afficher.
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController && !reloaded) { reloaded = true; location.reload(); } });
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
