@@ -1,6 +1,6 @@
 import { store, moduleOn, activeChild, eventsOf, addEvent, removeEvent, restoreEvent, feedingOf } from '../store.js';
 import { icon } from '../icons.js';
-import { esc, fmtClock, fmtDur, fmtNum, ago, time, startOfDay, dayLabel, openSheet, closeSheet, toast, seg, emptyState, toLocalInput, fromLocalInput, $, $$ } from '../ui.js';
+import { esc, swipeDismiss, fmtClock, fmtDur, fmtNum, ago, time, startOfDay, dayLabel, openSheet, closeSheet, toast, seg, emptyState, toLocalInput, fromLocalInput, $, $$ } from '../ui.js';
 import { appHeader } from '../profiles.js';
 import { homeSummary } from '../supplies.js';
 import { fridgeMl, takeFromFridge, giveBack } from '../milk.js';
@@ -168,12 +168,12 @@ export function eventRow(e) {
 function feedBanner(s) {
   const recent = [...s.events].filter((e) => Date.now() - e.at < 2 * 864e5).sort((a, b) => b.at - a.at);
   const e = recent.find((x) => x.by !== s.me) || recent[0];
-  if (!e) return '';
+  if (!e || e.id === s.bannerSeen) return '';
   const child = s.children.find((c) => c.id === e.childId);
   const mine = e.by === s.me;
   const tone = { Maman: 'salmon', Papa: 'slate', Nounou: 'sage' }[e.by] || 'pearl';
   return `
-    <div class="feed-banner tone-${tone}" role="status">
+    <div class="feed-banner tone-${tone}" role="status" data-id="${e.id}" title="Glisser pour retirer">
       <span class="avatar-mini">${esc(e.by[0])}</span>
       <span class="fb-text"><b>${mine ? 'Vous avez' : `${esc(e.by)} a`}</b> ${esc(action(e, child?.name || 'bébé'))}</span>
       <span class="faint" data-live="banner" data-at="${e.at}">${ago(e.at)}</span>
@@ -181,6 +181,8 @@ function feedBanner(s) {
 }
 
 export function mount(el, scope) {
+  const banner = $('.feed-banner', el);
+  if (banner) swipeDismiss(banner, () => { banner.remove(); store.update((s) => { s.bannerSeen = banner.dataset.id; }, { silent: true }); }, { baseTransform: 'translateX(-50%)' });
   el.addEventListener('click', (e) => {
     const b = e.target.closest('[data-act]');
     if (!b) return;
@@ -383,13 +385,15 @@ function saveBreast(c) {
 
 /* ---------- Couches ---------- */
 function openDiaper(c) {
-  let color = null, texture = null;
+  let color = null, texture = null, diaperAt = null; // diaperAt : null = maintenant
   openSheet({
     title: 'Couche', subtitle: `${c.name} · détails facultatifs, puis le type`,
     onMount(body, api) {
       const draw = () => {
         const col = STOOL_COLORS.find((x) => x.id === color);
         body.innerHTML = `
+          <label class="field"><span class="row-between">Heure de la couche${diaperAt ? '<button type="button" class="link" data-act="now">Maintenant</button>' : '<span class="faint">Maintenant</span>'}</span>
+            <input class="input" type="datetime-local" name="diaperAt" value="${toLocalInput(diaperAt ?? Date.now())}" max="${toLocalInput()}"></label>
           <p class="label">Couleur des selles</p>
           <div class="chips mt-8 tone-peach">${STOOL_COLORS.map((x) => `<button class="chip ${color === x.id ? 'is-on' : ''}" data-color="${x.id}"><span class="swatch" style="--c:${x.c}"></span>${x.label}</button>`).join('')}</div>
           ${col?.warn ? `<div class="notice tone-${col.urgent ? 'brick' : 'yellow'} mt-12">${icon('alert', 20)}<span>${col.warn}</span></div>` : ''}
@@ -405,14 +409,21 @@ function openDiaper(c) {
       body.addEventListener('click', (e) => {
         const b = e.target.closest('button');
         if (!b) return;
-        if (b.dataset.color) { color = color === b.dataset.color ? null : b.dataset.color; draw(); }
+        if (b.dataset.act === 'now') { diaperAt = null; draw(); }
+        else if (b.dataset.color) { color = color === b.dataset.color ? null : b.dataset.color; draw(); }
         else if (b.dataset.texture) { texture = texture === b.dataset.texture ? null : b.dataset.texture; draw(); }
         else if (b.dataset.kind) {
           const kind = b.dataset.kind;
-          const ev = addEvent({ childId: c.id, type: 'diaper', kind, ...(kind !== 'wet' ? { color, texture } : {}) });
+          const ev = addEvent({ childId: c.id, type: 'diaper', kind, ...(diaperAt ? { at: diaperAt } : {}), ...(kind !== 'wet' ? { color, texture } : {}) });
           api.close();
-          toast(`Couche ${DIAPER[kind].toLowerCase()} enregistrée`, { action: 'Annuler', onAction: () => removeEvent(ev.id) });
+          toast(`Couche ${DIAPER[kind].toLowerCase()} enregistrée${diaperAt ? ` à ${time(diaperAt)}` : ''}`, { action: 'Annuler', onAction: () => removeEvent(ev.id) });
         }
+      });
+      body.addEventListener('change', (e) => {
+        if (e.target.name !== 'diaperAt') return;
+        const ts = fromLocalInput(e.target.value);
+        diaperAt = Date.now() - ts > 60e3 ? Math.min(ts, Date.now()) : null;
+        draw();
       });
       draw();
     },

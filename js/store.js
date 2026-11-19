@@ -34,6 +34,7 @@ const defaults = () => ({
   chores: [],             // { id, name, every (jours, 0 = une fois), who: ''|'tour'|prénom, turn, last, lastBy, created }
   menus: {},              // { [AAAA-MM-JJ]: { lunch, dinner } }
   tasks: [],              // { id, text, from, to, at, done }
+  bannerSeen: null,       // id de la dernière action retirée de la bannière (sur CET appareil)
   pumpOn: null,           // tire-lait affiché dans Parents › Pour Maman (sur CET appareil) : true | false | null (selon les données)
   breastInput: null,      // saisie des tétées sur CET appareil : 'manual' | 'timer' | null (à demander)
   audio: { sound: 'white', timer: 30, volume: 0.7, fade: true },

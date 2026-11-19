@@ -118,6 +118,42 @@ export function closeSheet(immediate = false) {
 
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
 
+/**
+ * Balayage horizontal (droite ou gauche) pour retirer un élément.
+ * baseTransform : transformation CSS de repos de l'élément (ex. « translateX(-50%) »).
+ */
+export function swipeDismiss(el, onDismiss, { baseTransform = '', threshold = 70 } = {}) {
+  let x0 = null, y0 = 0, dx = 0, t0 = 0, locked = false;
+  const apply = (d) => { el.style.transform = `${baseTransform} translateX(${d}px)`.trim(); el.style.opacity = String(Math.max(0.25, 1 - Math.abs(d) / 260)); };
+  el.style.touchAction = 'pan-y';
+  el.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('button, a')) return; // les boutons gardent leur clic
+    x0 = e.clientX; y0 = e.clientY; dx = 0; locked = false; t0 = Date.now();
+    el.style.transition = 'none';
+    try { el.setPointerCapture(e.pointerId); } catch { /* ignoré */ }
+  });
+  el.addEventListener('pointermove', (e) => {
+    if (x0 === null) return;
+    dx = e.clientX - x0;
+    if (!locked && Math.abs(e.clientY - y0) > Math.abs(dx) + 6) { x0 = null; el.style.transition = ''; apply(0); return; } // geste vertical : on laisse défiler
+    locked = Math.abs(dx) > 6 || locked;
+    if (locked) apply(dx);
+  });
+  const end = () => {
+    if (x0 === null) return;
+    const fast = Math.abs(dx) / Math.max(1, Date.now() - t0) > 0.5;
+    x0 = null;
+    el.style.transition = 'transform .22s ease, opacity .22s ease';
+    if (Math.abs(dx) > threshold || (fast && Math.abs(dx) > 30)) {
+      apply(Math.sign(dx) * Math.max(window.innerWidth, 400));
+      el.style.opacity = '0';
+      setTimeout(() => onDismiss(), 200);
+    } else { apply(0); el.style.opacity = ''; }
+  };
+  el.addEventListener('pointerup', end);
+  el.addEventListener('pointercancel', end);
+}
+
 /* ---------- Toast ---------- */
 let toastTimer;
 export function toast(message, { action, onAction, duration = 3600 } = {}) {
@@ -128,6 +164,7 @@ export function toast(message, { action, onAction, duration = 3600 } = {}) {
   requestAnimationFrame(() => el.classList.add('visible'));
   el.querySelector('.toast-action')?.addEventListener('click', () => { onAction?.(); hide(); });
   const hide = () => { el.classList.remove('visible'); setTimeout(() => el.remove(), 250); };
+  swipeDismiss(el, () => { clearTimeout(toastTimer); el.remove(); });
   toastTimer = setTimeout(hide, duration);
 }
 
