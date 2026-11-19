@@ -26,7 +26,8 @@ const defaults = () => ({
   agenda: [],             // { id, title, kind: 'rdv'|'trip'|'family'|'other', allDay, start, end, place, note, by }
   expenses: [],           // { id, at, amount, cat, note, by, shared, tripId? }
   fixed: [],              // charges fixes mensuelles : { id, name, amount, cat }
-  budget: { monthly: null },
+  budget: { monthly: null, cats: {} },   // plafond mensuel global et par catégorie
+  goals: [],              // objectifs d'épargne : { id, name, target, initial, deadline?, hist: [{ id, at, amount, by }] }
   members: [],            // santé : { id, name, birth, blood, allergies, doctor, notes }
   health: [],             // { id, memberId, type: 'rdv'|'vaccin'|'traitement'|'note', title, at, end?, next?, place, note }
   trips: [],              // { id, name, dest, start, end, budget, lodging, ref, notes, items[], plan[], spend[], agendaId? }

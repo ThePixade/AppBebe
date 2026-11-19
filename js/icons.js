@@ -1,5 +1,13 @@
 // Jeu d'icônes linéaires (grille 24 px, trait 1.8) — cohérent et léger.
 const P = {
+  camera: '<path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2L9 5h6l1.5 2h2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><circle cx="12" cy="13" r="3.5"/>',
+  receipt: '<path d="M6 3.5h12v17l-2.2-1.5-1.9 1.5-1.9-1.5-1.9 1.5-1.9-1.5L6 20.5z"/><path d="M9 8.5h6M9 12h6"/>',
+  target: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".8"/>',
+  repeat: '<path d="M17 3.5 20.5 7 17 10.5"/><path d="M3.5 11V9.5A2.5 2.5 0 0 1 6 7h14.5M7 20.5 3.5 17 7 13.5"/><path d="M20.5 13v1.5a2.5 2.5 0 0 1-2.5 2.5H3.5"/>',
+  fork: '<path d="M7 3.5v7M5 3.5v5a2 2 0 0 0 4 0v-5M7 10.5v10"/><path d="M16 20.5v-17c-2 1-3 4-3 7 0 1.7 1 2.5 3 2.5"/>',
+  tag: '<path d="M3.5 12.5V4.5a1 1 0 0 1 1-1h8l8 8-9 9z"/><circle cx="8" cy="8" r="1.3"/>',
+  coins: '<circle cx="9" cy="9" r="5.5"/><path d="M14.5 6.5A5.5 5.5 0 1 1 9.5 14.5"/>',
+  more: '<circle cx="5.5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18.5" cy="12" r="1.3"/>',
   grid: '<rect x="4" y="4" width="6.5" height="6.5" rx="1.8"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.8"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.8"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.8"/>',
   wallet: '<path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3"/><path d="M4 7.5V17a2.5 2.5 0 0 0 2.5 2.5h12a1.5 1.5 0 0 0 1.5-1.5V9.5a1.5 1.5 0 0 0-1.5-1.5h-12A2.5 2.5 0 0 1 4 7.5z"/><path d="M16 13.5h.01"/>',
   plane: '<path d="M21 3 10 14"/><path d="M21 3 14.5 21 10 14 3 9.5z"/>',

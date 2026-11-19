@@ -885,3 +885,32 @@ a.hub-tile > .i:last-child { color: var(--text-3); flex: none; }
 
 .plain-item { flex: 1; display: flex; align-items: center; gap: 14px; padding: 13px 0; min-width: 0; }
 .plain-item .bullet { width: 8px; height: 8px; border-radius: 50%; background: var(--border-strong); flex: none; margin: 0 9px; }
+
+/* ---------- Budget : compléments ---------- */
+.grid-3 { display: grid; grid-template-columns: 1.7fr 1fr 44px; gap: 8px; }
+.text-sage { color: var(--sage); }
+.mini-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; padding-top: 14px; border-top: 1px solid var(--border); }
+.mini-stats span { display: block; font-size: .7rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.mini-stats b { font-size: 1.02rem; }
+.insight { padding: 14px 16px; }
+.insight + .insight, .grid-2 > .card + .card { margin-top: 0; }
+.insight-v { font-size: 1.45rem; font-weight: 800; letter-spacing: -.02em; margin-top: 2px; }
+.delta { font-size: .7rem; font-weight: 800; margin-left: 4px; }
+.delta.up { color: var(--brick); } .delta.down { color: var(--sage); }
+.goal { padding: 0; } .goal-main { display: block; width: 100%; text-align: left; padding: 16px 18px; color: inherit; font: inherit; }
+.legend { display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: var(--c); margin-right: 6px; vertical-align: -1px; }
+.scan-preview { width: 100%; max-height: 38vh; object-fit: contain; border-radius: 14px; background: var(--surface-2); }
+.receipt-text { white-space: pre-wrap; font-size: .72rem; line-height: 1.4; color: var(--text-2); background: var(--surface-2); padding: 10px; border-radius: 10px; max-height: 30vh; overflow: auto; margin: 8px 0 0; }
+.imp-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); }
+.imp-row:first-child { border-top: 0; } .imp-row.is-dup { opacity: .55; }
+.imp-check input { width: 20px; height: 20px; accent-color: var(--salmon); }
+.imp-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.imp-main b { font-size: .86rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.imp-main small { color: var(--text-3); font-size: .72rem; font-weight: 600; }
+.imp-side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex: none; }
+.imp-side b { font-size: .86rem; }
+.input-sm { height: 32px; padding: 0 8px; font-size: .74rem; border-radius: 10px; width: 130px; }
+details > summary { cursor: pointer; }
+
+.tabs-row { display: grid; grid-template-columns: repeat(5, auto); gap: 6px; justify-content: space-between; }
+.tabs-row .pill-btn { padding: 0 10px; font-size: .8rem; height: 36px; }
