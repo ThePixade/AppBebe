@@ -5,6 +5,7 @@ import { appHeader } from '../profiles.js';
 import { homeSummary } from '../supplies.js';
 import { fridgeMl, takeFromFridge, giveBack } from '../milk.js';
 import { nextEventLine, agendaCardHtml } from './agenda.js';
+import { takePending } from '../premium/actions.js';
 import { openGrowth } from './growth.js';
 import { openEvent, openHistory } from './edit.js';
 
@@ -182,6 +183,8 @@ function feedBanner(s) {
 }
 
 export function mount(el, scope) {
+  const pa = takePending('home');
+  if (pa) setTimeout(() => { const c0 = activeChild(store.state); if (c0) ({ feed: () => openFeed(c0), diaper: () => openDiaper(c0), sleep: () => toggleSleep(c0) })[pa]?.(); }, 60);
   const banner = $('.feed-banner', el);
   if (banner) swipeDismiss(banner, () => { banner.remove(); store.update((s) => { s.bannerSeen = banner.dataset.id; }, { silent: true }); }, { baseTransform: 'translateX(-50%)' });
   el.addEventListener('click', (e) => {

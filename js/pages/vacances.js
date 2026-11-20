@@ -17,14 +17,14 @@ const PEOPLE = ['Maman', 'Papa', 'Nounou'];
 const tsOf = (day) => new Date(day + 'T12:00:00').getTime();
 const fr = (ts, o = { day: 'numeric', month: 'short' }) => new Date(ts).toLocaleDateString('fr-FR', o);
 const nights = (t) => Math.max(1, Math.round((startOfDay(t.end) - startOfDay(t.start)) / DAY));
-const tripState = (t) => {
+export const tripState = (t) => {
   const today = startOfDay(), a = startOfDay(t.start), b = startOfDay(t.end);
   if (today > b) return { past: true, text: 'Terminé', tone: 'slate' };
   if (today >= a) return { text: 'En cours', tone: 'sage' };
   const d = Math.round((a - today) / DAY);
   return { text: d === 1 ? 'Demain' : `Dans ${d} jours`, tone: d <= 7 ? 'salmon' : 'gold' };
 };
-const spent = (t) => (t.spend || []).reduce((a, x) => a + x.amount, 0);
+export const spent = (t) => (t.spend || []).reduce((a, x) => a + x.amount, 0);
 
 export function vacancesSummary(s) {
   const next = [...s.trips].filter((t) => !tripState(t).past).sort((a, b) => a.start - b.start)[0];

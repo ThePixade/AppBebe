@@ -9,6 +9,9 @@ Automatique : si un dossier voisin `appbebe` (casse indifférente) contient `app
 Pour des données séparées : créer un fichier vide `no-link-appbebe` dans le dossier d'AppFamille (`touch /share/Web/appfamille/no-link-appbebe`), le supprimer pour relier à nouveau.
 AppBébé ignore les champs ajoutés par AppFamille (modules, tâches, menus) mais les conserve.
 
+## Démo Premium (AppPre)
+Dossier `AppPre` du NAS : accueil tableau de bord à cases déplaçables, personnalisation complète de l'affichage, navigation configurable. Même code que AppFamille, activé par le nom du dossier. Voir le README.
+
 ## Principe : des modules à activer
 Registre dans `js/modules.js`. Un module = une entrée du registre + une page dans `js/pages/` + une route dans `js/app.js`.
 Le choix se fait au premier démarrage et reste modifiable dans Réglages. Les modules « Bientôt » sont visibles mais non activables.

@@ -4,6 +4,7 @@ import { esc, uid, eur, fmtNum, startOfDay, dayKey, toLocalInput, fromLocalInput
 import { openForm } from '../forms.js';
 import { hubHeader } from './hub.js';
 import { agendaCardHtml } from './agenda.js';
+import { takePending } from '../premium/actions.js';
 import { addShopping } from '../supplies.js';
 import { calendarFor, VACCINE_NAMES, ageMonths } from '../data/sante-calendrier.js';
 import { dosesToday, parseTimes, progress, lastDose, pendingCount } from '../health/doses.js';
@@ -592,7 +593,7 @@ function summarySheet(memberId) {
 }
 
 /* --- Prises --- */
-function takeDose(tid, slot) {
+export function takeDose(tid, slot) {
   const s = store.state, h = s.health.find((x) => x.id === tid); if (!h) return;
   const day = dayKey(Date.now()), ex = (s.doses || []).find((d) => d.tid === tid && d.day === day && d.slot === slot);
   if (ex) { store.update((x) => { x.doses = x.doses.filter((d) => d.id !== ex.id); }); toast('Prise annulée'); return; }
@@ -600,7 +601,7 @@ function takeDose(tid, slot) {
   store.update((x) => { (x.doses ||= []).push(d); });
   toast(`${h.title} noté pour ${mName(s, h.memberId)}`, { action: 'Annuler', onAction: () => store.update((x) => { x.doses = x.doses.filter((y) => y.id !== d.id); }) });
 }
-function adhocDose(tid) {
+export function adhocDose(tid) {
   const s = store.state, h = s.health.find((x) => x.id === tid); if (!h) return;
   const last = lastDose(s, tid);
   if (last && h.minHours && Date.now() < last.at + h.minHours * 36e5 && !confirm(`Dernière prise ${ago(last.at)} : délai minimum de ${h.minHours} h. Noter quand même cette prise ?`)) return;
@@ -611,6 +612,8 @@ function adhocDose(tid) {
 
 /* ============================================================ Interactions */
 export function mount(el) {
+  const pa = takePending('sante');
+  if (pa && store.state.members.length) setTimeout(() => (pa === 'temp' ? mesureForm(null, 'temp') : pa === 'traitement' ? treatmentForm() : null), 60);
   el.addEventListener('click', (e) => {
     const b = e.target.closest('[data-act]'); if (!b) return;
     const S = store.state, id = b.dataset.id;

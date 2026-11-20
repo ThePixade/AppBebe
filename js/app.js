@@ -16,12 +16,27 @@ import * as stats from './pages/stats.js';
 import * as plan from './pages/plan.js';
 import * as agenda from './pages/agenda.js';
 import { initMiniPlayer } from './miniplayer.js';
+import { PREMIUM } from './edition.js';
+import * as dashboard from './premium/dashboard.js';
+import * as perso from './premium/customize.js';
+import { applyUi } from './premium/ui.js';
+import { renderNav, mountNav } from './premium/nav.js';
 
 const routes = { hub, maison, budget, sante, vacances, home, food, parents, sleep, stats, plan, agenda };
+// Édition Premium : l'accueil devient le tableau de bord, et la page Apparence existe.
+if (PREMIUM) { routes.hub = dashboard; routes.perso = perso; }
 const scope = createScope();
 let currentRoute = null;
 
+function updateNav(route, on) {
+  if (!PREMIUM) return;
+  const show = on && document.body.dataset.space === 'general';
+  document.body.dataset.nav = show ? 'on' : 'off';
+  if (show) $('#nav-pre .nav-pre-inner').innerHTML = renderNav(store.state, route);
+}
+
 function applyTheme() {
+  if (PREMIUM) applyUi();
   const theme = resolvedTheme(store.state);
   document.documentElement.dataset.theme = theme;
   const night = theme === 'dark' || document.body.dataset.page === 'sleep';
@@ -43,6 +58,7 @@ function render() {
 
   if (!s.modules) {
     document.body.dataset.page = 'onboarding';
+    updateNav('onboarding', false);
     applyTheme();
     main.innerHTML = renderModuleSetup(s);
     mountModuleSetup(main);
@@ -51,6 +67,7 @@ function render() {
   }
   if (moduleOn(s, 'baby') && !s.children.length) {
     document.body.dataset.page = 'onboarding';
+    updateNav('onboarding', false);
     applyTheme();
     main.innerHTML = renderOnboarding(s);
     mountOnboarding(main);
@@ -76,6 +93,7 @@ function render() {
 
   window.scrollTo(0, scrollY);
   currentRoute = name;
+  updateNav(name, true);
   $$('.tab').forEach((t) => {
     const on = t.dataset.tab === (name === 'stats' || name === 'plan' || name === 'agenda' ? 'home' : name);
     t.classList.toggle('is-active', on);
@@ -99,7 +117,8 @@ document.addEventListener('click', (e) => {
 initMiniPlayer();
 $('#fab').addEventListener('click', () => home.openQuickAdd());
 
-window.addEventListener('hashchange', () => { closeSheet(true); render(); });
+if (PREMIUM) mountNav($('#nav-pre'));
+window.addEventListener('hashchange', () => { closeSheet(true); if (PREMIUM) dashboard.stopEditing(); render(); });
 store.subscribe(render);
 // Le thème « auto » suit l'heure : on vérifie chaque minute.
 setInterval(() => { if (store.state.theme === 'auto') applyTheme(); }, 60000);

@@ -2,6 +2,7 @@ import { store, moduleOn } from '../store.js';
 import { icon } from '../icons.js';
 import { esc, uid, time, startOfDay, dayKey, dayLabel, toLocalInput, openSheet, toast, seg, emptyState, DAY } from '../ui.js';
 import { hubHeader } from './hub.js';
+import { takePending } from '../premium/actions.js';
 
 /*
  * Agenda commun : rendez-vous, départs en vacances, fêtes de famille…
@@ -275,6 +276,7 @@ function openForm(existing, day) {
 
 /* ---------- Interactions ---------- */
 export function mount(el) {
+  if (takePending('agenda') === 'add') setTimeout(() => openForm(null, selected), 60);
   el.addEventListener('click', (e) => {
     const d = e.target.closest('[data-day]');
     if (d) { selected = +d.dataset.day; month = monthStart(selected); store.refresh(); return; }

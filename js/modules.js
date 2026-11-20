@@ -1,6 +1,7 @@
 import { store, moduleOn } from './store.js';
 import { icon } from './icons.js';
 import { esc } from './ui.js';
+import { PREMIUM } from './edition.js';
 
 /*
  * Registre des modules de l'application.
@@ -18,6 +19,12 @@ export const MODULES = [
 ];
 
 export const moduleById = (id) => MODULES.find((m) => m.id === id);
+/** Module avec ses personnalisations (nom, icône, couleur) : édition Premium. */
+export function modInfo(s, id) {
+  const m = moduleById(id); if (!m) return null;
+  const o = PREMIUM ? s.ui?.mods?.[id] : null;
+  return o ? { ...m, ...Object.fromEntries(Object.entries(o).filter(([, v]) => v)) } : m;
+}
 export const enabledModules = (s) => MODULES.filter((m) => m.ready && moduleOn(s, m.id));
 
 /** Module propriétaire d'une page, ou null (hub, pages communes). */
@@ -27,6 +34,7 @@ export function moduleOfRoute(route) {
 
 /** Page d'ouverture : directement Bébé si c'est le seul module, sinon le hub. */
 export function defaultRoute(s) {
+  if (PREMIUM) return 'hub';
   const on = enabledModules(s);
   return on.length === 1 ? on[0].route : 'hub';
 }
@@ -35,12 +43,12 @@ export function defaultRoute(s) {
 export function modulePickerHtml(s, selected = s.modules || {}) {
   return `
   <div class="module-list" data-modules>
-    ${MODULES.map((m) => `
+    ${MODULES.map((m0) => { const m = modInfo(s, m0.id); return `
       <label class="module-row tone-${m.tone} ${m.ready ? '' : 'is-soon'}">
         <span class="dot-ic" style="--tone:var(--${m.tone})">${icon(m.icon, 20)}</span>
         <span class="module-text"><b>${esc(m.label)}${m.ready ? '' : ' <span class="badge">Bientôt</span>'}</b><small>${esc(m.desc)}</small></span>
         <span class="switch"><input type="checkbox" data-module="${m.id}" ${selected[m.id] ? 'checked' : ''} ${m.ready ? '' : 'disabled'}><span class="track"></span></span>
-      </label>`).join('')}
+      </label>`; }).join('')}
   </div>`;
 }
 

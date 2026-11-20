@@ -144,9 +144,9 @@ function hlistForm(l = null) {
 }
 
 /* ----- Tâches ----- */
-function assignee(c) { return c.who === 'tour' ? c.turn : c.who || ''; }
+export function assignee(c) { return c.who === 'tour' ? c.turn : c.who || ''; }
 
-function choreState(c, now = Date.now()) {
+export function choreState(c, now = Date.now()) {
   if (c.every === 0) return { delta: 0, label: 'À faire', tone: 'salmon' };
   const due = startOfDay((c.last ?? c.created) + (c.last ? c.every * DAY : 0));
   const delta = Math.round((due - startOfDay(now)) / DAY);
@@ -216,7 +216,7 @@ function choreForm(c = null) {
   });
 }
 
-function doneChore(id) {
+export function doneChore(id) {
   const before = store.state.chores.find((c) => c.id === id);
   if (!before) return;
   const copy = { ...before };

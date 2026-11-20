@@ -4,6 +4,7 @@ import { esc, uid, ageLabel, dayKey, ago, openSheet, closeSheet, toast, seg, $ }
 import { sync, syncNow } from './sync.js';
 import { modulePickerHtml, readPicker } from './modules.js';
 import { APP_VERSION } from './version.js';
+import { EDITION } from './edition.js';
 
 export const ROLES = ['Maman', 'Papa', 'Nounou'];
 
@@ -155,7 +156,8 @@ export function openProfiles() {
         const cur = activeChild(s);
         const baby = !!s.modules?.baby;
         body.innerHTML = `
-          <div class="field"><span>Modules activés</span>${modulePickerHtml(s)}</div>
+          ${EDITION.premium ? `<a class="btn btn-primary btn-block" href="#/perso">${icon('palette', 18)} Apparence et personnalisation</a>` : ''}
+          <div class="field ${EDITION.premium ? 'mt-16' : ''}"><span>Modules activés</span>${modulePickerHtml(s)}</div>
           ${baby ? `<div class="field mt-24"><span>Enfants</span></div>` : ''}
           <div class="stack" style="gap:4px" ${baby ? '' : 'hidden'}>
             ${s.children.map((c) => `
@@ -180,7 +182,7 @@ export function openProfiles() {
             </div>
           </div>
           ${syncBlock()}
-          <p class="small faint mt-16" style="text-align:center">AppFamille · version ${APP_VERSION}</p>`;
+          <p class="small faint mt-16" style="text-align:center">${EDITION.name}${EDITION.premium ? ' (démo)' : ''} · version ${APP_VERSION}</p>`;
       };
       body.addEventListener('click', (e) => {
         const t = e.target.closest('button');

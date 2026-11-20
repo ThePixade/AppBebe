@@ -1,7 +1,9 @@
 import { store, moduleOn, activeChild, eventsOf } from '../store.js';
 import { icon } from '../icons.js';
 import { esc, dayLabel, ageLabel, ago, startOfDay } from '../ui.js';
-import { enabledModules } from '../modules.js';
+import { enabledModules, modInfo } from '../modules.js';
+import { PREMIUM } from '../edition.js';
+import { uiOf } from '../premium/ui.js';
 import { nextEventLine } from './agenda.js';
 import { maisonSummary } from './maison.js';
 import { budgetSummary } from './budget.js';
@@ -16,8 +18,9 @@ export function hubHeader(s, { back = false, title = 'AppFamille' } = {}) {
   <header class="app-header">
     ${back
       ? `<a class="pill-btn" href="#/hub">${icon('chevronLeft', 16)}Accueil</a>`
-      : `<div class="hub-brand"><span class="ob-logo ob-logo-sm">${icon('grid', 20)}</span><b>${esc(title)}</b></div>`}
+      : `<div class="hub-brand"><span class="ob-logo ob-logo-sm">${icon('grid', 20)}</span><b>${esc((PREMIUM && uiOf(s).familyName) || title)}</b></div>`}
     <div class="header-actions">
+      ${PREMIUM ? `<a class="icon-btn" href="#/perso" aria-label="Apparence et personnalisation">${icon('palette', 20)}</a>` : ''}
       <button class="icon-btn" data-global="theme" aria-label="${dark ? 'Passer en mode clair' : 'Passer en mode sombre'}">${icon(dark ? 'sun' : 'moon', 20)}</button>
       <button class="pill-btn" data-global="settings">${icon('settings', 16)}Réglages</button>
     </div>
@@ -41,7 +44,7 @@ function summary(s, m) {
 }
 
 export function render(s) {
-  const mods = enabledModules(s);
+  const mods = enabledModules(s).map((m) => modInfo(s, m.id));
   return `
     ${hubHeader(s)}
     <section class="hero">

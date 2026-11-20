@@ -1,14 +1,17 @@
 import { uid } from './ui.js';
+import { EDITION } from './edition.js';
 
 /**
  * État unique de l'application, persisté en local (localStorage).
  * Aucune donnée ne quitte l'appareil.
  */
-const KEY = 'appfamille:v1';
+const KEY = EDITION.storageKey;
 const LEGACY_KEY = 'appbebe:v2'; // version d'origine : lue une seule fois pour reprendre les données, jamais modifiée
 
 const defaults = () => ({
   version: 1,
+  ui: null,               // personnalisation de l'affichage (édition Premium), propre à CET appareil
+  memo: '',               // mémo de la famille (accueil Premium), partagé
   modules: null,          // { baby, agenda, … } : null = choix des modules pas encore fait
   theme: 'auto',          // auto | dark | light
   me: 'Maman',            // qui utilise l'appareil : Maman | Papa | Nounou
@@ -57,19 +60,22 @@ function load() {
   return migrateLegacy();
 }
 
-/** Première ouverture : reprend une copie des données de l'app AppBébé d'origine (qui reste intacte). */
+/**
+ * Première ouverture : reprend une COPIE des données déjà présentes sur l'appareil (jamais modifiées) :
+ * AppBébé d'origine et, pour l'édition Premium, AppFamille.
+ */
 function migrateLegacy() {
-  try {
-    const raw = localStorage.getItem(LEGACY_KEY);
-    if (raw) {
-      const data = JSON.parse(raw);
-      if (Array.isArray(data.children) && data.children.length) {
-        const d = defaults();
-        return { ...d, ...data, version: 1, modules: { baby: true, agenda: true },
-          timers: { ...d.timers, ...data.timers }, audio: { ...d.audio, ...data.audio }, moods: { ...d.moods, ...data.moods } };
-      }
-    }
-  } catch (e) { console.warn('Reprise des données impossible', e); }
+  const sources = EDITION.premium ? ['appfamille:v1', LEGACY_KEY] : [LEGACY_KEY];
+  for (const k of sources) {
+    try {
+      const raw = localStorage.getItem(k); if (!raw) continue;
+      const data = JSON.parse(raw), d = defaults();
+      const usable = k === LEGACY_KEY ? Array.isArray(data.children) && data.children.length : !!(data && (data.modules || (data.children && data.children.length)));
+      if (!usable) continue;
+      return { ...d, ...data, version: 1, ui: null, modules: data.modules || { baby: true, agenda: true },
+        timers: { ...d.timers, ...data.timers }, audio: { ...d.audio, ...data.audio }, moods: { ...d.moods, ...data.moods } };
+    } catch (e) { console.warn('Reprise des données impossible', e); }
+  }
   return defaults();
 }
 

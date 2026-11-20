@@ -1,4 +1,5 @@
 import { store } from './store.js';
+import { EDITION } from './edition.js';
 
 /*
  * Synchronisation entre téléphones via api.php (hébergé sur le NAS).
@@ -9,8 +10,8 @@ import { store } from './store.js';
  */
 
 const API = 'api.php';
-const META_KEY = 'appfamille:sync';
-const SHARED = ['children', 'events', 'timers', 'foods', 'moods', 'checks', 'pumps', 'stock', 'tasks', 'supplies', 'lists', 'agenda', 'modules', 'chores', 'menus', 'homeLists', 'expenses', 'fixed', 'budget', 'goals', 'members', 'health', 'doses', 'meds', 'contacts', 'trips'];
+const META_KEY = EDITION.syncKey;
+const SHARED = ['children', 'events', 'timers', 'foods', 'moods', 'checks', 'pumps', 'stock', 'tasks', 'supplies', 'lists', 'agenda', 'modules', 'chores', 'menus', 'homeLists', 'expenses', 'fixed', 'budget', 'goals', 'members', 'health', 'doses', 'meds', 'contacts', 'memo', 'trips'];
 const POLL_MS = 10000;
 
 export const sync = { available: false, status: 'off', lastSync: 0, error: null };

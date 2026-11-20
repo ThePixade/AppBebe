@@ -3,6 +3,7 @@ import { icon } from '../icons.js';
 import { esc, uid, eur, dayKey, startOfDay, toast, emptyState, openSheet, DAY } from '../ui.js';
 import { openForm, num } from '../forms.js';
 import { hubHeader } from './hub.js';
+import { takePending } from '../premium/actions.js';
 import { CATS, INCOME_CATS, catOf, guessCategory, guessIncomeCategory, normText } from '../budget/cats.js';
 import { monthStats, balanceAll, pace, deltaByCat, yearStats, frequent, upcomingFixed, monthStart, addMonths, kindOf, goalSaved } from '../budget/stats.js';
 import { parseReceipt } from '../budget/receipt.js';
@@ -630,6 +631,7 @@ function menuSheet() {
 
 /* ============================================================ Interactions */
 export function mount(el) {
+  if (takePending('budget') === 'new-expense') setTimeout(() => expenseForm(), 60);
   el.addEventListener('input', (e) => {
     const f = e.target.closest('[data-filter]'); if (!f) return;
     filter[f.dataset.filter] = f.value;

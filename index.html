@@ -18,12 +18,21 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
   <link rel="stylesheet" href="css/styles.css">
   <script>
-    // Applique le thème avant le premier rendu (pas de flash).
+    // Applique le thème (et, en édition Premium, la personnalisation enregistrée) avant le premier rendu : pas de flash.
     (function () {
+      var pre = /\/apppre(\/|$)/i.test(location.pathname) || /[?&]edition=pre/.test(location.search);
       var t = 'auto';
-      try { t = (JSON.parse(localStorage.getItem('appfamille:v1')) || {}).theme || 'auto'; } catch (e) {}
+      try { t = (JSON.parse(localStorage.getItem(pre ? 'apppre:v1' : 'appfamille:v1')) || {}).theme || 'auto'; } catch (e) {}
       if (t === 'auto') { var h = new Date().getHours(); t = (h >= 19 || h < 8) ? 'dark' : 'light'; }
       document.documentElement.dataset.theme = t;
+      if (pre) {
+        document.documentElement.dataset.edition = 'pre';
+        var m = document.querySelector('link[rel="manifest"]'); if (m) m.setAttribute('href', 'manifest-pre.webmanifest');
+        var i = document.querySelector('link[rel="apple-touch-icon"]'); if (i) i.setAttribute('href', 'icons/icon-pre-192.png');
+        document.title = 'AppFamille Premium';
+        var at = document.querySelector('meta[name="apple-mobile-web-app-title"]'); if (at) at.setAttribute('content', 'AppPre');
+        try { var css = localStorage.getItem('apppre:css'); if (css) { var st = document.createElement('style'); st.id = 'ui-override'; st.textContent = css; document.head.appendChild(st); } } catch (e) {}
+      }
     })();
   </script>
 </head>
@@ -41,6 +50,8 @@
       <a class="tab" data-tab="sleep" href="#/sleep"><svg class="i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>Sommeil</a>
     </div>
   </nav>
+
+  <nav class="nav-pre" id="nav-pre" aria-label="Navigation principale"><div class="nav-pre-inner"></div></nav>
 
   <div id="sheet-root"></div>
   <div id="toast-root" aria-live="polite"></div>
