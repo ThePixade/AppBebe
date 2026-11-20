@@ -3,6 +3,7 @@ import { icon } from '../icons.js';
 import { esc, uid, eur, fmtNum, startOfDay, dayKey, toLocalInput, fromLocalInput, ageLabel, ago, DAY, toast, emptyState, openSheet } from '../ui.js';
 import { openForm } from '../forms.js';
 import { hubHeader } from './hub.js';
+import { agendaCardHtml } from './agenda.js';
 import { addShopping } from '../supplies.js';
 import { calendarFor, VACCINE_NAMES, ageMonths } from '../data/sante-calendrier.js';
 import { dosesToday, parseTimes, progress, lastDose, pendingCount } from '../health/doses.js';
@@ -152,6 +153,7 @@ function todayView(s) {
       ${rows.length ? rows.map((r) => doseRow(s, r)).join('') : '<p class="small faint" style="padding:6px 0 10px">Aucun traitement en cours. Ajoutez un médicament avec « Ajouter ».</p>'}</div>
     ${alerts.length ? `<div class="card list-group mt-12"><p class="cat-title">À surveiller</p>${alerts.join('')}</div>` : ''}
     ${section('À venir', a.upcoming.slice(0, 5).map((h) => itemRow(s, h)), 'Aucun rendez-vous prévu.')}
+    ${agendaCardHtml(s, 'sante', { title: "Autres rendez-vous de l'agenda", exclude: s.health.map((h) => h.agendaId).filter(Boolean) })}
     ${treat.length ? section('Autres traitements', treat.map((h) => itemRow(s, h)), '') : ''}`;
 }
 
@@ -339,7 +341,7 @@ function rdvForm(h = null, preset = {}) {
           const ev = x.agenda.find((e) => e.id === h.agendaId); if (ev) Object.assign(ev, { title: `${f.title} · ${who2}`, start: at, place: f.place });
         } else {
           const e = { id: uid(), ...data };
-          if (f.agenda) { e.agendaId = uid(); x.agenda.push({ id: e.agendaId, title: `${f.title} · ${who2}`, kind: 'rdv', allDay: false, start: at, end: null, place: f.place, note: '', by: x.me }); }
+          if (f.agenda) { e.agendaId = uid(); x.agenda.push({ id: e.agendaId, title: `${f.title} · ${who2}`, cat: 'sante', kind: 'rdv', allDay: false, start: at, end: null, place: f.place, note: '', by: x.me }); }
           x.health.push(e);
           if (f.budget && f.cost > 0) x.expenses.push({ id: uid(), at: Date.now(), amount: f.cost, cat: 'sante', note: `${f.title} · ${who2}`, by: x.me, shared: true, kind: 'out' });
         }

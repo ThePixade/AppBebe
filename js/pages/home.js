@@ -4,7 +4,7 @@ import { esc, swipeDismiss, fmtClock, fmtDur, fmtNum, ago, time, startOfDay, day
 import { appHeader } from '../profiles.js';
 import { homeSummary } from '../supplies.js';
 import { fridgeMl, takeFromFridge, giveBack } from '../milk.js';
-import { nextEventLine } from './agenda.js';
+import { nextEventLine, agendaCardHtml } from './agenda.js';
 import { openGrowth } from './growth.js';
 import { openEvent, openHistory } from './edit.js';
 
@@ -135,6 +135,7 @@ export function render(s) {
     </a>
 
     <div class="org-row">${orgCard(s)}${moduleOn(s, 'agenda') ? agendaCard(s) : ''}</div>
+    ${agendaCardHtml(s, 'bebe', { title: 'Rendez-vous de Bébé' })}
 
     <section class="action-grid" aria-label="Actions rapides">
       ${card('feed', 'salmon', 'bottle', 'Repas', feedMeta, !!breast)}

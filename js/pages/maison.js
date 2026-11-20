@@ -2,6 +2,7 @@ import { store, partnerOf } from '../store.js';
 import { icon } from '../icons.js';
 import { esc, uid, startOfDay, dayKey, openSheet, toast, seg, emptyState, DAY, $ } from '../ui.js';
 import { openForm } from '../forms.js';
+import { agendaCardHtml } from './agenda.js';
 import { hubHeader } from './hub.js';
 import { addShopping } from '../supplies.js';
 
@@ -39,7 +40,8 @@ export function render(s) {
     ${hubHeader(s, { back: true })}
     <section class="hero"><p class="eyebrow">Maison</p><h1 class="title">Courses, tâches &amp; menus</h1></section>
     ${seg('mtab', [['shop', 'Courses'], ['lists', 'Listes'], ['chores', 'Tâches'], ['menus', 'Menus']], tab)}
-    <div class="mt-16">${tab === 'shop' ? shopView(s) : tab === 'lists' ? listsView(s) : tab === 'chores' ? choresView(s) : menusView(s)}</div>`;
+    <div class="mt-16">${tab === 'shop' ? shopView(s) : tab === 'lists' ? listsView(s) : tab === 'chores' ? choresView(s) : menusView(s)}</div>
+    ${agendaCardHtml(s, 'maison', { title: "Dans l'agenda" })}`;
 }
 
 /* ----- Courses ----- */

@@ -3,6 +3,7 @@ import { icon } from '../icons.js';
 import { esc, uid, eur, startOfDay, dayKey, DAY, toast, seg, emptyState, openSheet } from '../ui.js';
 import { openForm } from '../forms.js';
 import { hubHeader } from './hub.js';
+import { agendaCardHtml } from './agenda.js';
 
 /*
  * Module Vacances : une fiche par voyage — valises (liste générée selon la durée et le type de séjour),
@@ -52,7 +53,8 @@ function listView(s) {
             ${n ? `<small>Valises : ${done}/${n}</small>` : ''}
           </button>${icon('chevronRight', 16)}
         </article>`; }).join('') : `<div class="card">${emptyState('plane', 'Aucun voyage', 'Créez un voyage pour préparer valises, programme et budget.')}</div>`}
-    </div>`;
+    </div>
+    ${agendaCardHtml(s, 'vacances', { title: "Dates de l'agenda", exclude: s.trips.map((t) => t.agendaId).filter(Boolean) })}`;
 }
 
 function tripView(s, t) {
@@ -251,7 +253,7 @@ function tripForm(t = null) {
         if (!t) x.trips.push(tr);
         const ev = x.agenda.find((e) => e.id === tr.agendaId);
         if (f.agenda) {
-          const evData = { title: tr.name, kind: 'trip', allDay: true, start, end, place: tr.dest || '', note: '' };
+          const evData = { title: tr.name, cat: 'vacances', kind: 'trip', allDay: true, start, end, place: tr.dest || '', note: '' };
           if (ev) Object.assign(ev, evData); else { tr.agendaId = uid(); x.agenda.push({ id: tr.agendaId, by: x.me, ...evData }); }
         } else if (ev) { x.agenda = x.agenda.filter((e) => e.id !== ev.id); delete tr.agendaId; }
       });

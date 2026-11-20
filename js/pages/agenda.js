@@ -1,4 +1,4 @@
-import { store } from '../store.js';
+import { store, moduleOn } from '../store.js';
 import { icon } from '../icons.js';
 import { esc, uid, time, startOfDay, dayKey, dayLabel, toLocalInput, openSheet, toast, seg, emptyState, DAY } from '../ui.js';
 import { hubHeader } from './hub.js';
@@ -16,7 +16,54 @@ export const KINDS = {
   other: { label: 'Autre', tone: 'slate', allDay: false },
 };
 
+/*
+ * Catégorie d'un événement = le module auquel il se rattache (Santé, Vacances, Bébé…), pour retrouver
+ * ses rendez-vous par module. `kind` (rdv / trip / family / other) est gardé pour la compatibilité.
+ */
+export const CATS = {
+  sante: { label: 'Santé', tone: 'brick', icon: 'stetho', kind: 'rdv', allDay: false, module: 'medical' },
+  vacances: { label: 'Vacances', tone: 'gold', icon: 'plane', kind: 'trip', allDay: true, module: 'vacation' },
+  bebe: { label: 'Bébé', tone: 'salmon', icon: 'baby', kind: 'rdv', allDay: false, module: 'baby' },
+  maison: { label: 'Maison', tone: 'peach', icon: 'home', kind: 'other', allDay: false, module: 'maison' },
+  budget: { label: 'Budget', tone: 'sage', icon: 'wallet', kind: 'other', allDay: false, module: 'finance' },
+  famille: { label: 'Famille & fêtes', tone: 'slate', icon: 'users', kind: 'family', allDay: true },
+  autre: { label: 'Autre', tone: 'pearl', icon: 'calendar', kind: 'other', allDay: false },
+};
+
+/** Catégorie d'un événement ; déduite pour les anciens événements (créés avant les catégories). */
+export function catOfEvent(e, s = store.state) {
+  if (e.cat && CATS[e.cat]) return e.cat;
+  if (e.kind === 'trip' || (s.trips || []).some((t) => t.agendaId === e.id)) return 'vacances';
+  if ((s.health || []).some((h) => h.agendaId === e.id)) return 'sante';
+  if (e.kind === 'family') return 'famille';
+  const t = String(e.title || '').toLowerCase();
+  if (/vaccin|p[ée]diatre|m[ée]decin|dentiste|docteur|\bdr\b|h[ôo]pital|kin[ée]|prise de sang|analyse|ophtalmo|dermato|gyn[ée]co|sage-femme|pharmacie|radio|infirmi/.test(t)) return 'sante';
+  if (/cr[èe]che|nounou|assistante maternelle|garderie/.test(t)) return 'bebe';
+  return 'autre';
+}
+/** Catégories proposées : celles des modules activés, plus Famille et Autre. */
+export const enabledCats = (s) => Object.entries(CATS).filter(([, c]) => !c.module || moduleOn(s, c.module)).map(([k]) => k);
+
+const isUpcoming = (e) => startOfDay(e.end ?? e.start) >= startOfDay() && (e.allDay || (e.end ?? e.start) >= Date.now());
+export function upcomingOf(s, cat, { exclude = [] } = {}) {
+  return (s.agenda || []).filter((e) => catOfEvent(e, s) === cat && isUpcoming(e) && !exclude.includes(e.id)).sort((a, b) => a.start - b.start);
+}
+const relDay = (ts) => { const d = Math.round((startOfDay(ts) - startOfDay()) / DAY); return d === 0 ? "aujourd'hui" : d === 1 ? 'demain' : d < 0 ? 'en cours' : d < 7 ? `dans ${d} jours` : new Date(ts).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }); };
+
+/** Carte « rendez-vous de ce module » à afficher dans Santé, Vacances, Bébé, Maison… (vide s'il n'y en a pas). */
+export function agendaCardHtml(s, cat, { title = "Dans l'agenda", exclude = [], limit = 4 } = {}) {
+  if (!moduleOn(s, 'agenda')) return '';
+  const evs = upcomingOf(s, cat, { exclude });
+  if (!evs.length) return '';
+  const c = CATS[cat];
+  return `<div class="card list-group mt-12"><p class="cat-title">${esc(title)}<small>${evs.length}</small></p>
+    ${evs.slice(0, limit).map((e) => `<a class="entry" href="#/agenda" data-agenda-cat="${cat}" data-agenda-day="${startOfDay(e.start)}"><span class="dot-ic" style="--tone:var(--${c.tone})">${icon(c.icon, 18)}</span>
+      <span class="entry-body"><b>${esc(e.title)}</b><small>${esc(relDay(e.start))}${e.allDay ? '' : ` · ${time(e.start)}`}${e.place ? ` · ${esc(e.place)}` : ''}</small></span></a>`).join('')}
+    ${evs.length > limit ? `<a class="small" style="padding:8px 0;display:block" href="#/agenda" data-agenda-cat="${cat}">Voir les ${evs.length} dans l'agenda</a>` : ''}</div>`;
+}
+
 let month = null;     // 1er jour du mois affiché
+let catFilter = 'all'; // catégorie affichée dans l'agenda
 let selected = null;  // jour sélectionné (début de journée)
 
 const addDays = (ts, n) => { const d = new Date(ts); d.setDate(d.getDate() + n); return startOfDay(d); };
@@ -41,15 +88,21 @@ export function nextEventLine(s) {
   const s0 = startOfDay(ev.start);
   const diff = Math.round((s0 - today) / DAY);
   const rel = s0 <= today ? (startOfDay(ev.end ?? ev.start) > today && s0 < today ? 'en cours' : 'aujourd\'hui') : diff === 1 ? 'demain' : diff < 7 ? `dans ${diff} jours` : fmtDay(s0);
-  return { title: ev.title, tone: KINDS[ev.kind]?.tone || 'slate', text: `${ev.title} · ${rel}${!ev.allDay && s0 >= today && diff <= 1 ? ` à ${time(ev.start)}` : ''}` };
+  return { title: ev.title, tone: CATS[catOfEvent(ev, s)].tone, text: `${ev.title} · ${rel}${!ev.allDay && s0 >= today && diff <= 1 ? ` à ${time(ev.start)}` : ''}` };
 }
+
+document.addEventListener('click', (e) => {
+  const a = e.target.closest('[data-agenda-cat]'); if (!a) return;
+  catFilter = a.dataset.agendaCat;
+  if (a.dataset.agendaDay) { selected = +a.dataset.agendaDay; month = monthStart(selected); }
+});
 
 /* ---------- Rendu ---------- */
 export function render(s) {
   const today = startOfDay();
   if (!month) month = monthStart(today);
   if (!selected) selected = today;
-  const evs = s.agenda || [];
+  const evs = (s.agenda || []).filter((e) => catFilter === 'all' || catOfEvent(e, s) === catFilter);
 
   const first = new Date(month);
   const offset = (first.getDay() + 6) % 7; // semaine du lundi
@@ -64,17 +117,21 @@ export function render(s) {
     return `
       <button class="cal-day ${out ? 'is-out' : ''} ${d0 === today ? 'is-today' : ''} ${d0 === selected ? 'is-sel' : ''}" data-day="${d0}" aria-label="${esc(dayLabel(d0))}${day.length ? `, ${day.length} événement${day.length > 1 ? 's' : ''}` : ''}">
         <span class="cal-n">${new Date(d0).getDate()}</span>
-        <span class="cal-dots">${day.slice(0, 3).map((e) => `<i class="tone-${KINDS[e.kind]?.tone || 'slate'}"></i>`).join('')}</span>
+        <span class="cal-dots">${day.slice(0, 3).map((e) => `<i class="tone-${CATS[catOfEvent(e, s)].tone}"></i>`).join('')}</span>
       </button>`;
   };
 
   const dayEvs = evs.filter((e) => covers(e, selected)).sort(byStart);
   const upcoming = evs.filter((e) => startOfDay(e.end ?? e.start) >= today && !covers(e, selected)).sort((a, b) => a.start - b.start).slice(0, 6);
   const mLabel = first.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  const cats = enabledCats(s);
+  if (catFilter !== 'all' && !cats.includes(catFilter)) catFilter = 'all';
+  const perModule = cats.map((k) => ({ k, list: upcomingOf(s, k) })).filter((x) => x.list.length);
 
   return `
     ${hubHeader(s, { back: true })}
     <section class="hero"><p class="eyebrow">Agenda commun</p><h1 class="title">Rendez-vous &amp; vacances</h1></section>
+    <div class="chips-row" style="margin:-4px 0 14px">${[['all', 'Tout'], ...cats.map((k) => [k, CATS[k].label])].map(([k, l]) => `<button class="pill-btn ${catFilter === k ? 'is-on' : ''}" data-act="cat" data-v="${k}">${esc(l)}</button>`).join('')}</div>
 
     <section class="card cal">
       <div class="row-between cal-nav">
@@ -92,11 +149,17 @@ export function render(s) {
       ${dayEvs.length ? dayEvs.map(evCard).join('') : `<div class="card">${emptyState('calendar', 'Rien de prévu ce jour', 'Ajoutez un rendez-vous ou un départ en vacances.')}</div>`}
     </section>
 
-    ${upcoming.length ? `<section class="section"><div class="section-head"><h2>À venir</h2></div>${upcoming.map(evCard).join('')}</section>` : ''}`;
+    ${catFilter === 'all' && perModule.length ? `
+    <section class="card list-group section"><p class="cat-title">Par module</p>
+      ${perModule.map(({ k, list }) => `<button class="entry" data-act="cat" data-v="${k}"><span class="dot-ic" style="--tone:var(--${CATS[k].tone})">${icon(CATS[k].icon, 18)}</span>
+        <span class="entry-body"><b>${esc(CATS[k].label)} · ${list.length} à venir</b><small>${esc(list[0].title)} · ${esc(relDay(list[0].start))}</small></span>${icon('chevronRight', 16)}</button>`).join('')}
+    </section>` : ''}
+
+    ${upcoming.length ? `<section class="section"><div class="section-head"><h2>À venir${catFilter !== 'all' ? ` · ${esc(CATS[catFilter].label)}` : ''}</h2></div>${upcoming.map(evCard).join('')}</section>` : ''}`;
 }
 
 function evCard(e) {
-  const k = KINDS[e.kind] || KINDS.other;
+  const c = CATS[catOfEvent(e)], k = { tone: c.tone, label: c.label };
   const multi = startOfDay(e.start) !== startOfDay(e.end ?? e.start);
   return `
     <button class="card ev-card tone-${k.tone}" data-act="open" data-id="${e.id}">
@@ -117,8 +180,11 @@ function openForm(existing, day) {
   const isNew = !existing;
   const base = new Date(day || selected || startOfDay());
   const nine = base.getTime() + 9 * 3600e3;
-  const ev = existing ? { ...existing } : { title: '', kind: 'rdv', allDay: false, start: nine, end: null, place: '', note: '' };
-  const st = { kind: ev.kind, allDay: !!ev.allDay, start: ev.start, end: ev.end ?? null };
+  const cats0 = enabledCats(store.state);
+  const ev = existing ? { ...existing } : { title: '', allDay: false, start: nine, end: null, place: '', note: '' };
+  const startCat = existing ? catOfEvent(existing) : (catFilter !== 'all' ? catFilter : 'autre');
+  const st = { cat: startCat, allDay: existing ? !!ev.allDay : CATS[startCat].allDay, start: ev.start, end: ev.end ?? null };
+  const catList = existing && !cats0.includes(startCat) ? [...cats0, startCat] : cats0;
 
   const dateFields = () => st.allDay
     ? `<div class="grid-2">
@@ -132,10 +198,10 @@ function openForm(existing, day) {
     title: isNew ? 'Nouvel événement' : 'Modifier l\'événement',
     subtitle: isNew ? '' : `Ajouté par ${ev.by || '—'}`,
     content: `
-      <form class="js-form tone-${KINDS[st.kind].tone}">
+      <form class="js-form tone-${CATS[st.cat].tone}">
         <label class="field"><span>Titre</span><input class="input" name="title" value="${esc(ev.title)}" maxlength="60" placeholder="Ex. Vaccin chez le pédiatre" required></label>
-        <div class="field"><span>Type</span>
-          <div class="chips mt-8" data-pick="kind">${Object.entries(KINDS).map(([k, v]) => `<button type="button" class="chip tone-${v.tone} ${k === st.kind ? 'is-on' : ''}" data-v="${k}">${v.label}</button>`).join('')}</div>
+        <div class="field"><span>Catégorie <small class="faint">(pour le retrouver dans le module)</small></span>
+          <div class="chips mt-8" data-pick="cat">${catList.map((k) => `<button type="button" class="chip tone-${CATS[k].tone} ${k === st.cat ? 'is-on' : ''}" data-v="${k}">${esc(CATS[k].label)}</button>`).join('')}</div>
         </div>
         <div class="field"><span>Durée</span>${seg('allday', [['0', 'Heure précise'], ['1', 'Toute la journée']], st.allDay ? '1' : '0')}</div>
         <div class="js-dates">${dateFields()}</div>
@@ -162,12 +228,12 @@ function openForm(existing, day) {
         }
       };
       body.querySelector('[data-close]')?.addEventListener('click', () => api.close());
-      body.querySelectorAll('[data-pick=kind] .chip').forEach((b) => b.addEventListener('click', () => {
-        st.kind = b.dataset.v;
-        body.querySelectorAll('[data-pick=kind] .chip').forEach((x) => x.classList.toggle('is-on', x === b));
-        form.className = `js-form tone-${KINDS[st.kind].tone}`;
+      body.querySelectorAll('[data-pick=cat] .chip').forEach((b) => b.addEventListener('click', () => {
+        st.cat = b.dataset.v;
+        body.querySelectorAll('[data-pick=cat] .chip').forEach((x) => x.classList.toggle('is-on', x === b));
+        form.className = `js-form tone-${CATS[st.cat].tone}`;
         if (isNew) { // les départs / fêtes sont plutôt sur la journée entière
-          readDates(); st.allDay = KINDS[st.kind].allDay;
+          readDates(); st.allDay = CATS[st.cat].allDay;
           if (st.allDay) { st.start = startOfDay(st.start); st.end = st.end ? startOfDay(st.end) : null; }
           body.querySelectorAll('[data-seg=allday]').forEach((x) => { const on = (x.dataset.v === '1') === st.allDay; x.classList.toggle('is-on', on); x.setAttribute('aria-selected', on); });
           dates.innerHTML = dateFields();
@@ -191,9 +257,9 @@ function openForm(existing, day) {
         e.preventDefault();
         readDates();
         const f = new FormData(form);
-        const title = String(f.get('title')).trim() || KINDS[st.kind].label;
+        const title = String(f.get('title')).trim() || CATS[st.cat].label;
         if (st.end !== null && st.end < st.start) { err.textContent = 'La fin ne peut pas être avant le début.'; err.hidden = false; return; }
-        const data = { title, kind: st.kind, allDay: st.allDay, start: st.start, end: st.end, place: String(f.get('place')).trim(), note: String(f.get('note')).trim() };
+        const data = { title, cat: st.cat, kind: CATS[st.cat].kind, allDay: st.allDay, start: st.start, end: st.end, place: String(f.get('place')).trim(), note: String(f.get('note')).trim() };
         store.update((s) => {
           if (isNew) s.agenda.push({ id: uid(), by: s.me, created: Date.now(), ...data });
           else { const x = s.agenda.find((y) => y.id === existing.id); if (x) Object.assign(x, data, { editedBy: s.me }); }
@@ -218,6 +284,7 @@ export function mount(el) {
     if (a === 'prev') { const m = new Date(month); m.setMonth(m.getMonth() - 1); month = startOfDay(m); store.refresh(); }
     else if (a === 'next') { const m = new Date(month); m.setMonth(m.getMonth() + 1); month = startOfDay(m); store.refresh(); }
     else if (a === 'today') { selected = startOfDay(); month = monthStart(selected); store.refresh(); }
+    else if (a === 'cat') { catFilter = b.dataset.v; store.refresh(); }
     else if (a === 'add') openForm(null, selected);
     else if (a === 'open') openForm((store.state.agenda || []).find((x) => x.id === b.dataset.id));
   });

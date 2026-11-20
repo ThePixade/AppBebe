@@ -21,7 +21,7 @@ Application web progressive (PWA) installable sur téléphone, **sans serveur ni
 - Profil d'alimentation (allaitement, biberon, mixte) : l'app ne propose que ce qui vous concerne (pas de lait infantile ni de choix du lait si bébé est allaité), et les listes s'adaptent
 - Un biberon de lait maternel est retiré automatiquement du stock du frigo (pot le plus ancien d'abord) ; modifier ou supprimer le biberon remet le lait dans le stock
 - Listes partagées : courses, voyage, sac à langer, valise maternité (modèles prêts à l'emploi qui se règlent avec quelques questions : « de quoi faire dormir bébé sur place ? » retire le lit parapluie), avec ajout en un clic depuis le stock ; chaque article indique qui l'a ajouté et qui l'a coché
-- Agenda commun (rendez-vous, départs en vacances, fêtes) : vue mensuelle, événements sur plusieurs jours, qui l'a ajouté, prochain événement sur l'accueil
+- Agenda commun (rendez-vous, départs en vacances, fêtes) : vue mensuelle, événements sur plusieurs jours, qui l'a ajouté, prochain événement sur l'accueil ; **catégories par module** (Santé, Vacances, Bébé, Maison, Budget, Famille), filtre par catégorie et **résumé « Par module »** ; chaque module affiche ses propres rendez-vous de l'agenda
 
 **Diversification**
 - Recherche d'aliment avec vérification de l'âge adapté
