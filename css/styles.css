@@ -914,3 +914,27 @@ details > summary { cursor: pointer; }
 
 .tabs-row { display: grid; grid-template-columns: repeat(5, auto); gap: 6px; justify-content: space-between; }
 .tabs-row .pill-btn { padding: 0 10px; font-size: .8rem; height: 36px; }
+
+.grid-2b { display: grid; grid-template-columns: 1fr 44px; gap: 8px; }
+
+/* ---------- Santé : compléments ---------- */
+.tabs-5 .pill-btn { position: relative; }
+.dot-badge { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 6px; border-radius: 9px; background: var(--salmon); color: var(--on-accent); font-size: .68rem; font-weight: 800; }
+.dose { display: flex; align-items: center; gap: 14px; width: 100%; padding: 13px 0; text-align: left; color: inherit; font: inherit; border-top: 1px solid var(--border); }
+.list-group > .dose:first-of-type, .cat-title + .dose, .cat-title + .as-needed { border-top: 0; }
+.dose .check-box { flex: none; }
+.dose.is-done .check-box { background: var(--sage); border-color: var(--sage); color: var(--on-accent); }
+.dose.is-done .dose-main b { text-decoration: line-through; color: var(--text-3); }
+.dose.is-late .check-box { border-color: var(--brick); } .dose.is-late small { color: var(--brick); font-weight: 700; }
+.dose.is-due .check-box { border-color: var(--salmon); } .dose.is-due small { color: var(--salmon); font-weight: 700; }
+.dose.is-later { opacity: .72; }
+.dose-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.dose-main b { font-size: .94rem; } .dose-main small { color: var(--text-2); font-size: .78rem; font-weight: 600; }
+.dose.as-needed { gap: 10px; border-top: 1px solid var(--border); } .dose.as-needed .btn { flex: none; }
+.entry-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; text-align: left; color: inherit; font: inherit; }
+a.entry { text-decoration: none; }
+.mb-16 { margin-bottom: 16px; }
+
+.tabs-5 { gap: 3px; }
+.tabs-5 .pill-btn { padding: 0 6px; font-size: .72rem; height: 36px; gap: 2px; letter-spacing: -.01em; }
+.tabs-5 .dot-badge { margin-left: 4px; min-width: 16px; height: 16px; font-size: .62rem; }

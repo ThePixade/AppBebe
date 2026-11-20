@@ -1,9 +1,9 @@
 // Service worker : app disponible hors-ligne (mode avion compris).
-const VERSION = 'appfamille-v0.4.0';
+const VERSION = 'appfamille-v0.5.0';
 const SHELL = [
   './', './index.html', './manifest.webmanifest', './css/styles.css',
   './js/app.js', './js/store.js', './js/ui.js', './js/icons.js', './js/profiles.js', './js/audio.js', './js/sync.js',
-  './js/pages/home.js', './js/pages/edit.js', './js/pages/stats.js', './js/pages/plan.js', './js/miniplayer.js', './js/milk.js', './js/pages/agenda.js', './js/supplies.js', './js/data/templates.js', './js/pages/growth.js', './js/pages/food.js', './js/pages/parents.js', './js/pages/sleep.js', './js/modules.js', './js/pages/hub.js', './js/pages/maison.js', './js/pages/budget.js', './js/pages/sante.js', './js/pages/vacances.js', './js/forms.js', './js/version.js', './js/budget/cats.js', './js/budget/stats.js', './js/budget/receipt.js', './js/budget/csv.js', './js/budget/ocr.js',
+  './js/pages/home.js', './js/pages/edit.js', './js/pages/stats.js', './js/pages/plan.js', './js/miniplayer.js', './js/milk.js', './js/pages/agenda.js', './js/supplies.js', './js/data/templates.js', './js/pages/growth.js', './js/pages/food.js', './js/pages/parents.js', './js/pages/sleep.js', './js/modules.js', './js/pages/hub.js', './js/pages/maison.js', './js/pages/budget.js', './js/pages/sante.js', './js/pages/vacances.js', './js/forms.js', './js/version.js', './js/budget/cats.js', './js/budget/stats.js', './js/budget/receipt.js', './js/budget/csv.js', './js/budget/ocr.js', './js/data/sante-calendrier.js', './js/health/doses.js', './js/health/summary.js',
   './js/data/foods.js', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png',
 ];
 

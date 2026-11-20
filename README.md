@@ -44,7 +44,7 @@ Application web progressive (PWA) installable sur téléphone, **sans serveur ni
 
 **Budget** (AppFamille)
 - Dépenses et revenus, en 10 secondes : montant, libellé, catégorie devinée automatiquement, qui a payé, dépense commune ou perso
-- **Scan de ticket de caisse** : photo ou image → total, date, commerçant et catégorie reconnus **sur le téléphone** (OCR embarqué, rien n'est envoyé sur internet), avec vérification avant d'enregistrer
+- Scan de ticket de caisse (OCR embarqué, sur le téléphone) : **désactivé pour le moment**, la lecture n'est pas assez fiable (interrupteur `SCAN_ENABLED` dans `js/pages/budget.js`)
 - Budget mensuel + **budgets par catégorie** avec alertes à 80 %, reste par jour, projection de fin de mois, évolution par rapport au mois précédent
 - Charges et revenus fixes (jour du mois, début et fin), prochains prélèvements
 - **Qui doit quoi** entre parents (cumulé) et **règlement des comptes**
@@ -52,6 +52,14 @@ Application web progressive (PWA) installable sur téléphone, **sans serveur ni
 - **Bilan de l'année** : graphique mois par mois, mois le plus cher, répartition par catégorie
 - Recherche et filtres, dépenses fréquentes en un geste, duplication
 - **Import d'un relevé bancaire (CSV)** avec catégories automatiques et détection des doublons ; **export CSV** (mois, année, tout)
+
+**Santé** (AppFamille)
+- **Prises du jour** : liste à cocher des médicaments à prendre (horaires, jour 3/7 d'un antibiotique), en retard / c'est l'heure, qui a donné quoi ; médicaments « si besoin » avec délai minimum avant la prochaine prise
+- **Carnet** par personne : rendez-vous (lien agenda et budget), vaccins avec rappel, traitements, symptômes, mesures, notes ; fusionne les vaccins, températures, mesures et médicaments notés dans le module Bébé
+- **Suivi en courbes** : température (alerte fièvre, avis médical avant 3 mois), poids, taille, tension, glycémie
+- **Vaccins et dépistages recommandés** (calendrier français, indicatif) selon l'âge, avec ce qui est déjà fait
+- **Pharmacie** : dates de péremption, alertes, ajout aux courses
+- **Fiche à partager** (médecin, nounou, urgences) en texte, **contacts de santé** avec appel en un geste, numéros d'urgence
 
 ## Design
 
@@ -109,6 +117,8 @@ js/ui.js              Utilitaires, bottom sheets, toasts
 js/audio.js           Moteur audio génératif (Web Audio)
 js/profiles.js        Profils, onboarding, réglages, import / export
 js/supplies.js        Calcul du stock (consommation tirée du journal)
+js/health/            Prises de médicaments, fiche à partager
+js/data/sante-calendrier.js  Calendrier vaccinal et dépistages (indicatif)
 js/budget/            Calculs du budget, catégories, lecture de tickets (OCR), import / export CSV
 js/vendor/tesseract/  Moteur de lecture de tickets embarqué (Tesseract.js, licence Apache 2.0)
 js/pages/             Accueil, croissance, diversification, parents, sommeil, statistiques, stock et listes, agenda

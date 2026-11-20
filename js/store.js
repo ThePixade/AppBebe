@@ -28,8 +28,11 @@ const defaults = () => ({
   fixed: [],              // charges fixes mensuelles : { id, name, amount, cat }
   budget: { monthly: null, cats: {} },   // plafond mensuel global et par catégorie
   goals: [],              // objectifs d'épargne : { id, name, target, initial, deadline?, hist: [{ id, at, amount, by }] }
-  members: [],            // santé : { id, name, birth, blood, allergies, doctor, notes }
-  health: [],             // { id, memberId, type: 'rdv'|'vaccin'|'traitement'|'note', title, at, end?, next?, place, note }
+  members: [],            // santé : { id, name, birth, sex, blood, allergies, antecedents, doctor, mutuelle, notes, childId? (lien avec un profil Bébé) }
+  health: [],             // carnet : { id, memberId, type: 'rdv'|'vaccin'|'traitement'|'symptome'|'mesure'|'note', title, at, … } (voir js/pages/sante.js)
+  doses: [],              // prises de médicaments : { id, tid (traitement), memberId, day, slot: 'HH:MM'|null, at, by }
+  meds: [],               // pharmacie : { id, name, expiry (1er jour du mois d'expiration), qty, note }
+  contacts: [],           // contacts de santé : { id, name, role, phone, address, note }
   trips: [],              // { id, name, dest, start, end, budget, lodging, ref, notes, items[], plan[], spend[], agendaId? }
   homeLists: [],          // module Maison › Listes : { id, name, check (à cocher ?), created, items: [{ id, text, done?, by }] }
   chores: [],             // { id, name, every (jours, 0 = une fois), who: ''|'tour'|prénom, turn, last, lastBy, created }

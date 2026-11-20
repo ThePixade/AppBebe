@@ -15,6 +15,9 @@ import { parseCSV, readBankRows, readFileText, toCSV } from '../budget/csv.js';
  */
 
 export { CATS };
+
+// Scan de ticket de caisse : désactivé pour le moment (lecture pas assez fiable). Passer à true pour le réactiver.
+const SCAN_ENABLED = false;
 const PEOPLE = ['Maman', 'Papa', 'Nounou'];
 const TABS = [['month', 'Mois'], ['list', 'Dépenses'], ['fixed', 'Fixes'], ['goals', 'Épargne'], ['year', 'Année']];
 
@@ -44,9 +47,9 @@ export function render(s) {
     ${hubHeader(s, { back: true })}
     <section class="hero"><p class="eyebrow">Budget</p><h1 class="title">Dépenses de la famille</h1></section>
     <button class="btn btn-primary btn-block btn-lg" data-act="new-expense">${icon('plus', 20)} Ajouter une dépense</button>
-    <div class="grid-3 mt-12">
-      <button class="btn btn-ghost btn-sm" data-act="scan">${icon('camera', 16)} Scanner un ticket</button>
-      <button class="btn btn-ghost btn-sm" data-act="new-income">${icon('plus', 16)} Revenu</button>
+    <div class="${SCAN_ENABLED ? 'grid-3' : 'grid-2b'} mt-12">
+      ${SCAN_ENABLED ? `<button class="btn btn-ghost btn-sm" data-act="scan">${icon('camera', 16)} Scanner un ticket</button>` : ''}
+      <button class="btn btn-ghost btn-sm" data-act="new-income">${icon('plus', 16)} Ajouter un revenu</button>
       <button class="btn btn-ghost btn-sm" data-act="menu" aria-label="Plus d'options">${icon('more', 18)}</button>
     </div>
     <div class="tabs-row mt-16">${TABS.map(([id, l]) => `<button class="pill-btn ${tab === id ? 'is-on' : ''}" data-act="tab" data-v="${id}">${l}</button>`).join('')}</div>
@@ -643,7 +646,7 @@ export function mount(el) {
       case 'tab': tab = b.dataset.v; store.refresh(); break;
       case 'new-expense': expenseForm(); break;
       case 'new-income': incomeForm(); break;
-      case 'scan': openScan(); break;
+      case 'scan': if (SCAN_ENABLED) openScan(); break;
       case 'menu': menuSheet(); break;
       case 'quick': { const q = quickList[+b.dataset.i]; if (q) expenseForm(null, { amount: q.amount, note: q.note, cat: q.cat, shared: q.shared }); break; }
       case 'edit-op': { const o = S.expenses.find((x) => x.id === id); if (!o) break; if (kindOf(o) === 'in') incomeForm(o); else if (kindOf(o) === 'out') expenseForm(o); else if (confirm(`Supprimer ce règlement de ${eur(o.amount)} ?`)) { store.update((x) => { x.expenses = x.expenses.filter((y) => y.id !== id); }); toast('Règlement supprimé'); } break; }
