@@ -76,6 +76,29 @@ function updateBadge() {
   fab.hidden = open || ['onboarding', 'sleep'].includes(document.body.dataset.page);
 }
 
+/* ------------------------------------------------------------ liens et presse-papiers */
+const URL_RE = /(https?:\/\/[^\s<]+|www\.[^\s<]+)/gi;
+const cleanUrl = (u) => u.replace(/[.,;:!?)\]»]+$/, '');
+const hrefOf = (u) => (/^www\./i.test(u) ? 'https://' + u : u);
+const linksOf = (text) => [...String(text || '').matchAll(URL_RE)].map((m) => cleanUrl(m[0]));
+function linkify(text) {
+  let out = '', i = 0;
+  for (const m of String(text).matchAll(URL_RE)) {
+    const u = cleanUrl(m[0]);
+    out += esc(text.slice(i, m.index)) + `<a class="chat-link" href="${esc(hrefOf(u))}" target="_blank" rel="noopener noreferrer">${esc(u)}</a>`;
+    i = m.index + u.length;
+  }
+  return (out + esc(text.slice(i))).replace(/\n/g, '<br>');
+}
+async function copyText(s, ok = 'Copié') {
+  try { await navigator.clipboard.writeText(s); } catch {
+    const ta = document.createElement('textarea'); ta.value = s; ta.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch { /* copie impossible */ } ta.remove();
+  }
+  toast(ok);
+}
+const shareText = (m) => m.share ? [m.share.title, ...(m.share.lines || [])].join('\n') : '';
+
 /* ------------------------------------------------------------ panneau */
 function dayHead(at) {
   const k = dayKey(at), t = dayKey(), y = dayKey(Date.now() - DAY);
@@ -87,9 +110,9 @@ function msgHtml(m, prev) {
   let body = '';
   if (m.img) body += `<img class="chat-img" src="${API}?img=${encodeURIComponent(m.img)}" alt="Photo" loading="lazy">`;
   if (m.share) body += `<a class="chat-share" href="${esc(m.share.route || '#/hub')}" data-close><b>${esc(m.share.title)}</b>${(m.share.lines || []).map((l) => `<span>${esc(l)}</span>`).join('')}</a>`;
-  if (m.text) body += `<p>${esc(m.text).replace(/\n/g, '<br>')}</p>`;
+  if (m.text) body += `<p>${linkify(m.text)}</p>`;
   return `${head ? `<div class="chat-day">${esc(dayHead(m.at))}</div>` : ''}
-    <div class="chat-msg ${mine ? 'is-mine' : ''} ${grouped ? 'is-grouped' : ''}">${!mine && !grouped ? `<small class="chat-by tone-${whoTone(m.by)}">${esc(m.by || '?')}</small>` : ''}<div class="chat-bubble">${body}<time>${time(m.at)}</time>${mine ? `<button type="button" class="chat-del" data-del="${m.id}" aria-label="Supprimer ce message">${icon('trash', 14)}</button>` : ''}</div></div>`;
+    <div class="chat-msg ${mine ? 'is-mine' : ''} ${grouped ? 'is-grouped' : ''}" data-mid="${m.id}">${!mine && !grouped ? `<small class="chat-by tone-${whoTone(m.by)}">${esc(m.by || '?')}</small>` : ''}<div class="chat-bubble">${body}<time>${time(m.at)}</time></div></div>`;
 }
 function renderMsgs(stick) {
   const box = panel?.querySelector('.chat-list'); if (!box) return;
@@ -128,7 +151,53 @@ export function closeChat(fromPop) {
   updateBadge(); schedule();
 }
 
+/* Appui long (ou clic droit) sur un message : menu Copier / Supprimer, adapté au contenu. */
+function openMenu(m) {
+  panel.querySelector('.chat-menu')?.remove();
+  const mine = m.by === me(), links = linksOf(m.text), acts = [];
+  if (links.length) acts.push({ k: 'link', ic: 'link', label: links.length > 1 ? 'Copier le 1er lien' : 'Copier le lien', sub: links[0] });
+  if (m.text) acts.push({ k: 'text', ic: 'copy', label: links.length ? 'Copier tout le message' : 'Copier le message' });
+  if (links.length) acts.push({ k: 'open', ic: 'link', label: 'Ouvrir le lien' });
+  if (m.share) acts.push({ k: 'share', ic: 'copy', label: 'Copier le contenu partagé' });
+  if (m.img) acts.push({ k: 'img', ic: 'download', label: 'Enregistrer la photo' });
+  if (mine) acts.push({ k: 'del', ic: 'trash', label: 'Supprimer pour tous', danger: true });
+  const menu = document.createElement('div'); menu.className = 'chat-menu';
+  menu.innerHTML = `<div class="chat-menu-card" role="menu">${acts.map((a, i) => `<button type="button" role="menuitem" data-a="${i}" class="${a.danger ? 'is-danger' : ''}">${icon(a.ic, 18)}<span><b>${esc(a.label)}</b>${a.sub ? `<small>${esc(a.sub.slice(0, 48))}</small>` : ''}</span></button>`).join('')}<button type="button" class="chat-menu-x" data-a="x">Annuler</button></div>`;
+  panel.appendChild(menu);
+  navigator.vibrate?.(12);
+  const close = () => menu.remove();
+  menu.addEventListener('click', async (e) => {
+    const b = e.target.closest('button'); if (!b && e.target !== menu) return; if (e.target === menu || b.dataset.a === 'x') return close();
+    const a = acts[+b.dataset.a]; close();
+    if (a.k === 'link') copyText(links[0], 'Lien copié');
+    else if (a.k === 'text') copyText(m.text, 'Message copié');
+    else if (a.k === 'share') copyText(shareText(m), 'Copié');
+    else if (a.k === 'open') window.open(hrefOf(links[0]), '_blank', 'noopener');
+    else if (a.k === 'img') { const l = document.createElement('a'); l.href = `${API}?img=${encodeURIComponent(m.img)}`; l.download = m.img; document.body.appendChild(l); l.click(); l.remove(); }
+    else if (a.k === 'del') {
+      if (!confirm('Supprimer ce message pour toute la famille ?')) return;
+      msgs = msgs.filter((x) => x.id !== m.id); renderMsgs(false);
+      try { await api('POST', { action: 'delete', id: m.id, by: me() }); } catch { toast('Suppression impossible'); poll(); }
+    }
+  });
+}
+function wirePress() {
+  const list = panel.querySelector('.chat-list'); let timer = null, sx = 0, sy = 0, fired = false;
+  const msgOf = (el) => { const n = el.closest('[data-mid]'); return n ? msgs.find((m) => m.id === +n.dataset.mid) : null; };
+  const stop = () => clearTimeout(timer);
+  list.addEventListener('pointerdown', (e) => {
+    const m = msgOf(e.target); fired = false; if (!m || e.button > 0) return;
+    sx = e.clientX; sy = e.clientY; timer = setTimeout(() => { fired = true; openMenu(m); }, 450);
+  });
+  list.addEventListener('pointermove', (e) => { if (Math.abs(e.clientX - sx) > 8 || Math.abs(e.clientY - sy) > 8) stop(); });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach((ev) => list.addEventListener(ev, stop));
+  list.addEventListener('scroll', stop, { passive: true });
+  list.addEventListener('contextmenu', (e) => { const m = msgOf(e.target); if (m) { e.preventDefault(); stop(); if (!fired) openMenu(m); fired = true; } });
+  list.addEventListener('click', (e) => { if (fired) { e.preventDefault(); e.stopPropagation(); fired = false; } }, true);
+}
+
 function wire() {
+  wirePress();
   const ta = panel.querySelector('textarea'), tray = panel.querySelector('.chat-tray');
   const grow = () => { ta.style.height = 'auto'; ta.style.height = Math.min(120, ta.scrollHeight) + 'px'; };
   ta.addEventListener('input', grow);
@@ -137,8 +206,6 @@ function wire() {
   panel.addEventListener('click', async (e) => {
     const t = e.target;
     if (t.closest('[data-x]')) return closeChat();
-    const del = t.closest('[data-del]');
-    if (del) { if (!confirm('Supprimer ce message pour toute la famille ?')) return; const id = +del.dataset.del; msgs = msgs.filter((m) => m.id !== id); renderMsgs(false); try { await api('POST', { action: 'delete', id, by: me() }); } catch { toast('Suppression impossible'); poll(); } return; }
     if (t.closest('[data-clear]')) { if (!confirm('Vider toute la discussion pour toute la famille ? Cette action est définitive.')) return; try { await api('POST', { action: 'clear', by: me() }); msgs = []; renderMsgs(false); toast('Discussion vidée'); } catch { toast('Suppression impossible'); } return; }
     const mu = t.closest('[data-mute]');
     if (mu) { setMuted(!muted()); mu.innerHTML = icon(muted() ? 'bellOff' : 'bell', 20); toast(muted() ? 'Notifications du chat désactivées' : 'Notifications du chat activées'); return; }

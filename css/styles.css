@@ -1046,7 +1046,14 @@ body:not([data-nav="on"]) .chat-fab { bottom: calc(env(safe-area-inset-bottom) +
 .chat-composer { display: flex; align-items: flex-end; gap: 4px; padding: 8px 8px calc(env(safe-area-inset-bottom) + 8px); background: var(--bg-elev); border-top: 1px solid var(--border); }
 .chat-composer textarea { flex: 1; resize: none; min-height: 44px; max-height: 120px; padding: 11px 14px; border-radius: 22px; line-height: 1.25; }
 .chat-send { width: 44px; height: 44px; padding: 0; border-radius: 50%; display: grid; place-items: center; flex: none; }
-.chat-del { position: absolute; top: 4px; right: 6px; width: 24px; height: 24px; border-radius: 50%; display: none; place-items: center; background: rgba(0, 0, 0, .25); color: #fff; }
-.chat-bubble { position: relative; }
-.chat-msg.is-mine:hover .chat-del, .chat-msg.is-mine:focus-within .chat-del { display: grid; }
-@media (hover: none) { .chat-msg.is-mine .chat-del { display: grid; opacity: .55; } }
+/* Appui long sur un message */
+.chat-bubble { position: relative; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.chat-link { color: inherit; text-decoration: underline; text-underline-offset: 2px; word-break: break-all; -webkit-touch-callout: none; }
+.chat-menu { position: absolute; inset: 0; z-index: 5; display: flex; align-items: flex-end; background: rgba(0, 0, 0, .38); animation: chatFade .15s; }
+.chat-menu-card { width: 100%; padding: 10px 10px calc(env(safe-area-inset-bottom) + 10px); background: var(--bg-elev); border-radius: 22px 22px 0 0; display: grid; gap: 4px; animation: chatUp .2s; }
+.chat-menu-card button { display: flex; align-items: center; gap: 12px; text-align: left; padding: 13px 14px; border-radius: 14px; font-size: 1rem; }
+.chat-menu-card button:active { background: var(--seg-track); }
+.chat-menu-card small { display: block; color: var(--text-2); font-weight: 500; word-break: break-all; }
+.chat-menu-card .is-danger { color: #D64545; }
+.chat-menu-card .chat-menu-x { justify-content: center; margin-top: 4px; background: var(--seg-track); font-weight: 700; }
+@keyframes chatFade { from { opacity: 0; } } @keyframes chatUp { from { transform: translateY(40px); } }
