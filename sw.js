@@ -2,7 +2,7 @@
 // Les caches portent le nom du dossier : plusieurs éditions (AppFamille, AppPre) peuvent coexister sur la même adresse
 // sans se supprimer mutuellement leurs fichiers.
 const PREFIX = 'af:' + new URL(self.registration.scope).pathname + ':';
-const VERSION = PREFIX + 'v0.7.1';
+const VERSION = PREFIX + 'v0.7.2';
 const SHELL = [
   './', './index.html', './manifest.webmanifest', './css/styles.css',
   './js/app.js', './js/store.js', './js/ui.js', './js/icons.js', './js/profiles.js', './js/audio.js', './js/sync.js',

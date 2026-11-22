@@ -6,6 +6,7 @@ import { uiOf, setUi, applyPreset, resetUi, ACCENTS, BG_LIGHT, BG_DARK, FONTS, G
 import { MODULES, enabledModules, modInfo } from '../modules.js';
 import { actionsFor } from './actions.js';
 import { navIdsOf } from './nav.js';
+import { WIDGETS, layoutOf } from './dashboard.js';
 
 /* Page « Apparence » (édition Premium) : tout se règle ici, et l'app change en direct. */
 const open = new Set(['presets', 'colors']);
@@ -56,7 +57,11 @@ export function render(s) {
     <div class="row-between mt-16"><span class="grow"><b style="display:block">Bouton « + » au centre</b><span class="small muted">Ajout rapide en un geste</span></span><label class="switch"><input type="checkbox" data-flag="navPlus" ${ui.navPlus ? 'checked' : ''}><span class="track"></span></label></div>
     <p class="label mt-16">Raccourcis <small class="faint">(accueil et bouton « + », jusqu'à 6)</small></p>
     <div class="chips">${acts.map((a) => `<button class="chip tone-${a.tone} ${ui.shortcuts.includes(a.id) ? 'is-on' : ''}" data-short="${a.id}">${esc(a.label)}</button>`).join('')}</div>`;
+  const SZ = { S: 'Petit', M: 'Moyen', L: 'Grand' };
+  const sizes = layoutOf(s).filter((w) => WIDGETS[w.id].sizes.length > 1).map((w) => `<div class="row-between nav-row" style="gap:8px"><span class="grow">${esc(WIDGETS[w.id].label)}${w.hidden ? ' <small class="faint">(masqué)</small>' : ''}</span><span class="seg" style="flex:0 0 auto">${WIDGETS[w.id].sizes.map((z) => `<button type="button" class="${w.size === z ? 'is-on' : ''}" data-wsize="${w.id}" data-v="${z}">${SZ[z]}</button>`).join('')}</span></div>`).join('');
   const home = `
+    <p class="label">Taille des blocs</p>
+    <div class="list-group">${sizes}</div>
     <p class="small muted">Déplacez, redimensionnez et masquez les cases de l'accueil : alertes, prises du jour, rendez-vous, bébé, budget, courses…</p>
     <div class="grid-2 mt-12"><a class="btn btn-primary btn-sm" href="#/hub" data-go-edit>${icon('settings', 16)} Organiser l'accueil</a><button class="btn btn-ghost btn-sm" data-home-reset>Rétablir l'accueil</button></div>`;
   const backup = `
@@ -103,6 +108,7 @@ export function mount(el) {
     else if (b.dataset.modreset) { const mods = { ...ui().mods }; delete mods[b.dataset.modreset]; setUi({ mods }); }
     else if (b.dataset.navmove) { const nav = [...navIdsOf(store.state)], i = nav.indexOf(b.dataset.navmove), j = i + +b.dataset.d; if (j < 0 || j >= nav.length) return; [nav[i], nav[j]] = [nav[j], nav[i]]; setUi({ nav }); }
     else if (b.dataset.short) { let sc = [...ui().shortcuts]; sc = sc.includes(b.dataset.short) ? sc.filter((x) => x !== b.dataset.short) : [...sc, b.dataset.short]; if (sc.length > 6) { toast('6 raccourcis au maximum'); return; } setUi({ shortcuts: sc }); }
+    else if (b.dataset.wsize) { const lay = layoutOf(store.state).map(({ id, size, hidden }) => ({ id, size: id === b.dataset.wsize ? b.dataset.v : size, hidden: !!hidden })); setUi({ widgets: lay }); }
     else if (b.matches('[data-home-reset]')) { setUi({ widgets: null }); toast('Accueil rétabli'); }
     else if (b.matches('[data-reset-ui]')) { if (confirm("Réinitialiser toute l'apparence et l'accueil ?")) { resetUi(); toast('Apparence réinitialisée'); } }
     else if (b.matches('[data-export-ui]')) exportUi();
