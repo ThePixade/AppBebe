@@ -10,7 +10,7 @@ const LEGACY_KEY = 'appbebe:v2'; // version d'origine : lue une seule fois pour 
 
 const defaults = () => ({
   version: 1,
-  ui: null,               // personnalisation de l'affichage (édition Premium), propre à CET appareil
+  ui: null,               // personnalisation de l'affichage (édition Premium), synchronisée entre les appareils
   memo: '',               // mémo de la famille (accueil Premium), partagé
   modules: null,          // modules visibles sur CET appareil : null = pas encore choisi (jamais partagé)
   modulesHint: '',        // dernière configuration de modules faite dans la famille (JSON, partagé) : simple point de départ

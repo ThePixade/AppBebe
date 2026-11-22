@@ -3,7 +3,7 @@ import { EDITION } from '../edition.js';
 
 /*
  * Personnalisation de l'affichage (édition Premium).
- * Les réglages vivent dans store.state.ui (propres à chaque appareil) et sont traduits en une feuille de style
+ * Les réglages vivent dans store.state.ui (synchronisés entre les appareils) et sont traduits en une feuille de style
  * <style id="ui-override"> posée après la feuille principale : toute l'app suit, sans toucher aux pages.
  */
 

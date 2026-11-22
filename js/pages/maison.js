@@ -16,6 +16,9 @@ let openList = null; // id de la liste ouverte (onglet Listes)
 let weekOffset = 0;
 let focusAdd = false;
 
+/** Choisit l'onglet affiché à l'ouverture de Maison (ex. depuis l'accueil). */
+export function showTab(v) { tab = v; openList = null; }
+
 const PEOPLE = ['Maman', 'Papa', 'Nounou'];
 const EVERY = [[0, 'Une fois'], [1, 'Chaque jour'], [3, 'Tous les 3 jours'], [7, 'Chaque semaine'], [14, 'Toutes les 2 semaines'], [30, 'Chaque mois']];
 const CHORE_PRESETS = [['Passer l\'aspirateur', 7], ['Sortir les poubelles', 3], ['Nettoyer la salle de bain', 7], ['Lancer une machine', 3], ['Faire la vaisselle', 1], ['Changer les draps', 14]];

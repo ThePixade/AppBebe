@@ -1,3 +1,4 @@
+import { showTab as maisonTab } from '../pages/maison.js';
 import { store, moduleOn, activeChild, eventsOf, lastOf } from '../store.js';
 import { icon } from '../icons.js';
 import { esc, eur, fmtNum, fmtDur, ago, time, dayLabel, dayKey, startOfDay, toast, DAY } from '../ui.js';
@@ -88,7 +89,7 @@ function wBudget(s, size) {
 function wShop(s, size) {
   if (!moduleOn(s, 'maison')) return null;
   const l = (s.lists || []).find((x) => x.kind === 'shop'), todo = (l?.items || []).filter((i) => !i.done), n = size === 'S' ? 3 : size === 'L' ? 8 : 4;
-  return { title: 'Courses', badge: todo.length || '', more: ['#/maison', 'Maison'], html: `
+  return { title: 'Courses', badge: todo.length || '', more: ['#/maison', 'Maison', 'shop'], html: `
     ${todo.length ? `<div class="list-group">${todo.slice(0, n).map((i) => `<button class="check" data-act="shop-toggle" data-id="${i.id}"><span class="check-box">${icon('check', 14)}</span><span class="check-text">${esc(i.text)}${i.qty ? ` <span class="qty-tag">× ${esc(i.qty)}</span>` : ''}</span></button>`).join('')}</div>${todo.length > n ? `<p class="small faint" style="padding-top:4px">+ ${todo.length - n} autre${todo.length - n > 1 ? 's' : ''}</p>` : ''}` : empty('Liste vide : rien à acheter.')}
     ${size !== 'S' ? `<form class="add-line mt-12" data-form="shop"><input class="input" name="text" placeholder="Ajouter un article…" autocomplete="off" maxlength="80"><button class="btn btn-primary" type="submit" aria-label="Ajouter">${icon('plus', 18)}</button></form>` : ''}` };
 }
@@ -96,13 +97,13 @@ function wShop(s, size) {
 function wChores(s, size) {
   if (!moduleOn(s, 'maison')) return null;
   const list = (s.chores || []).map((c) => ({ c, st: choreState(c) })).sort((a, b) => a.st.delta - b.st.delta).filter((x) => x.st.delta <= 1).slice(0, size === 'L' ? 6 : 4);
-  return { title: 'Tâches à faire', more: ['#/maison', 'Maison'], html: list.length ? list.map(({ c, st }) => `<div class="chore-row tone-${st.tone}"><span class="entry-body"><b>${esc(c.name)}</b><small><span class="chore-due" style="color:var(--${st.tone === 'brick' ? 'brick' : 'salmon'})">${esc(st.label)}</span>${assignee(c) ? ` · ${esc(assignee(c))}` : ''}</small></span><button class="btn btn-sm btn-primary" data-act="chore" data-id="${c.id}">${icon('check', 14)} Fait</button></div>`).join('') : empty('Rien à faire pour le moment.') };
+  return { title: 'Tâches à faire', more: ['#/maison', 'Maison', 'chores'], html: list.length ? list.map(({ c, st }) => `<div class="chore-row tone-${st.tone}"><span class="entry-body"><b>${esc(c.name)}</b><small><span class="chore-due" style="color:var(--${st.tone === 'brick' ? 'brick' : 'salmon'})">${esc(st.label)}</span>${assignee(c) ? ` · ${esc(assignee(c))}` : ''}</small></span><button class="btn btn-sm btn-primary" data-act="chore" data-id="${c.id}">${icon('check', 14)} Fait</button></div>`).join('') : empty('Rien à faire pour le moment.') };
 }
 
 function wMenu(s) {
   if (!moduleOn(s, 'maison')) return null;
   const m = (s.menus || {})[dayKey()] || {};
-  return { title: 'Menu du jour', more: ['#/maison', 'Maison'], html: `<div class="menu-mini"><p><span class="faint">Midi</span><b>${esc(m.lunch || '—')}</b></p><p><span class="faint">Soir</span><b>${esc(m.dinner || '—')}</b></p></div>` };
+  return { title: 'Menu du jour', more: ['#/maison', 'Maison', 'menus'], html: `<div class="menu-mini"><p><span class="faint">Midi</span><b>${esc(m.lunch || '—')}</b></p><p><span class="faint">Soir</span><b>${esc(m.dinner || '—')}</b></p></div>` };
 }
 
 function wTrip(s, size) {
@@ -172,7 +173,7 @@ function shell(w, def, r, i) {
   const attrs = `data-w="${w.id}" data-size="${w.size}" style="${jig}" tabindex="${editing ? 0 : -1}" aria-label="${esc(def.label)}"`;
   if (r.plain) return `<section class="dw dw-plain" ${attrs}>${badges}${r.html}</section>`;
   return `<section class="dw card" ${attrs}>${badges}
-    <header class="dw-head"><b>${r.title}</b>${r.badge ? `<span class="dot-badge" style="margin-left:6px">${r.badge}</span>` : ''}${r.more ? `<a class="dw-more" href="${r.more[0]}">${esc(r.more[1])} ${icon('chevronRight', 13)}</a>` : ''}</header>
+    <header class="dw-head"><b>${r.title}</b>${r.badge ? `<span class="dot-badge" style="margin-left:6px">${r.badge}</span>` : ''}${r.more ? `<a class="dw-more" href="${r.more[0]}"${r.more[2] ? ` data-tab="${r.more[2]}"` : ''}>${esc(r.more[1])} ${icon('chevronRight', 13)}</a>` : ''}</header>
     <div class="dw-body">${r.html}</div></section>`;
 }
 
@@ -323,6 +324,8 @@ export function mount(el) {
     flipFrom = snapById(dash); focusId = n.dataset.w; [lay[i], lay[tgt]] = [lay[tgt], lay[i]]; save(lay);
   });
   el.addEventListener('click', (e) => {
+    const more = e.target.closest('a.dw-more[data-tab]');
+    if (more) maisonTab(more.dataset.tab);
     const b = e.target.closest('[data-act]'); if (!b) return;
     const S = store.state, id = b.dataset.id, lay = layoutOf(S), i = lay.findIndex((w) => w.id === id), keep = () => { flipFrom = snapById(dash); };
     switch (b.dataset.act) {
