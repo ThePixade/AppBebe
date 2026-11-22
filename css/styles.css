@@ -943,7 +943,7 @@ a.entry { text-decoration: none; }
    Édition Premium : tableau de bord, navigation, personnalisation
    ========================================================= */
 .dash { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
-.dw { grid-column: span 2; position: relative; min-width: 0; margin: 0 !important; }
+.dw { grid-column: span 2; position: relative; min-width: 0; margin: 0 !important; outline: none; }
 .dw[data-size="S"] { grid-column: span 1; }
 .dw.card { padding: 14px 16px 16px; }
 .dw[data-size="S"].card { padding: 13px 14px 14px; }
@@ -970,16 +970,33 @@ a.entry { text-decoration: none; }
 .memo { width: 100%; resize: vertical; min-height: 96px; font-size: .9rem; line-height: 1.45; }
 .dw .entry:first-child { border-top: 0; }
 
-/* Mode organisation */
-.dash.is-editing .dw { outline: 2px dashed color-mix(in srgb, var(--salmon) 55%, transparent); outline-offset: 2px; border-radius: var(--r-lg); }
-.dw-tools { display: flex; align-items: center; gap: 4px; margin: -2px -4px 10px; padding: 4px; border-radius: 12px; background: color-mix(in srgb, var(--salmon) 12%, transparent); flex-wrap: wrap; }
-.dw-name { font-size: .78rem; flex: 1; min-width: 60px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dw-tools button, .dw-grip { height: 30px; min-width: 30px; padding: 0 6px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; gap: 2px; background: var(--surface); border: 1px solid var(--border); color: var(--text); }
-.dw-tools small { font-size: .66rem; font-weight: 800; }
-.dw-grip { cursor: grab; touch-action: none; color: var(--salmon); }
-.dw.is-drag { z-index: 60; box-shadow: 0 24px 50px -12px rgba(0, 0, 0, .45); opacity: .96; transition: none; pointer-events: none; }
-body.dragging { user-select: none; -webkit-user-select: none; cursor: grabbing; }
-.dash.is-editing .dw-body, .dash.is-editing .dw-hello { pointer-events: none; opacity: .75; }
+/* Mode organisation : on reste sur les blocs, qui frétillent, se soulèvent et se posent en rebondissant */
+.dw { -webkit-touch-callout: none; }
+body.org-mode .dw { -webkit-user-select: none; user-select: none; cursor: grab; }
+.dash .dw { transition: scale .3s var(--ease); }
+.dash.is-editing .dw { scale: .975; }
+@keyframes jiggle { from { rotate: -.6deg; } to { rotate: .6deg; } }
+@keyframes badge-pop { from { scale: 0; } 60% { scale: 1.25; } to { scale: 1; } }
+.dash.is-editing .dw:not(.is-drag):not(.is-drop) { animation: jiggle .27s ease-in-out infinite alternate; animation-delay: var(--j, 0s); }
+.dw-badge { display: none; position: absolute; z-index: 5; width: 28px; height: 28px; border-radius: 50%; align-items: center; justify-content: center; font-size: .72rem; font-weight: 800; box-shadow: 0 5px 12px rgba(0, 0, 0, .3); border: 2px solid var(--bg); }
+.dash.is-editing .dw-badge { display: inline-flex; animation: badge-pop .35s var(--ease) both; }
+.dw-hide { left: 7px; top: 7px; background: var(--brick); color: #fff; }
+.dw-size { right: 7px; top: 7px; background: var(--text); color: var(--bg); }
+.dash.is-editing .dw-head { padding-left: 30px; min-height: 28px; }
+.dash.is-editing .dw-head .dw-more { display: none; }
+.dash.is-editing .dw-plain { background: color-mix(in srgb, var(--surface) 72%, transparent); border-radius: var(--r-lg); padding: 42px 14px 14px; }
+.dash.is-editing .dw-body, .dash.is-editing .dw-hello, .dash.is-editing .dw-head a { pointer-events: none; }
+.dw.is-drag { transform: scale(1.05) rotate(1.6deg); animation: none !important; box-shadow: 0 34px 64px -14px rgba(0, 0, 0, .55), 0 0 0 2px color-mix(in srgb, var(--salmon) 65%, transparent); opacity: .98; cursor: grabbing; scale: 1; }
+.dw.is-drop { animation: none !important; scale: 1; }
+.dw-ghost { grid-column: span 2; border-radius: var(--r-lg); border: 2px dashed color-mix(in srgb, var(--salmon) 65%, transparent); background: color-mix(in srgb, var(--salmon) 7%, transparent); min-width: 0; }
+.dw-ghost[data-size="S"] { grid-column: span 1; }
+body.dragging { user-select: none; -webkit-user-select: none; cursor: grabbing; overscroll-behavior: contain; }
+.org-bar { display: none; position: sticky; top: 8px; z-index: 40; margin-bottom: 14px; background: color-mix(in srgb, var(--bg-elev) 92%, transparent); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border: 1.5px solid color-mix(in srgb, var(--salmon) 55%, transparent); }
+body.org-mode .org-bar { display: block; animation: org-in .35s var(--ease); }
+@keyframes org-in { from { opacity: 0; transform: translateY(-14px) scale(.97); } }
+body.org-mode .dash-bar { display: none; }
+.org-tray { display: none; } body.org-mode .org-tray { display: block; animation: org-in .35s var(--ease); }
+body.org-mode .dash-tip { display: none; }
 
 /* Barre de navigation du bas */
 .nav-pre { display: none; position: fixed; z-index: 30; left: 0; right: 0; bottom: 0; padding: 0 8px env(safe-area-inset-bottom); background: color-mix(in srgb, var(--bg-elev) 90%, transparent); -webkit-backdrop-filter: blur(20px) saturate(1.5); backdrop-filter: blur(20px) saturate(1.5); border-top: 1px solid var(--border); }

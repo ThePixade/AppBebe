@@ -21,6 +21,8 @@ import { ACTIONS, actionsFor } from './actions.js';
  * Taille S = demi-largeur, M = pleine largeur, L = pleine largeur avec plus de contenu.
  */
 let editing = false;
+let flipFrom = null;   // positions des blocs avant un changement : sert à animer le réarrangement
+let focusId = null;    // bloc à refocaliser après un réarrangement au clavier
 const hourFr = (ts) => new Date(ts).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 const empty = (t) => `<p class="small faint" style="padding:4px 0 2px">${t}</p>`;
 
@@ -161,23 +163,21 @@ export function layoutOf(s) {
 const save = (lay, silent = false) => setUi({ widgets: lay.map(({ id, size, hidden }) => ({ id, size, hidden: !!hidden })) }, { silent });
 
 /* ------------------------------------------------------------------- rendu */
-function shell(w, def, r) {
-  if (r.plain) return `<section class="dw dw-plain" data-w="${w.id}" data-size="${w.size}">${editing ? tools(w, def) : ''}${r.html}</section>`;
-  return `<section class="dw card" data-w="${w.id}" data-size="${w.size}">
-    ${editing ? tools(w, def) : ''}
-    <header class="dw-head"><b>${r.title}</b>${r.badge ? `<span class="dot-badge" style="margin-left:6px">${r.badge}</span>` : ''}${!editing && r.more ? `<a class="dw-more" href="${r.more[0]}">${esc(r.more[1])} ${icon('chevronRight', 13)}</a>` : ''}</header>
+const motionOff = () => !!uiOf(store.state).reduceMotion || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+const buzz = (ms) => { try { navigator.vibrate?.(ms); } catch { /* pas de vibration */ } };
+
+function shell(w, def, r, i) {
+  const jig = `--j:${-(i % 6) * 0.05}s`;
+  const badges = `<button class="dw-badge dw-hide" data-act="w-hide" data-id="${w.id}" aria-label="Masquer ${esc(def.label)}">${icon('minus', 14)}</button>${def.sizes.length > 1 ? `<button class="dw-badge dw-size" data-act="w-size" data-id="${w.id}" aria-label="Changer la taille de ${esc(def.label)}">${w.size}</button>` : ''}`;
+  const attrs = `data-w="${w.id}" data-size="${w.size}" style="${jig}" tabindex="${editing ? 0 : -1}" aria-label="${esc(def.label)}"`;
+  if (r.plain) return `<section class="dw dw-plain" ${attrs}>${badges}${r.html}</section>`;
+  return `<section class="dw card" ${attrs}>${badges}
+    <header class="dw-head"><b>${r.title}</b>${r.badge ? `<span class="dot-badge" style="margin-left:6px">${r.badge}</span>` : ''}${r.more ? `<a class="dw-more" href="${r.more[0]}">${esc(r.more[1])} ${icon('chevronRight', 13)}</a>` : ''}</header>
     <div class="dw-body">${r.html}</div></section>`;
-}
-function tools(w, def) {
-  return `<div class="dw-tools"><span class="dw-grip" data-grip aria-label="Déplacer ${esc(def.label)}" role="button" tabindex="0">${icon('grip', 18)}</span><b class="dw-name">${esc(def.label)}</b>
-    <button data-act="w-up" data-id="${w.id}" aria-label="Monter">${icon('up', 16)}</button><button data-act="w-down" data-id="${w.id}" aria-label="Descendre">${icon('down', 16)}</button>
-    ${def.sizes.length > 1 ? `<button data-act="w-size" data-id="${w.id}" aria-label="Changer la taille">${icon('resize', 15)}<small>${w.size}</small></button>` : ''}
-    <button data-act="w-hide" data-id="${w.id}" aria-label="Masquer">${icon('eyeoff', 16)}</button></div>`;
 }
 
 export function render(s) {
-  const lay = layoutOf(s), ui = uiOf(s);
-  const shown = [], hidden = [];
+  const lay = layoutOf(s), ui = uiOf(s), shown = [], hidden = [];
   for (const w of lay) {
     const def = WIDGETS[w.id], r = def.render(s, w.size);
     if (!r) continue;                       // module désactivé : le widget n'existe pas
@@ -185,56 +185,122 @@ export function render(s) {
   }
   return `
     ${hubHeader(s)}
-    ${editing ? `<div class="card edit-bar"><p><b>Personnalisation de l'accueil</b></p><p class="small muted">Glissez une case par sa poignée ${icon('grip', 13)}, changez sa taille, ou masquez-la. Les cases « S » se mettent côte à côte.</p>
-      <div class="grid-2 mt-12"><button class="btn btn-primary btn-sm" data-act="edit-done">${icon('check', 16)} Terminé</button><button class="btn btn-ghost btn-sm" data-act="w-reset">Rétablir par défaut</button></div></div>`
-      : `<div class="dash-bar"><button class="pill-btn" data-act="edit">${icon('settings', 15)} Organiser l'accueil</button><a class="pill-btn" href="#/perso">${icon('palette', 15)} Apparence</a></div>`}
-    <div class="dash ${editing ? 'is-editing' : ''}">${shown.map(({ w, def, r }) => shell(w, def, r)).join('')}</div>
-    ${editing && hidden.length ? `<div class="card mt-16"><p class="cat-title" style="padding-top:0">Widgets masqués</p>${hidden.map(({ w, def }) => `<div class="row-between" style="padding:8px 0;border-top:1px solid var(--border)"><span>${esc(def.label)}</span><button class="btn btn-ghost btn-sm" data-act="w-show" data-id="${w.id}">${icon('plus', 14)} Afficher</button></div>`).join('')}</div>` : ''}
-    ${!ui.tipSeen && !editing ? `<div class="notice tone-gold mt-16">${icon('sparkle', 18)}<span class="grow" style="flex:1"><b>Démo de la version Premium.</b> Touchez « Organiser l'accueil » pour déplacer les cases, ou « Apparence » pour tout personnaliser : couleurs, polices, tailles, navigation.</span><button class="btn btn-sm" data-act="tip-close">OK</button></div>` : ''}`;
+    <div class="org-bar card" role="region" aria-label="Organisation de l'accueil">
+      <p><b>Organisez votre accueil</b></p>
+      <p class="small muted">Maintenez un bloc appuyé, puis faites-le glisser où vous voulez. Le bouton rouge masque un bloc, la pastille noire en change la taille.</p>
+      <div class="grid-2 mt-12"><button class="btn btn-primary btn-sm" data-act="edit-done">${icon('check', 16)} Terminé</button><button class="btn btn-ghost btn-sm" data-act="w-reset">Rétablir par défaut</button></div>
+    </div>
+    <div class="dash-bar"><button class="pill-btn" data-act="edit">${icon('settings', 15)} Organiser l'accueil</button><a class="pill-btn" href="#/perso">${icon('palette', 15)} Apparence</a></div>
+    <div class="dash ${editing ? 'is-editing' : ''}">${shown.map(({ w, def, r }, i) => shell(w, def, r, i)).join('')}</div>
+    <div class="org-tray card mt-16">${hidden.length ? `<p class="cat-title" style="padding-top:0">Blocs masqués : touchez pour les remettre</p><div class="chips">${hidden.map(({ w, def }) => `<button class="chip" data-act="w-show" data-id="${w.id}">${icon('plus', 13)} ${esc(def.label)}</button>`).join('')}</div>` : '<p class="small faint">Tous les blocs sont affichés.</p>'}</div>
+    ${!ui.tipSeen ? `<div class="notice tone-gold mt-16 dash-tip">${icon('sparkle', 18)}<span class="grow" style="flex:1"><b>Démo de la version Premium.</b> Maintenez un bloc appuyé pour le déplacer, ou touchez « Apparence » pour tout personnaliser : couleurs, polices, tailles, navigation.</span><button class="btn btn-sm" data-act="tip-close">OK</button></div>` : ''}`;
 }
 
-/* ------------------------------------------------------------ interactions */
-function startDrag(e, el, dash) {
-  e.preventDefault();
-  const grip = e.currentTarget, sx = window.scrollX, sy = window.scrollY, r0 = el.getBoundingClientRect();
-  const startPage = { x: r0.left + sx, y: r0.top + sy }, p0 = { x: e.clientX + sx, y: e.clientY + sy };
-  let last = { x: e.clientX, y: e.clientY }, raf = 0, timer = 0;
-  el.classList.add('is-drag'); document.body.classList.add('dragging');
-  try { grip.setPointerCapture(e.pointerId); } catch { /* ignoré */ }
-  const step = () => {
+/* --------------------------------------------------- animations de réarrangement */
+const snapAll = (root) => new Map([...root.querySelectorAll(':scope > .dw, :scope > .dw-ghost')].map((n) => [n, n.getBoundingClientRect()]));
+/** FLIP : les blocs partent de leur ancienne position et glissent jusqu'à la nouvelle. */
+function flip(before, skip) {
+  if (motionOff()) return;
+  for (const [n, a] of before) {
+    if (n === skip || !n.isConnected) continue;
+    const b = n.getBoundingClientRect(), dx = a.left - b.left, dy = a.top - b.top;
+    if (Math.abs(dx) < 1 && Math.abs(dy) < 1) continue;
+    n.animate([{ transform: `translate(${dx}px,${dy}px)` }, { transform: 'translate(0,0)' }], { duration: 280, easing: 'cubic-bezier(.2,.9,.25,1)' });
+  }
+}
+/** Après un nouveau rendu : même chose, par identifiant de bloc (taille changée = déformation fluide). */
+function playFlip(dash) {
+  const from = flipFrom; flipFrom = null;
+  if (!from || motionOff()) return;
+  dash.querySelectorAll(':scope > .dw').forEach((n) => {
+    const a = from.get(n.dataset.w), b = n.getBoundingClientRect();
+    if (!a) { n.animate([{ opacity: 0, transform: 'scale(.85)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 320, easing: 'cubic-bezier(.34,1.56,.64,1)' }); return; }
+    const dx = a.left - b.left, dy = a.top - b.top, sx = a.width / b.width, sy = a.height / b.height;
+    if (Math.abs(dx) < 1 && Math.abs(dy) < 1 && Math.abs(sx - 1) < .01 && Math.abs(sy - 1) < .01) return;
+    n.style.transformOrigin = 'top left';
+    n.animate([{ transform: `translate(${dx}px,${dy}px) scale(${sx},${sy})` }, { transform: 'translate(0,0) scale(1,1)' }], { duration: 340, easing: 'cubic-bezier(.34,1.3,.5,1)' }).onfinish = () => { n.style.transformOrigin = ''; };
+  });
+}
+const snapById = (dash) => new Map([...dash.querySelectorAll(':scope > .dw')].map((n) => [n.dataset.w, n.getBoundingClientRect()]));
+
+/* --------------------------------------------------------- mode organisation */
+function setEditing(on) {
+  editing = on;
+  document.body.classList.toggle('org-mode', on);
+  const dash = document.querySelector('.dash');
+  if (dash) { dash.classList.toggle('is-editing', on); dash.querySelectorAll(':scope > .dw').forEach((n) => { n.tabIndex = on ? 0 : -1; }); }
+  if (on) buzz(8);
+}
+export const stopEditing = () => { editing = false; document.body.classList.remove('org-mode'); };
+
+/**
+ * On appuie sur un bloc : maintenu (ou déplacé à la souris en mode organisation), il se soulève et suit le doigt.
+ * Un emplacement en pointillés montre où il se posera ; les autres blocs s'écartent en glissant.
+ */
+function armPress(e, el, dash) {
+  if (e.target.closest('.dw-badge, textarea, input, select')) return;
+  const touch = e.pointerType !== 'mouse';
+  if (!touch && e.button !== 0) return;
+  const start0 = { x: e.clientX, y: e.clientY };
+  const hold = editing ? (touch ? 160 : 0) : 480, slop = editing && !touch ? 4 : 10;
+  let last = { ...start0 }, timer = 0, gone = false;
+  const cleanup = () => { gone = true; clearTimeout(timer); window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', cancel); window.removeEventListener('pointercancel', cancel); };
+  const cancel = () => cleanup();
+  const go = () => { if (gone) return; cleanup(); if (!editing) setEditing(true); beginDrag(el, dash, last); };
+  const move = (ev) => { last = { x: ev.clientX, y: ev.clientY }; if (Math.hypot(last.x - start0.x, last.y - start0.y) > slop) { if (editing && !touch) go(); else cancel(); } };
+  window.addEventListener('pointermove', move); window.addEventListener('pointerup', cancel); window.addEventListener('pointercancel', cancel);
+  if (hold) timer = setTimeout(go, hold);
+}
+
+function beginDrag(el, dash, from) {
+  const reduce = motionOff(), r = el.getBoundingClientRect(), grab = { x: from.x - r.left, y: from.y - r.top };
+  const ghost = document.createElement('div'); ghost.className = 'dw-ghost'; ghost.dataset.size = el.dataset.size; ghost.style.height = `${r.height}px`;
+  el.after(ghost);
+  Object.assign(el.style, { position: 'fixed', left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px`, zIndex: '60', pointerEvents: 'none', margin: '0', transition: 'none' });
+  el.classList.add('is-drag'); document.body.classList.add('dragging'); buzz(14);
+  const block = (ev) => { if (ev.cancelable) ev.preventDefault(); };            // pas de défilement pendant le déplacement
+  window.addEventListener('touchmove', block, { passive: false });
+  let cur = { ...from }, raf = 0, auto = 0;
+
+  const place = () => {
     raf = 0;
-    el.style.transform = ''; el.style.pointerEvents = 'none';
-    const under = document.elementFromPoint(last.x, last.y)?.closest('.dw');
-    el.style.pointerEvents = '';
-    if (under && under !== el && under.parentElement === dash) {
-      const r = under.getBoundingClientRect(), side = r.width < dash.clientWidth * 0.75;
-      const after = side ? last.x > r.left + r.width / 2 : last.y > r.top + r.height / 2;
-      dash.insertBefore(el, after ? under.nextSibling : under);
-      try { grip.setPointerCapture(e.pointerId); } catch { /* le déplacement dans la page a pu libérer la capture */ }
-    }
-    const n = el.getBoundingClientRect();
-    const dx = startPage.x + (last.x + window.scrollX - p0.x) - (n.left + window.scrollX), dy = startPage.y + (last.y + window.scrollY - p0.y) - (n.top + window.scrollY);
-    el.style.transform = `translate(${dx}px,${dy}px)`;
+    el.style.left = `${cur.x - grab.x}px`; el.style.top = `${cur.y - grab.y}px`;
+    const under = document.elementFromPoint(cur.x, cur.y)?.closest('.dw');
+    if (!under || under === el || under.parentElement !== dash) return;
+    const rt = under.getBoundingClientRect(), side = rt.width < dash.clientWidth * 0.75;
+    const frac = side ? (cur.x - rt.left) / rt.width : (cur.y - rt.top) / rt.height;
+    const targetAfter = !!(ghost.compareDocumentPosition(under) & Node.DOCUMENT_POSITION_FOLLOWING);
+    let ref;
+    if (targetAfter && frac > 0.55) ref = under.nextSibling; else if (!targetAfter && frac < 0.45) ref = under; else return;
+    const before = snapAll(dash); dash.insertBefore(ghost, ref); flip(before, el); buzz(6);
   };
-  const move = (ev) => { last = { x: ev.clientX, y: ev.clientY }; if (!raf) raf = requestAnimationFrame(step); };
-  timer = setInterval(() => { if (last.y < 90) { window.scrollBy(0, -14); move({ clientX: last.x, clientY: last.y }); } else if (last.y > window.innerHeight - 90) { window.scrollBy(0, 14); move({ clientX: last.x, clientY: last.y }); } }, 16);
+  const move = (ev) => { cur = { x: ev.clientX, y: ev.clientY }; if (!raf) raf = requestAnimationFrame(place); };
+  auto = setInterval(() => { const d = cur.y < 100 ? -16 : cur.y > innerHeight - 110 ? 16 : 0; if (d) { window.scrollBy(0, d); place(); } }, 16);
+
   const end = () => {
-    clearInterval(timer); cancelAnimationFrame(raf);
-    window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', end); window.removeEventListener('pointercancel', end);
-    el.classList.remove('is-drag'); document.body.classList.remove('dragging'); el.style.transform = '';
-    const order = [...dash.querySelectorAll(':scope > .dw')].map((n) => n.dataset.w).filter((id) => id !== 'hello' || true);
-    const lay = layoutOf(store.state), byId = Object.fromEntries(lay.map((w) => [w.id, w]));
-    const next = [...order.map((id) => byId[id]).filter(Boolean), ...lay.filter((w) => !order.includes(w.id))];
-    save(next, true);
+    clearInterval(auto); cancelAnimationFrame(raf);
+    window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', end); window.removeEventListener('pointercancel', end); window.removeEventListener('touchmove', block);
+    const g = ghost.getBoundingClientRect(), t = reduce ? 'none' : 'left .34s cubic-bezier(.34,1.56,.64,1), top .34s cubic-bezier(.34,1.56,.64,1), width .3s var(--ease), height .3s var(--ease), transform .34s cubic-bezier(.34,1.56,.64,1), box-shadow .3s';
+    el.style.transition = t; el.classList.remove('is-drag'); el.classList.add('is-drop');
+    el.style.left = `${g.left}px`; el.style.top = `${g.top}px`; el.style.width = `${g.width}px`; el.style.height = `${g.height}px`;
+    const done = () => {
+      ['position', 'left', 'top', 'width', 'height', 'zIndex', 'pointerEvents', 'margin', 'transition'].forEach((k) => { el.style[k] = ''; });
+      ghost.replaceWith(el); el.classList.remove('is-drop'); document.body.classList.remove('dragging'); buzz(10);
+      const order = [...dash.querySelectorAll(':scope > .dw')].map((n) => n.dataset.w), lay = layoutOf(store.state), byId = Object.fromEntries(lay.map((w) => [w.id, w]));
+      save([...order.map((id) => byId[id]).filter(Boolean), ...lay.filter((w) => !order.includes(w.id))], true);
+    };
+    setTimeout(done, reduce ? 0 : 350);
   };
-  // sur la fenêtre : déplacer l'élément dans la page fait perdre la capture du pointeur à la poignée
   window.addEventListener('pointermove', move); window.addEventListener('pointerup', end); window.addEventListener('pointercancel', end);
-  step();
+  place();
 }
 
 export function mount(el) {
   const dash = el.querySelector('.dash');
-  el.querySelectorAll('[data-grip]').forEach((g) => g.addEventListener('pointerdown', (e) => startDrag(e, g.closest('.dw'), dash)));
+  document.body.classList.toggle('org-mode', editing);
+  dash.querySelectorAll(':scope > .dw').forEach((n) => n.addEventListener('pointerdown', (e) => armPress(e, n, dash)));
+  playFlip(dash);
+  if (focusId) { dash.querySelector(`.dw[data-w="${focusId}"]`)?.focus({ preventScroll: true }); focusId = null; }
 
   let memoTimer = 0;
   el.addEventListener('input', (e) => {
@@ -247,20 +313,26 @@ export function mount(el) {
     const t = f.elements.text.value.trim(); if (!t) return;
     if (!addShopping(t)) toast(`« ${t} » est déjà dans la liste`);
   });
+  // clavier : en mode organisation, les flèches déplacent le bloc ciblé
+  dash.addEventListener('keydown', (e) => {
+    const n = e.target.closest?.('.dw'); if (!editing || !n || e.target !== n) return;
+    const d = { ArrowUp: -1, ArrowLeft: -1, ArrowDown: 1, ArrowRight: 1 }[e.key]; if (!d) return;
+    e.preventDefault();
+    const lay = layoutOf(store.state), vis = lay.map((w, k) => k).filter((k) => !lay[k].hidden), i = lay.findIndex((w) => w.id === n.dataset.w), tgt = vis[vis.indexOf(i) + d];
+    if (tgt === undefined) return;
+    flipFrom = snapById(dash); focusId = n.dataset.w; [lay[i], lay[tgt]] = [lay[tgt], lay[i]]; save(lay);
+  });
   el.addEventListener('click', (e) => {
     const b = e.target.closest('[data-act]'); if (!b) return;
-    const S = store.state, id = b.dataset.id, lay = layoutOf(S), i = lay.findIndex((w) => w.id === id);
-    const move = (d) => { const vis = lay.map((w, k) => k).filter((k) => !lay[k].hidden), pos = vis.indexOf(i), tgt = vis[pos + d]; if (tgt === undefined) return; [lay[i], lay[tgt]] = [lay[tgt], lay[i]]; save(lay); };
+    const S = store.state, id = b.dataset.id, lay = layoutOf(S), i = lay.findIndex((w) => w.id === id), keep = () => { flipFrom = snapById(dash); };
     switch (b.dataset.act) {
-      case 'edit': editing = true; store.refresh(); break;
-      case 'edit-done': editing = false; store.refresh(); break;
+      case 'edit': setEditing(true); break;
+      case 'edit-done': setEditing(false); break;
       case 'tip-close': setUi({ tipSeen: true }); break;
-      case 'w-reset': setUi({ widgets: null }); break;
-      case 'w-hide': lay[i].hidden = true; save(lay); break;
-      case 'w-show': lay[i].hidden = false; save(lay); break;
-      case 'w-up': move(-1); break;
-      case 'w-down': move(1); break;
-      case 'w-size': { const sz = WIDGETS[id].sizes; lay[i].size = sz[(sz.indexOf(lay[i].size) + 1) % sz.length]; save(lay); break; }
+      case 'w-reset': keep(); setUi({ widgets: null }); break;
+      case 'w-hide': keep(); lay[i].hidden = true; save(lay); break;
+      case 'w-show': keep(); lay[i].hidden = false; save(lay); break;
+      case 'w-size': { keep(); const sz = WIDGETS[id].sizes; lay[i].size = sz[(sz.indexOf(lay[i].size) + 1) % sz.length]; save(lay); break; }
       case 'dose': takeDose(id, b.dataset.slot); break;
       case 'dose-adhoc': adhocDose(id); break;
       case 'chore': doneChore(id); break;
@@ -269,4 +341,3 @@ export function mount(el) {
     }
   });
 }
-export const stopEditing = () => { editing = false; };

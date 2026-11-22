@@ -65,7 +65,7 @@ Application web progressive (PWA) installable sur téléphone, **sans serveur ni
 
 La même application, servie depuis un dossier `apppre`, devient la **démo de la version Premium** (reconnue au dossier, aucun réglage) :
 - **Accueil tableau de bord** : alertes classées par importance, prises de médicaments du jour (à cocher), prochains rendez-vous, bébé, budget du mois, courses (ajout direct), tâches à faire, menu du jour, prochain voyage, objectifs d'épargne, activité récente de la famille, mémo partagé, raccourcis, modules
-- **Cases déplaçables** : « Organiser l'accueil » → glisser une case par sa poignée, changer sa taille (S = demi-largeur, M, L), la masquer, la réafficher, rétablir
+- **Cases déplaçables, façon écran d'accueil de téléphone** : on **maintient un bloc appuyé** (ou « Organiser l'accueil »), tous les blocs frétillent, le bloc choisi se soulève et suit le doigt, les autres s'écartent en glissant, il se pose en rebondissant. Pastille rouge = masquer, pastille noire = taille (S demi-largeur, M, L). Flèches du clavier et vibrations légères prises en charge, animations coupées avec « Réduire les animations »
 - **Apparence et personnalisation complète** (page `#/perso`) : 8 thèmes prêts à l'emploi, 7 couleurs principales, 5 fonds clairs et 5 fonds sombres, ambiances en dégradé, 6 polices, taille du texte, densité, arrondis, style des cartes, contraste élevé, animations réduites, nom et pastille de la famille, export / import de l'apparence
 - **Modules renommables** (nom, icône, couleur) et **barre du bas configurable** (jusqu'à 4 modules, bouton « + » avec raccourcis au choix)
 - Données : mêmes données du NAS que AppBébé / AppFamille (liaison automatique du `api.php`), réglages d'affichage propres à chaque appareil
