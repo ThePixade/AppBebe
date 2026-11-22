@@ -61,6 +61,9 @@ Application web progressive (PWA) installable sur téléphone, **sans serveur ni
 - **Pharmacie** : dates de péremption, alertes, ajout aux courses
 - **Fiche à partager** (médecin, nounou, urgences) en texte, **contacts de santé** avec appel en un geste, numéros d'urgence
 
+## Discussion de famille (v0.8.0)
+Bouton flottant en bas à droite : un fil unique partagé par tous les profils, en direct (texte, emojis, photos, partage d'un élément : courses, rendez-vous, tâches, mémo), avec pastille de messages non lus. Les messages sont stockés sur le NAS par `chat.php` (fichier `appfamille-chat.php` + dossier `appfamille-chat-img`, 500 derniers messages). Sans NAS, le bouton n'apparaît pas.
+
 ## Modules par appareil et navigation unifiée (v0.7.0)
 - **Chaque parent choisit ses modules** : le choix est propre à l'appareil, les données restent partagées. Changer ses modules ne modifie jamais l'écran de l'autre parent.
 - **Un nouvel appareil reprend la configuration de la famille** (dernière config publiée, clé partagée `modulesHint`) et affiche une alerte « Bienvenue ! » (Adapter / Garder).

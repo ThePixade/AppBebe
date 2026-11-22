@@ -21,6 +21,7 @@ import * as dashboard from './premium/dashboard.js';
 import * as perso from './premium/customize.js';
 import { applyUi } from './premium/ui.js';
 import { renderNav, mountNav } from './premium/nav.js';
+import { initChat } from './chat.js';
 
 const routes = { hub, maison, budget, sante, vacances, home, food, parents, sleep, stats, plan, agenda };
 // Édition Premium : l'accueil devient le tableau de bord, et la page Apparence existe.
@@ -110,6 +111,7 @@ document.addEventListener('click', (e) => {
 });
 
 initMiniPlayer();
+initChat();
 
 mountNav($('#appnav'));
 window.addEventListener('hashchange', () => { closeSheet(true); if (PREMIUM) dashboard.stopEditing(); render(); });
