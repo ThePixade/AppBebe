@@ -5,6 +5,7 @@
  * GET  chat.php?since=N      → {"app":"appfamille","last":N,"msgs":[…]}  (messages d'identifiant > N ; since=0 : les 60 derniers)
  * GET  chat.php?img=NOM      → renvoie une photo envoyée dans la discussion
  * POST chat.php {by,text?,img?,share?} → ajoute un message et le renvoie
+ * POST chat.php {action:'delete',id,by} → supprime un de ses messages ; {action:'clear'} vide la discussion
  *
  * Les messages sont rangés (un par ligne) dans appfamille-chat.php, à côté du fichier de données :
  * toutes les éditions (AppFamille, AppPre) partagent donc la même discussion.
@@ -73,7 +74,9 @@ if ($method === 'GET') {
     $out = array();
     foreach ($msgs as $m) if ($m['id'] > $since) $out[] = $m;
     if ($since === 0) $out = array_slice($out, -60);
-    reply(200, array('last' => $last, 'msgs' => $out));
+    $ids = array();
+    foreach ($msgs as $m) $ids[] = $m['id'];
+    reply(200, array('last' => $last, 'msgs' => $out, 'ids' => $ids));
 }
 
 if ($method === 'POST') {
@@ -81,6 +84,22 @@ if ($method === 'POST') {
     if ($body === false || strlen($body) === 0 || strlen($body) > 6 * 1024 * 1024) reply(413, array('error' => 'size'));
     $in = json_decode($body, true);
     if (!is_array($in)) reply(400, array('error' => 'invalid_json'));
+
+    if (isset($in['action']) && ($in['action'] === 'delete' || $in['action'] === 'clear')) {
+        $who = isset($in['by']) ? (string) $in['by'] : '';
+        flock($fp, LOCK_EX);
+        $msgs = load_msgs($fp);
+        $keep = array(); $gone = array();
+        foreach ($msgs as $m) {
+            $hit = $in['action'] === 'clear' || ($m['id'] === (int) (isset($in['id']) ? $in['id'] : -1) && isset($m['by']) && $m['by'] === $who);
+            if ($hit) $gone[] = $m; else $keep[] = $m;
+        }
+        $raw = GUARD;
+        foreach ($keep as $m) $raw .= json_encode($m) . "\n";
+        ftruncate($fp, 0); rewind($fp); fwrite($fp, $raw); fflush($fp); flock($fp, LOCK_UN);
+        foreach ($gone as $m) if (isset($m['img'])) @unlink(IMG_DIR . '/' . basename($m['img']));
+        reply(200, array('deleted' => count($gone)));
+    }
 
     $text = isset($in['text']) ? trim((string) $in['text']) : '';
     if (function_exists('mb_substr')) $text = mb_substr($text, 0, 2000, 'UTF-8'); else $text = substr($text, 0, 2000);

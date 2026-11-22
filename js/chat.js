@@ -17,6 +17,9 @@ const EMOJIS = ['😀', '😂', '😍', '🥰', '😘', '😉', '👍', '🙏', 
 let available = false, msgs = [], last = 0, open = false, fab = null, panel = null, pollTimer = null, busy = false, firstLoad = true;
 const seen = () => { try { return +localStorage.getItem(SEEN_KEY) || 0; } catch { return 0; } };
 const setSeen = (n) => { try { localStorage.setItem(SEEN_KEY, String(n)); } catch { /* stockage indisponible */ } };
+const MUTE_KEY = EDITION.storageKey + ':chat-mute';
+const muted = () => { try { return localStorage.getItem(MUTE_KEY) === '1'; } catch { return false; } };
+const setMuted = (v) => { try { localStorage.setItem(MUTE_KEY, v ? '1' : '0'); } catch { /* stockage indisponible */ } };
 const me = () => store.state.me || 'Maman';
 const unread = () => msgs.filter((m) => m.id > seen() && m.by !== me()).length;
 
@@ -33,16 +36,18 @@ async function poll() {
   try {
     const j = await api('GET', null, `?since=${last}`);
     if (!available) { available = true; mountFab(); }
+    let changed = false;
+    if (Array.isArray(j.ids)) { const keep = new Set(j.ids), n = msgs.length; msgs = msgs.filter((m) => keep.has(m.id)); changed = msgs.length !== n; }
     const fresh = j.msgs.filter((m) => !msgs.some((x) => x.id === m.id));
     if (fresh.length) {
       msgs = msgs.concat(fresh).slice(-300); last = j.last;
       const others = fresh.filter((m) => m.by !== me());
       if (open) { setSeen(last); renderMsgs(true); }
-      else if (!firstLoad && others.length) {
+      else if (!firstLoad && others.length && !muted()) {
         const m = others[others.length - 1];
         toast(`${m.by || 'Quelqu’un'} : ${m.text || (m.img ? '📷 Photo' : m.share ? m.share.title : '')}`.slice(0, 70), { action: 'Ouvrir', onAction: openChat });
       }
-    } else last = Math.max(last, j.last);
+    } else { last = Math.max(last, j.last); if (changed) { if (open) renderMsgs(false); } }
     firstLoad = false; updateBadge();
   } catch (e) { /* pas de NAS ou hors connexion : on réessaiera */ }
   busy = false;
@@ -84,7 +89,7 @@ function msgHtml(m, prev) {
   if (m.share) body += `<a class="chat-share" href="${esc(m.share.route || '#/hub')}" data-close><b>${esc(m.share.title)}</b>${(m.share.lines || []).map((l) => `<span>${esc(l)}</span>`).join('')}</a>`;
   if (m.text) body += `<p>${esc(m.text).replace(/\n/g, '<br>')}</p>`;
   return `${head ? `<div class="chat-day">${esc(dayHead(m.at))}</div>` : ''}
-    <div class="chat-msg ${mine ? 'is-mine' : ''} ${grouped ? 'is-grouped' : ''}">${!mine && !grouped ? `<small class="chat-by tone-${whoTone(m.by)}">${esc(m.by || '?')}</small>` : ''}<div class="chat-bubble">${body}<time>${time(m.at)}</time></div></div>`;
+    <div class="chat-msg ${mine ? 'is-mine' : ''} ${grouped ? 'is-grouped' : ''}">${!mine && !grouped ? `<small class="chat-by tone-${whoTone(m.by)}">${esc(m.by || '?')}</small>` : ''}<div class="chat-bubble">${body}<time>${time(m.at)}</time>${mine ? `<button type="button" class="chat-del" data-del="${m.id}" aria-label="Supprimer ce message">${icon('trash', 14)}</button>` : ''}</div></div>`;
 }
 function renderMsgs(stick) {
   const box = panel?.querySelector('.chat-list'); if (!box) return;
@@ -99,7 +104,7 @@ export function openChat() {
   panel = document.createElement('div');
   panel.className = 'chat-panel'; panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-label', 'Discussion de famille');
   panel.innerHTML = `
-    <header class="chat-head"><button class="icon-btn" data-x aria-label="Fermer">${icon('chevronLeft', 22)}</button><div class="grow"><b>Discussion de famille</b><small>Connecté en tant que ${esc(me())}</small></div></header>
+    <header class="chat-head"><button class="icon-btn" data-x aria-label="Fermer">${icon('chevronLeft', 22)}</button><div class="grow"><b>Discussion de famille</b><small>Connecté en tant que ${esc(me())}</small></div><button class="icon-btn" data-mute aria-label="Notifications">${icon(muted() ? 'bellOff' : 'bell', 20)}</button><button class="icon-btn" data-clear aria-label="Vider la discussion">${icon('trash', 20)}</button></header>
     <div class="chat-list" aria-live="polite"></div>
     <div class="chat-tray" hidden></div>
     <form class="chat-composer">
@@ -132,6 +137,11 @@ function wire() {
   panel.addEventListener('click', async (e) => {
     const t = e.target;
     if (t.closest('[data-x]')) return closeChat();
+    const del = t.closest('[data-del]');
+    if (del) { if (!confirm('Supprimer ce message pour toute la famille ?')) return; const id = +del.dataset.del; msgs = msgs.filter((m) => m.id !== id); renderMsgs(false); try { await api('POST', { action: 'delete', id, by: me() }); } catch { toast('Suppression impossible'); poll(); } return; }
+    if (t.closest('[data-clear]')) { if (!confirm('Vider toute la discussion pour toute la famille ? Cette action est définitive.')) return; try { await api('POST', { action: 'clear', by: me() }); msgs = []; renderMsgs(false); toast('Discussion vidée'); } catch { toast('Suppression impossible'); } return; }
+    const mu = t.closest('[data-mute]');
+    if (mu) { setMuted(!muted()); mu.innerHTML = icon(muted() ? 'bellOff' : 'bell', 20); toast(muted() ? 'Notifications du chat désactivées' : 'Notifications du chat activées'); return; }
     const lk = t.closest('[data-close]'); if (lk) { e.preventDefault(); closeChat(true); location.hash = lk.getAttribute('href'); return; }
     if (t.closest('[data-emoji]')) return showTray({ k: 'e', h: `<div class="chat-emojis">${EMOJIS.map((x) => `<button type="button" data-em="${x}">${x}</button>`).join('')}</div>` });
     const em = t.closest('[data-em]'); if (em) { ta.setRangeText(em.dataset.em, ta.selectionStart, ta.selectionEnd, 'end'); ta.focus(); return; }

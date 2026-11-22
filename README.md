@@ -62,7 +62,7 @@ Application web progressive (PWA) installable sur téléphone, **sans serveur ni
 - **Fiche à partager** (médecin, nounou, urgences) en texte, **contacts de santé** avec appel en un geste, numéros d'urgence
 
 ## Discussion de famille (v0.8.0)
-Bouton flottant en bas à droite : un fil unique partagé par tous les profils, en direct (texte, emojis, photos, partage d'un élément : courses, rendez-vous, tâches, mémo), avec pastille de messages non lus. Les messages sont stockés sur le NAS par `chat.php` (fichier `appfamille-chat.php` + dossier `appfamille-chat-img`, 500 derniers messages). Sans NAS, le bouton n'apparaît pas.
+Bouton flottant en bas à droite (v0.8.1 : suppression de ses messages, vidage de la discussion, notifications désactivables) : un fil unique partagé par tous les profils, en direct (texte, emojis, photos, partage d'un élément : courses, rendez-vous, tâches, mémo), avec pastille de messages non lus. Les messages sont stockés sur le NAS par `chat.php` (fichier `appfamille-chat.php` + dossier `appfamille-chat-img`, 500 derniers messages). Sans NAS, le bouton n'apparaît pas.
 
 ## Modules par appareil et navigation unifiée (v0.7.0)
 - **Chaque parent choisit ses modules** : le choix est propre à l'appareil, les données restent partagées. Changer ses modules ne modifie jamais l'écran de l'autre parent.

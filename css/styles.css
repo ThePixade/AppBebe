@@ -1046,3 +1046,7 @@ body:not([data-nav="on"]) .chat-fab { bottom: calc(env(safe-area-inset-bottom) +
 .chat-composer { display: flex; align-items: flex-end; gap: 4px; padding: 8px 8px calc(env(safe-area-inset-bottom) + 8px); background: var(--bg-elev); border-top: 1px solid var(--border); }
 .chat-composer textarea { flex: 1; resize: none; min-height: 44px; max-height: 120px; padding: 11px 14px; border-radius: 22px; line-height: 1.25; }
 .chat-send { width: 44px; height: 44px; padding: 0; border-radius: 50%; display: grid; place-items: center; flex: none; }
+.chat-del { position: absolute; top: 4px; right: 6px; width: 24px; height: 24px; border-radius: 50%; display: none; place-items: center; background: rgba(0, 0, 0, .25); color: #fff; }
+.chat-bubble { position: relative; }
+.chat-msg.is-mine:hover .chat-del, .chat-msg.is-mine:focus-within .chat-del { display: grid; }
+@media (hover: none) { .chat-msg.is-mine .chat-del { display: grid; opacity: .55; } }
