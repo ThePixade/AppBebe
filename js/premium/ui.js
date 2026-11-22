@@ -45,7 +45,7 @@ export const DEFAULT_UI = {
   density: 'normal', radius: 'normal', cards: 'soft', contrast: false, reduceMotion: false,
   familyName: '', familyEmoji: '',
   widgets: null,                      // [{ id, size: 'S'|'M'|'L', hidden }] : ordre de l'accueil
-  nav: ['baby', 'agenda', 'maison'],  // modules de la barre du bas
+  nav: null,                          // modules de la barre du bas : null = automatique (3 premiers modules activés)
   navPlus: true,                      // bouton « + » au centre
   mods: {},                           // { [moduleId]: { label, icon, tone } }
   shortcuts: ['exp', 'rdv', 'shop', 'temp'],

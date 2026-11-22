@@ -6,6 +6,7 @@ import { homeSummary } from '../supplies.js';
 import { fridgeMl, takeFromFridge, giveBack } from '../milk.js';
 import { nextEventLine, agendaCardHtml } from './agenda.js';
 import { takePending } from '../premium/actions.js';
+import { babyTabs } from './babytabs.js';
 import { openGrowth } from './growth.js';
 import { openEvent, openHistory } from './edit.js';
 
@@ -122,6 +123,7 @@ export function render(s) {
 
   return `
     ${appHeader(s)}
+    ${babyTabs('home')}
     <section class="hero">
       <p class="eyebrow">${dayLabel()}</p>
       <h1 class="title">La journée de ${esc(c.name)}</h1>

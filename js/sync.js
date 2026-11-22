@@ -11,7 +11,7 @@ import { EDITION } from './edition.js';
 
 const API = 'api.php';
 const META_KEY = EDITION.syncKey;
-const SHARED = ['children', 'events', 'timers', 'foods', 'moods', 'checks', 'pumps', 'stock', 'tasks', 'supplies', 'lists', 'agenda', 'modules', 'chores', 'menus', 'homeLists', 'expenses', 'fixed', 'budget', 'goals', 'members', 'health', 'doses', 'meds', 'contacts', 'memo', 'trips'];
+const SHARED = ['children', 'events', 'timers', 'foods', 'moods', 'checks', 'pumps', 'stock', 'tasks', 'supplies', 'lists', 'agenda', 'modulesHint', 'chores', 'menus', 'homeLists', 'expenses', 'fixed', 'budget', 'goals', 'members', 'health', 'doses', 'meds', 'contacts', 'memo', 'trips'];
 const POLL_MS = 10000;
 
 export const sync = { available: false, status: 'off', lastSync: 0, error: null };
@@ -39,6 +39,14 @@ export function merge3(base, local, remote) {
   if (eq(local, remote)) return local;
   if (eq(base, local)) return remote;
   if (eq(base, remote)) return local;
+
+  // Jamais synchronisé (pas de valeur d'origine) : une valeur vide ne doit pas écraser une valeur existante.
+  // Ex. un nouveau téléphone (réglage vide) ne doit pas effacer ce que la famille a déjà enregistré sur le NAS.
+  if (base === undefined) {
+    const empty = (v) => v === undefined || v === null || v === '' || (Array.isArray(v) && !v.length) || (isObj(v) && !Object.keys(v).length);
+    if (empty(local) && !empty(remote)) return remote;
+    if (empty(remote) && !empty(local)) return local;
+  }
 
   // Listes d'objets avec id (événements, profils, stock…) : fusion élément par élément.
   if ([base, local, remote].some(isIdArray) && [local, remote].every((a) => a === undefined || Array.isArray(a))) {

@@ -1,6 +1,6 @@
 import { store, moduleOn } from './store.js';
 import { icon } from './icons.js';
-import { esc } from './ui.js';
+import { esc, openSheet } from './ui.js';
 import { PREMIUM } from './edition.js';
 
 /*
@@ -37,6 +37,58 @@ export function defaultRoute(s) {
   if (PREMIUM) return 'hub';
   const on = enabledModules(s);
   return on.length === 1 ? on[0].route : 'hub';
+}
+
+/* ---------- Choix des modules : propre à chaque appareil, avec la config de la famille comme point de départ ---------- */
+const ROLES = ['Maman', 'Papa', 'Nounou'];
+export function hintOf(s = store.state) {
+  try { const h = JSON.parse(s.modulesHint); return h && h.modules ? h : null; } catch { return null; }
+}
+/** Enregistre mon choix ET le propose à la famille : les autres appareils déjà configurés ne changent pas. */
+export function publishModules(modules) {
+  store.update((s) => { s.modules = modules; s.modulesHint = JSON.stringify({ by: s.meChosen ? s.me : '', at: Date.now(), modules }); });
+}
+/** Appareil sans choix : on reprend la dernière configuration de la famille (sinon, écran de choix). */
+export function adoptHint() {
+  const s = store.state; if (s.modules) return false;
+  const h = hintOf(s); if (!h) return false;
+  store.update((x) => { x.modules = { ...h.modules }; x.modulesNotice = { by: h.by || '', ids: Object.keys(h.modules).filter((k) => h.modules[k]) }; });
+  return true;
+}
+/** Appareil déjà configuré avant cette version : il publie sa configuration une seule fois. */
+export function ensureHint() {
+  const s = store.state;
+  if (s.modules && !hintOf(s)) store.update((x) => { x.modulesHint = JSON.stringify({ by: x.meChosen ? x.me : '', at: Date.now(), modules: x.modules }); });
+}
+
+let noticeOpen = false;
+/** Alerte d'arrivée : qui êtes-vous, modules repris, adapter ou garder. Une seule fois par appareil. */
+export function openArrivalNotice() {
+  const s = store.state, n = s.modulesNotice; if (!n || noticeOpen) return;
+  noticeOpen = true;
+  store.update((x) => { x.modulesNotice = null; }, { silent: true });
+  const names = (n.ids || []).map((id) => modInfo(s, id)?.label).filter(Boolean);
+  openSheet({
+    title: 'Bienvenue !', subtitle: 'Cet appareil est relié aux données de la famille.',
+    onMount(body, api) {
+      const draw = () => {
+        const me = store.state.me;
+        body.innerHTML = `
+          <p class="label">Qui êtes-vous ?</p>
+          <div class="seg" role="tablist">${ROLES.map((r) => `<button class="${r === me && store.state.meChosen ? 'is-on' : ''}" data-role="${r}">${r}</button>`).join('')}</div>
+          <div class="notice tone-sage mt-16">${icon('check', 18)}<span class="grow" style="flex:1"><b>Modules repris${n.by ? ` de ${esc(n.by)}` : ' de la famille'}</b> : ${names.length ? esc(names.join(', ')) : 'aucun'}.</span></div>
+          <p class="small muted mt-12">Vous pouvez les adapter à vos besoins : <b>cela ne change rien sur l'écran des autres</b>. Chacun voit les modules qu'il veut, les données restent communes.</p>
+          <div class="stack mt-16"><button class="btn btn-primary btn-block" data-adapt>Adapter mes modules</button><button class="btn btn-ghost btn-block" data-keep>Garder ces modules</button></div>`;
+      };
+      body.addEventListener('click', (e) => {
+        const r = e.target.closest('[data-role]');
+        if (r) { store.update((x) => { x.me = r.dataset.role; x.meChosen = true; }, { silent: true }); draw(); return; }
+        if (e.target.closest('[data-keep]')) { noticeOpen = false; api.close(); }
+        else if (e.target.closest('[data-adapt]')) { noticeOpen = false; api.close(); setTimeout(() => document.querySelector('[data-global=settings]')?.click(), 320); }
+      });
+      draw();
+    },
+  });
 }
 
 /** Liste des modules avec interrupteurs (choix initial et réglages). */
@@ -77,6 +129,6 @@ export function mountModuleSetup(main) {
   root.querySelector('[data-setup-go]').addEventListener('click', () => {
     const picked = readPicker(root);
     if (!Object.keys(picked).length) { alert('Choisissez au moins un module.'); return; }
-    store.update((s) => { s.modules = picked; });
+    publishModules(picked);
   });
 }

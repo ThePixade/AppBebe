@@ -2,7 +2,7 @@ import { store, resolvedTheme, moduleOn } from './store.js';
 import { initSync } from './sync.js';
 import { $, $$, createScope, closeSheet } from './ui.js';
 import { renderOnboarding, mountOnboarding, openProfiles, openChildForm } from './profiles.js';
-import { renderModuleSetup, mountModuleSetup, moduleOfRoute, defaultRoute } from './modules.js';
+import { renderModuleSetup, mountModuleSetup, moduleOfRoute, defaultRoute, adoptHint, ensureHint, openArrivalNotice } from './modules.js';
 import * as hub from './pages/hub.js';
 import * as maison from './pages/maison.js';
 import * as budget from './pages/budget.js';
@@ -29,10 +29,8 @@ const scope = createScope();
 let currentRoute = null;
 
 function updateNav(route, on) {
-  if (!PREMIUM) return;
-  const show = on && document.body.dataset.space === 'general';
-  document.body.dataset.nav = show ? 'on' : 'off';
-  if (show) $('#nav-pre .nav-pre-inner').innerHTML = renderNav(store.state, route);
+  document.body.dataset.nav = on ? 'on' : 'off';
+  if (on) $('#appnav .appnav-inner').innerHTML = renderNav(store.state, route);
 }
 
 function applyTheme() {
@@ -56,6 +54,7 @@ function render() {
   const main = $('#main');
   scope.dispose();
 
+  if (!s.modules && adoptHint()) return;     // un autre parent a déjà configuré : on reprend sa config (puis nouveau rendu)
   if (!s.modules) {
     document.body.dataset.page = 'onboarding';
     updateNav('onboarding', false);
@@ -94,11 +93,7 @@ function render() {
   window.scrollTo(0, scrollY);
   currentRoute = name;
   updateNav(name, true);
-  $$('.tab').forEach((t) => {
-    const on = t.dataset.tab === (name === 'stats' || name === 'plan' || name === 'agenda' ? 'home' : name);
-    t.classList.toggle('is-active', on);
-    on ? t.setAttribute('aria-current', 'page') : t.removeAttribute('aria-current');
-  });
+  if (store.state.modulesNotice) setTimeout(openArrivalNotice, 450);
 }
 
 /* Actions globales (en-tête partagé). */
@@ -115,16 +110,15 @@ document.addEventListener('click', (e) => {
 });
 
 initMiniPlayer();
-$('#fab').addEventListener('click', () => home.openQuickAdd());
 
-if (PREMIUM) mountNav($('#nav-pre'));
+mountNav($('#appnav'));
 window.addEventListener('hashchange', () => { closeSheet(true); if (PREMIUM) dashboard.stopEditing(); render(); });
 store.subscribe(render);
 // Le thème « auto » suit l'heure : on vérifie chaque minute.
 setInterval(() => { if (store.state.theme === 'auto') applyTheme(); }, 60000);
 
 // Nouveau téléphone : on attend les données du NAS avant d'afficher l'accueil.
-if (store.state.modules) { render(); initSync(); }
+if (store.state.modules) { render(); initSync().finally(ensureHint); }
 else initSync().finally(render);
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {

@@ -2,6 +2,7 @@ import { store, activeChild } from '../store.js';
 import { icon } from '../icons.js';
 import { esc, norm, dayKey, ageMonths, dateShort, openSheet, toast, $, $$ } from '../ui.js';
 import { appHeader } from '../profiles.js';
+import { babyTabs } from './babytabs.js';
 import { FOODS, CATEGORIES, STATUS, RECIPES, AGE_BANDS } from '../data/foods.js';
 
 let query = '';
@@ -42,6 +43,7 @@ export function render(s) {
 
   return `
     ${appHeader(s)}
+    ${babyTabs('food')}
     <section class="hero">
       <p class="eyebrow">Diversification</p>
       <h1 class="title">Le voyage culinaire<br>de ${esc(c.name)}</h1>

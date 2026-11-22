@@ -61,6 +61,12 @@ Application web progressive (PWA) installable sur téléphone, **sans serveur ni
 - **Pharmacie** : dates de péremption, alertes, ajout aux courses
 - **Fiche à partager** (médecin, nounou, urgences) en texte, **contacts de santé** avec appel en un geste, numéros d'urgence
 
+## Modules par appareil et navigation unifiée (v0.7.0)
+- **Chaque parent choisit ses modules** : le choix est propre à l'appareil, les données restent partagées. Changer ses modules ne modifie jamais l'écran de l'autre parent.
+- **Un nouvel appareil reprend la configuration de la famille** (dernière config publiée, clé partagée `modulesHint`) et affiche une alerte « Bienvenue ! » (Adapter / Garder).
+- **Une seule barre du bas** dans toutes les éditions (Accueil, modules, « + » contextuel). Dans Bébé, les sous-pages (Journée, Repas, Parents, Sommeil) sont des onglets en haut.
+- Correctif de synchro : une valeur vide d'un nouvel appareil n'écrase plus celle du NAS.
+
 ## Édition Premium (démo) : AppPre
 
 La même application, servie depuis un dossier `apppre`, devient la **démo de la version Premium** (reconnue au dossier, aucun réglage) :

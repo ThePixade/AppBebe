@@ -24,7 +24,7 @@ export function render(s) {
   if (list) return `${appHeader(s)}${listView(list)}`;
   return `
     ${appHeader(s)}
-    <a class="back-link" href="#/home">${icon('chevronLeft', 16)} Accueil</a>
+    <a class="back-link" href="#/home">${icon('chevronLeft', 16)} Bébé</a>
     <section class="hero"><p class="eyebrow">Organisation</p><h1 class="title">Stock &amp; listes</h1></section>
     ${seg('ptab', [['stock', 'Stock'], ['lists', 'Listes']], tab)}
     <div class="mt-16">${tab === 'stock' ? stockView(s) : listsView(s)}</div>`;

@@ -12,7 +12,10 @@ const defaults = () => ({
   version: 1,
   ui: null,               // personnalisation de l'affichage (édition Premium), propre à CET appareil
   memo: '',               // mémo de la famille (accueil Premium), partagé
-  modules: null,          // { baby, agenda, … } : null = choix des modules pas encore fait
+  modules: null,          // modules visibles sur CET appareil : null = pas encore choisi (jamais partagé)
+  modulesHint: '',        // dernière configuration de modules faite dans la famille (JSON, partagé) : simple point de départ
+  modulesNotice: null,    // alerte d'arrivée à afficher une fois sur cet appareil
+  meChosen: false,        // le rôle (Maman / Papa / Nounou) a été choisi sur cet appareil          // { baby, agenda, … } : null = choix des modules pas encore fait
   theme: 'auto',          // auto | dark | light
   me: 'Maman',            // qui utilise l'appareil : Maman | Papa | Nounou
   children: [],           // { id, name, birth, sex: 'F'|'M', photo, hue }

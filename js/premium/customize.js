@@ -5,6 +5,7 @@ import { hubHeader } from '../pages/hub.js';
 import { uiOf, setUi, applyPreset, resetUi, ACCENTS, BG_LIGHT, BG_DARK, FONTS, GRADIENTS, RADII, DENSITIES, CARD_STYLES, PRESETS, DEFAULT_UI } from './ui.js';
 import { MODULES, enabledModules, modInfo } from '../modules.js';
 import { actionsFor } from './actions.js';
+import { navIdsOf } from './nav.js';
 
 /* Page « Apparence » (édition Premium) : tout se règle ici, et l'app change en direct. */
 const open = new Set(['presets', 'colors']);
@@ -41,14 +42,14 @@ export function render(s) {
   const family = `
     <label class="field"><span>Nom de la famille</span><input class="input" data-text="familyName" value="${esc(ui.familyName)}" maxlength="30" placeholder="Ex. Les Dupont"></label>
     <label class="field"><span>Pastille (un emoji)</span><input class="input" data-text="familyEmoji" value="${esc(ui.familyEmoji)}" maxlength="4" placeholder="Ex. 🏡"></label>`;
-  const modules = mods.map((m) => { const o = (ui.mods || {})[m.id] || {}, inNav = ui.nav.includes(m.id);
+  const modules = mods.map((m) => { const o = (ui.mods || {})[m.id] || {}, inNav = navIdsOf(s).includes(m.id);
     return `<details class="perso-mod" data-mod="${m.id}"><summary><span class="dot-ic" style="--tone:var(--${m.tone})">${icon(m.icon, 18)}</span><b>${esc(m.label)}</b>${icon('chevronDown', 14)}</summary>
       <label class="field mt-12"><span>Nom</span><input class="input" data-modtext="${m.id}" value="${esc(o.label || '')}" maxlength="20" placeholder="${esc(MODULES.find((x) => x.id === m.id).label)}"></label>
       <p class="label">Icône</p><div class="icon-pick">${ICONS.map((n) => `<button class="${(o.icon || MODULES.find((x) => x.id === m.id).icon) === n ? 'is-on' : ''}" data-modset="${m.id}" data-k="icon" data-v="${n}" aria-label="${n}">${icon(n, 18)}</button>`).join('')}</div>
       <p class="label mt-12">Couleur</p><div class="swatches">${TONES.map((t) => `<button class="swatch-btn tone-${t} ${(o.tone || MODULES.find((x) => x.id === m.id).tone) === t ? 'is-on' : ''}" style="--c:var(--${t})" data-modset="${m.id}" data-k="tone" data-v="${t}" aria-label="${t}"></button>`).join('')}</div>
       <div class="row-between mt-12"><span>Dans la barre du bas</span><label class="switch"><input type="checkbox" data-nav="${m.id}" ${inNav ? 'checked' : ''}><span class="track"></span></label></div>
       <button class="btn btn-ghost btn-sm mt-12" data-modreset="${m.id}">Rétablir le nom, l'icône et la couleur</button></details>`; }).join('');
-  const navOrder = ui.nav.filter((id) => mods.some((m) => m.id === id));
+  const navOrder = navIdsOf(s).filter((id) => mods.some((m) => m.id === id));
   const nav = `
     <p class="label">Barre du bas <small class="faint">(jusqu'à 4 modules)</small></p>
     ${navOrder.length ? navOrder.map((id, i) => { const m = mods.find((x) => x.id === id); return `<div class="row-between nav-row"><span class="row" style="gap:10px"><span class="dot-ic" style="--tone:var(--${m.tone})">${icon(m.icon, 16)}</span>${esc(m.label)}</span><span class="row" style="gap:4px"><button class="icon-btn icon-btn-sm" data-navmove="${id}" data-d="-1" ${i === 0 ? 'disabled' : ''} aria-label="Monter">${icon('up', 16)}</button><button class="icon-btn icon-btn-sm" data-navmove="${id}" data-d="1" ${i === navOrder.length - 1 ? 'disabled' : ''} aria-label="Descendre">${icon('down', 16)}</button></span></div>`; }).join('') : '<p class="small faint">Aucun module dans la barre : activez-les dans la liste ci-dessus.</p>'}
@@ -89,7 +90,7 @@ export function mount(el) {
     else if (t.matches('[data-text]')) setUi({ [t.dataset.text]: t.value.trim() });
     else if (t.matches('[data-modtext]')) { const id = t.dataset.modtext, mods = { ...ui().mods }; mods[id] = { ...(mods[id] || {}), label: t.value.trim() }; setUi({ mods }); }
     else if (t.matches('[data-nav]')) {
-      let nav = ui().nav.filter((x) => x !== t.dataset.nav);
+      let nav = navIdsOf(store.state).filter((x) => x !== t.dataset.nav);
       if (t.checked) { if (nav.length >= 4) { toast('4 modules au maximum dans la barre'); store.refresh(); return; } nav = [...nav, t.dataset.nav]; }
       setUi({ nav });
     } else if (t.matches('[data-import-ui]')) importUi(t.files[0]);
@@ -100,7 +101,7 @@ export function mount(el) {
     else if (b.dataset.pre) applyPreset(b.dataset.pre);
     else if (b.dataset.modset) { const id = b.dataset.modset, mods = { ...ui().mods }; mods[id] = { ...(mods[id] || {}), [b.dataset.k]: b.dataset.v }; setUi({ mods }); }
     else if (b.dataset.modreset) { const mods = { ...ui().mods }; delete mods[b.dataset.modreset]; setUi({ mods }); }
-    else if (b.dataset.navmove) { const nav = [...ui().nav], i = nav.indexOf(b.dataset.navmove), j = i + +b.dataset.d; if (j < 0 || j >= nav.length) return; [nav[i], nav[j]] = [nav[j], nav[i]]; setUi({ nav }); }
+    else if (b.dataset.navmove) { const nav = [...navIdsOf(store.state)], i = nav.indexOf(b.dataset.navmove), j = i + +b.dataset.d; if (j < 0 || j >= nav.length) return; [nav[i], nav[j]] = [nav[j], nav[i]]; setUi({ nav }); }
     else if (b.dataset.short) { let sc = [...ui().shortcuts]; sc = sc.includes(b.dataset.short) ? sc.filter((x) => x !== b.dataset.short) : [...sc, b.dataset.short]; if (sc.length > 6) { toast('6 raccourcis au maximum'); return; } setUi({ shortcuts: sc }); }
     else if (b.matches('[data-home-reset]')) { setUi({ widgets: null }); toast('Accueil rétabli'); }
     else if (b.matches('[data-reset-ui]')) { if (confirm("Réinitialiser toute l'apparence et l'accueil ?")) { resetUi(); toast('Apparence réinitialisée'); } }

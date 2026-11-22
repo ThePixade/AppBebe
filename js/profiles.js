@@ -2,7 +2,7 @@ import { store, activeChild, resolvedTheme, FEEDING, feedingOf } from './store.j
 import { icon } from './icons.js';
 import { esc, uid, ageLabel, dayKey, ago, openSheet, closeSheet, toast, seg, $ } from './ui.js';
 import { sync, syncNow } from './sync.js';
-import { modulePickerHtml, readPicker } from './modules.js';
+import { modulePickerHtml, readPicker, publishModules, hintOf } from './modules.js';
 import { APP_VERSION } from './version.js';
 import { EDITION } from './edition.js';
 
@@ -29,7 +29,6 @@ export function appHeader(s) {
       </span>
     </button>
     <div class="header-actions">
-      <a class="icon-btn" href="#/hub" aria-label="Retour à l'accueil de l'application">${icon('grid', 20)}</a>
       <button class="icon-btn" data-global="theme" aria-label="${dark ? 'Passer en mode clair' : 'Passer en mode sombre'}">${icon(dark ? 'sun' : 'moon', 20)}</button>
       <button class="pill-btn" data-global="add-child">${icon('plus', 16)}Profils</button>
     </div>
@@ -114,7 +113,7 @@ function bindChildForm(root, c, onDone) {
         s.children.push({ id, name, birth, sex: values.sex, photo: values.photo, feeding: values.feeding, hue: [18, 200, 140, 260, 330][s.children.length % 5] });
         s.activeChild = id;
       }
-      if (root.dataset.onboarding) s.me = values.me;
+      if (root.dataset.onboarding) { s.me = values.me; s.meChosen = true; }
     });
     onDone?.();
   });
@@ -157,7 +156,9 @@ export function openProfiles() {
         const baby = !!s.modules?.baby;
         body.innerHTML = `
           ${EDITION.premium ? `<a class="btn btn-primary btn-block" href="#/perso">${icon('palette', 18)} Apparence et personnalisation</a>` : ''}
-          <div class="field ${EDITION.premium ? 'mt-16' : ''}"><span>Modules activés</span>${modulePickerHtml(s)}</div>
+          <div class="field ${EDITION.premium ? 'mt-16' : ''}"><span>Mes modules <small class="faint">(propres à cet appareil)</small></span>${modulePickerHtml(s)}
+            ${(() => { const h = hintOf(s); return h && JSON.stringify(Object.keys(h.modules).filter((k) => h.modules[k]).sort()) !== JSON.stringify(Object.keys(s.modules || {}).filter((k) => s.modules[k]).sort()) ? `<button class="btn btn-ghost btn-sm mt-8" data-use-hint>Reprendre la configuration ${h.by ? `de ${esc(h.by)}` : 'de la famille'}</button>` : ''; })()}
+            <p class="small faint mt-8">Ce choix ne change rien pour les autres : chacun voit les modules qu'il veut, les données restent communes.</p></div>
           ${baby ? `<div class="field mt-24"><span>Enfants</span></div>` : ''}
           <div class="stack" style="gap:4px" ${baby ? '' : 'hidden'}>
             ${s.children.map((c) => `
@@ -190,8 +191,9 @@ export function openProfiles() {
         if (t.dataset.pick) { store.update((s) => { s.activeChild = t.dataset.pick; }); closeSheet(); }
         else if (t.dataset.edit) openChildForm(store.state.children.find((c) => c.id === t.dataset.edit));
         else if (t.hasAttribute('data-add')) openChildForm();
-        else if (t.dataset.seg === 'me') { store.update((s) => { s.me = t.dataset.v; }); draw(); }
+        else if (t.dataset.seg === 'me') { store.update((s) => { s.me = t.dataset.v; s.meChosen = true; }); draw(); }
         else if (t.dataset.seg === 'theme') { store.update((s) => { s.theme = t.dataset.v; }); draw(); }
+        else if (t.hasAttribute('data-use-hint')) { const h = hintOf(store.state); if (h) { publishModules({ ...h.modules }); draw(); } }
         else if (t.hasAttribute('data-export')) exportData();
         else if (t.hasAttribute('data-sync')) syncNow().then(draw);
       });
@@ -200,7 +202,7 @@ export function openProfiles() {
         else if (e.target.matches('[data-module]')) {
           const next = readPicker(body);
           if (!Object.keys(next).length) { e.target.checked = true; toast('Gardez au moins un module'); return; }
-          store.update((s) => { s.modules = next; });
+          publishModules(next);
           // Bébé activé sans enfant : l'app passe à la création du profil.
           if (next.baby && !store.state.children.length) { closeSheet(); return; }
           draw();

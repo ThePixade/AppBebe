@@ -239,7 +239,7 @@ export function render(s) {
   return `
     ${appHeader(s)}
     <section class="hero">
-      <a class="back-link" href="#/home">${icon('chevronLeft', 18)} Accueil</a>
+      <a class="back-link" href="#/home">${icon('chevronLeft', 18)} Bébé</a>
       <h1 class="title">Statistiques</h1>
       <p class="subtitle">${esc(c.name)} · ${onlyToday ? "moyennes sur aujourd'hui (pas encore de journée complète)" : `moyennes par jour sur ${basis.length} jour${basis.length > 1 ? 's' : ''} complet${basis.length > 1 ? 's' : ''}`}</p>
     </section>

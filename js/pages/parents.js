@@ -2,6 +2,7 @@ import { store, activeChild, eventsOf, partnerOf, usesBreast, setBreastfeeding }
 import { icon } from '../icons.js';
 import { esc, uid, dayKey, dateShort, ago, DAY, openSheet, toast, seg, emptyState, $ } from '../ui.js';
 import { appHeader } from '../profiles.js';
+import { babyTabs } from './babytabs.js';
 
 let tab = null;
 
@@ -62,6 +63,7 @@ export function render(s) {
 
   return `
     ${appHeader(s)}
+    ${babyTabs('parents')}
     <section class="hero">
       <p class="eyebrow">Espace parents</p>
       <h1 class="title">Prendre soin<br>de vous aussi</h1>

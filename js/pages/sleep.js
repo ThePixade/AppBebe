@@ -1,6 +1,7 @@
 import { store, activeChild } from '../store.js';
 import { icon } from '../icons.js';
 import { esc, fmtClock, toast, $, $$ } from '../ui.js';
+import { babyTabs } from './babytabs.js';
 import { SOUNDS, CATS, player, onPlayer, play, toggle, step, setVolume, setTimer, setFade } from '../audio.js';
 
 let cat = null;
@@ -26,6 +27,7 @@ export function render(s) {
   const greet = h >= 18 || h < 6 ? `Bonne nuit, ${esc(c.name)}` : `Douce sieste, ${esc(c.name)}`;
 
   return `
+    ${babyTabs('sleep')}
     <header class="night-head">
       <div><p class="eyebrow">Détente & Sommeil</p><h1 class="title" style="font-size:1.5rem">${greet}</h1></div>
       <button class="icon-btn glow-btn" data-act="veil" aria-label="Activer la veilleuse">${icon('lamp', 22)}</button>
