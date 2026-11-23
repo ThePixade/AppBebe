@@ -9,6 +9,8 @@ export const pad = (n) => String(n).padStart(2, '0');
 export const norm = (s) => String(s).normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
 export const fmtNum = (n, d = 1) => Number(n).toLocaleString('fr-FR', { maximumFractionDigits: d });
 export const DAY = 864e5;
+/** Éléments de liste du plus récent au plus ancien (l'identifiant commence par l'heure de création) : ce qu'on ajoute arrive en haut. */
+export const newestFirst = (arr) => [...(arr || [])].sort((a, b) => (a.id < b.id ? 1 : a.id > b.id ? -1 : 0));
 export const eur = (n) => Number(n || 0).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
 export function fmtClock(ms) {

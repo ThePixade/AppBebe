@@ -1,7 +1,7 @@
 import { showTab as maisonTab } from '../pages/maison.js';
 import { store, moduleOn, activeChild, eventsOf, lastOf } from '../store.js';
 import { icon } from '../icons.js';
-import { esc, eur, fmtNum, fmtDur, ago, time, dayLabel, dayKey, startOfDay, toast, DAY } from '../ui.js';
+import { newestFirst, esc, eur, fmtNum, fmtDur, ago, time, dayLabel, dayKey, startOfDay, toast, DAY } from '../ui.js';
 import { hubHeader } from '../pages/hub.js';
 import { uiOf, setUi } from './ui.js';
 import { modInfo, enabledModules } from '../modules.js';
@@ -88,7 +88,7 @@ function wBudget(s, size) {
 
 function wShop(s, size) {
   if (!moduleOn(s, 'maison')) return null;
-  const l = (s.lists || []).find((x) => x.kind === 'shop'), todo = (l?.items || []).filter((i) => !i.done), n = size === 'S' ? 3 : size === 'L' ? 8 : 4;
+  const l = (s.lists || []).find((x) => x.kind === 'shop'), todo = newestFirst(l?.items).filter((i) => !i.done), n = size === 'S' ? 3 : size === 'L' ? 8 : 4;
   return { title: 'Courses', badge: todo.length || '', more: ['#/maison', 'Maison', 'shop'], html: `
     ${todo.length ? `<div class="list-group">${todo.slice(0, n).map((i) => `<button class="check" data-act="shop-toggle" data-id="${i.id}"><span class="check-box">${icon('check', 14)}</span><span class="check-text">${esc(i.text)}${i.qty ? ` <span class="qty-tag">× ${esc(i.qty)}</span>` : ''}</span></button>`).join('')}</div>${todo.length > n ? `<p class="small faint" style="padding-top:4px">+ ${todo.length - n} autre${todo.length - n > 1 ? 's' : ''}</p>` : ''}` : empty('Liste vide : rien à acheter.')}
     ${size !== 'S' ? `<form class="add-line mt-12" data-form="shop"><input class="input" name="text" placeholder="Ajouter un article…" autocomplete="off" maxlength="80"><button class="btn btn-primary" type="submit" aria-label="Ajouter">${icon('plus', 18)}</button></form>` : ''}` };

@@ -1,6 +1,6 @@
 import { store, partnerOf } from '../store.js';
 import { icon } from '../icons.js';
-import { esc, uid, startOfDay, dayKey, openSheet, toast, seg, emptyState, DAY, $ } from '../ui.js';
+import { newestFirst, esc, uid, startOfDay, dayKey, openSheet, toast, seg, emptyState, DAY, $ } from '../ui.js';
 import { openForm } from '../forms.js';
 import { agendaCardHtml } from './agenda.js';
 import { hubHeader } from './hub.js';
@@ -60,7 +60,7 @@ function shopView(s) {
       </button>
       <button class="icon-btn icon-btn-sm" data-act="del-item" data-id="${i.id}" aria-label="Retirer ${esc(i.text)}">${icon('x', 16)}</button>
     </div>`;
-  const sorted = [...items].sort((a, b) => !!a.done - !!b.done);
+  const sorted = newestFirst(items).sort((a, b) => !!a.done - !!b.done);
   return `
     ${n ? `<div class="progress"><span style="width:${Math.round((done / n) * 100)}%"></span></div><p class="small faint mt-8">${done} / ${n} dans le panier</p>` : ''}
     <form class="add-line mt-16" data-form="shop">
@@ -108,7 +108,7 @@ function listDetail(l) {
         <button class="icon-btn icon-btn-sm" data-act="h-del" data-id="${i.id}" aria-label="Retirer ${esc(i.text)}">${icon('x', 16)}</button></div>`
     : `<div class="li-row"><span class="plain-item"><span class="bullet"></span><span class="check-text">${esc(i.text)}${i.by ? `<small>Ajouté par ${esc(i.by)}</small>` : ''}</span></span>
         <button class="icon-btn icon-btn-sm" data-act="h-del" data-id="${i.id}" aria-label="Retirer ${esc(i.text)}">${icon('x', 16)}</button></div>`;
-  const items = l.check ? [...l.items].sort((a, b) => !!a.done - !!b.done) : l.items;
+  const items = l.check ? newestFirst(l.items).sort((a, b) => !!a.done - !!b.done) : newestFirst(l.items);
   return `
     <button class="back-link" data-act="close-hlist">${icon('chevronLeft', 16)} Listes</button>
     <div class="row-between mt-8"><div><h2 class="title" style="font-size:1.4rem">${esc(l.name)}</h2><p class="small faint">${l.check ? `À cocher · ${n ? `${done} / ${n}` : 'vide'}` : `Liste simple · ${n} élément${n > 1 ? 's' : ''}`}</p></div>

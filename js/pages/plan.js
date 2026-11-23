@@ -1,6 +1,6 @@
 import { store, activeChild, feedingOf, usesFormula, usesBreast, FEEDING } from '../store.js';
 import { icon } from '../icons.js';
-import { esc, fmtNum, uid, ageMonths, openSheet, toast, seg, emptyState, $, $$ } from '../ui.js';
+import { newestFirst, esc, fmtNum, uid, ageMonths, openSheet, toast, seg, emptyState, $, $$ } from '../ui.js';
 import { appHeader } from '../profiles.js';
 import { TEMPLATES, KIND_LABEL, buildItems, questionsFor } from '../data/templates.js';
 import * as sup from '../supplies.js';
@@ -256,7 +256,7 @@ function listView(l) {
       <button class="icon-btn icon-btn-sm" data-act="edit-item" data-id="${i.id}" aria-label="Modifier ${esc(i.text)}">${icon('edit', 16)}</button>
     </div>`;
   const groups = cats.map((cat) => {
-    const its = l.items.filter((i) => (i.cat || '') === cat).sort((a, b) => !!a.done - !!b.done);
+    const its = newestFirst(l.items).filter((i) => (i.cat || '') === cat).sort((a, b) => !!a.done - !!b.done);
     return `<div class="card list-group">${cat ? `<p class="cat-title">${esc(cat)} <small>${its.filter((i) => i.done).length}/${its.length}</small></p>` : ''}${its.map(row).join('')}</div>`;
   }).join('');
   return `
