@@ -35,7 +35,9 @@ const isIdArray = (v) => Array.isArray(v) && v.length > 0 && v.every((x) => isOb
 const toMap = (a) => Object.fromEntries((Array.isArray(a) ? a : []).map((x) => [x.id, x]));
 
 /** Fusion à trois voies générique sur du JSON. */
-export function merge3(base, local, remote) {
+let preferRemote = false; // première synchronisation de cette édition : en cas de conflit, le NAS (référence de la famille) l'emporte
+export function merge3(base, local, remote, firstSync = false) {
+  if (firstSync) { preferRemote = true; try { return merge3(base, local, remote); } finally { preferRemote = false; } }
   if (eq(local, remote)) return local;
   if (eq(base, local)) return remote;
   if (eq(base, remote)) return local;
@@ -77,7 +79,9 @@ export function merge3(base, local, remote) {
     }
     return out;
   }
-  return local; // conflit sur une valeur simple : ce téléphone l'emporte
+  // Conflit sur une valeur simple : ce téléphone l'emporte, sauf à la toute première synchronisation (copie locale possiblement
+  // périmée : sans cette règle, une vieille quantité de stock locale écrasait la bonne valeur du NAS).
+  return preferRemote ? remote : local;
 }
 
 async function call(method, body, rev) {
@@ -109,7 +113,7 @@ export async function syncNow() {
     let { json: remote } = await call('GET');
     for (let attempt = 0; attempt < 4; attempt++) {
       const local = pick(store.state);
-      const merged = remote.data ? merge3(meta.base ?? undefined, local, remote.data) : local;
+      const merged = remote.data ? merge3(meta.base ?? undefined, local, remote.data, !meta.base) : local;
       applyLocal(merged);
       if (eq(merged, remote.data)) { meta = { rev: remote.rev, base: clone(merged) }; break; }
       const { status, json } = await call('POST', JSON.stringify(merged), remote.rev);

@@ -1,2 +1,2 @@
 // Numéro de version affiché dans les réglages (à garder identique à celui de sw.js).
-export const APP_VERSION = '0.8.3';
+export const APP_VERSION = '0.8.4';
