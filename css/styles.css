@@ -1057,3 +1057,8 @@ body:not([data-nav="on"]) .chat-fab { bottom: calc(env(safe-area-inset-bottom) +
 .chat-menu-card .is-danger { color: #D64545; }
 .chat-menu-card .chat-menu-x { justify-content: center; margin-top: 4px; background: var(--seg-track); font-weight: 700; }
 @keyframes chatFade { from { opacity: 0; } } @keyframes chatUp { from { transform: translateY(40px); } }
+
+/* Le bouton de discussion remonte au-dessus de la bannière d'activité quand il y en a une */
+.chat-fab { transition: transform .15s, bottom .25s var(--ease, ease); }
+body:has(.feed-banner) .chat-fab { bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 70px); }
+body:has(.feed-banner)[data-chat="on"] .miniplayer { bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 132px); right: 16px; }
