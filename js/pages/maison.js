@@ -150,13 +150,28 @@ function hlistForm(l = null) {
 export function assignee(c) { return c.who === 'tour' ? c.turn : c.who || ''; }
 
 export function choreState(c, now = Date.now()) {
-  if (c.every === 0) return { delta: 0, label: 'À faire', tone: 'salmon' };
-  const due = startOfDay((c.last ?? c.created) + (c.last ? c.every * DAY : 0));
+  if (c.every === 0 && !c.start) return { delta: 0, label: 'À faire', tone: 'salmon' };
+  const due = startOfDay(c.last ? c.last + c.every * DAY : (c.start ?? c.created));
   const delta = Math.round((due - startOfDay(now)) / DAY);
   if (delta < 0) return { delta, label: `En retard de ${-delta} j`, tone: 'brick' };
   if (delta === 0) return { delta, label: "Aujourd'hui", tone: 'salmon' };
   if (delta === 1) return { delta, label: 'Demain', tone: 'slate' };
   return { delta, label: `Dans ${delta} jours`, tone: 'sage' };
+}
+
+/** Jours (début de journée) où une tâche tombe entre `from` et `to` : pour l'afficher dans l'agenda. */
+export function choreDates(c, from, to, now = Date.now()) {
+  if (c.every === 0 && !c.start) return [];
+  const st = choreState(c, now), today = startOfDay(now);
+  const first = today + st.delta * DAY < today ? today : startOfDay(today + st.delta * DAY + 12 * 36e5); // en retard : affichée aujourd'hui
+  if (c.every === 0) return first >= from && first <= to ? [first] : [];
+  const out = [];
+  for (let k = 0; k < 400; k++) {
+    const d = startOfDay(first + k * c.every * DAY + 12 * 36e5);
+    if (d > to) break;
+    if (d >= from) out.push(d);
+  }
+  return out;
 }
 
 function choresView(s) {
@@ -186,6 +201,7 @@ function choreForm(c = null) {
         ${c ? '' : `<div class="chips" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">${CHORE_PRESETS.map(([n, e]) => `<button type="button" class="pill-btn" data-preset="${esc(n)}" data-every="${e}">${esc(n)}</button>`).join('')}</div>`}
         <label class="field"><span>Tâche</span><input class="input" name="name" value="${esc(v.name)}" maxlength="60" placeholder="Ex. Passer l'aspirateur" required></label>
         <label class="field"><span>Fréquence</span><select class="input" name="every">${EVERY.map(([n, l]) => `<option value="${n}" ${n === v.every ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+        ${v.last ? '' : `<label class="field"><span>${c ? 'Prochaine fois' : 'Premier jour'}</span><input class="input" type="date" name="start" value="${dayKey(v.start ?? Date.now())}" required></label>`}
         <label class="field"><span>Qui s'en occupe</span><select class="input" name="who">
           <option value="" ${!v.who ? 'selected' : ''}>Tout le monde</option>
           <option value="tour" ${v.who === 'tour' ? 'selected' : ''}>À tour de rôle (Maman / Papa)</option>
@@ -209,6 +225,7 @@ function choreForm(c = null) {
         const f = new FormData(e.target), name = String(f.get('name')).trim();
         if (!name) return;
         const patch = { name, every: Number(f.get('every')), who: String(f.get('who')) };
+        if (f.get('start')) patch.start = startOfDay(new Date(String(f.get('start')) + 'T12:00'));
         store.update((s) => {
           if (c) { const x = s.chores.find((y) => y.id === c.id); if (x) { Object.assign(x, patch); if (patch.who === 'tour' && !x.turn) x.turn = s.me === 'Papa' ? 'Papa' : 'Maman'; } }
           else s.chores.push({ id: uid(), created: Date.now(), last: null, ...patch, ...(patch.who === 'tour' ? { turn: s.me === 'Papa' ? 'Papa' : 'Maman' } : {}) });

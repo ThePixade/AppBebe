@@ -391,9 +391,9 @@ function saveBreast(c) {
 
 /* ---------- Couches ---------- */
 function openDiaper(c) {
-  let color = null, texture = null, diaperAt = null; // diaperAt : null = maintenant
+  let color = null, texture = null, diaperAt = null, kind = null; // diaperAt : null = maintenant ; kind : type choisi, enregistré seulement au clic sur « Valider »
   openSheet({
-    title: 'Couche', subtitle: `${c.name} · détails facultatifs, puis le type`,
+    title: 'Couche', subtitle: `${c.name} · détails facultatifs, type, puis Valider`,
     onMount(body, api) {
       const draw = () => {
         const col = STOOL_COLORS.find((x) => x.id === color);
@@ -405,12 +405,13 @@ function openDiaper(c) {
           ${col?.warn ? `<div class="notice tone-${col.urgent ? 'brick' : 'yellow'} mt-12">${icon('alert', 20)}<span>${col.warn}</span></div>` : ''}
           <p class="label mt-20">Texture</p>
           <div class="chips mt-8 tone-peach">${TEXTURES.map((x) => `<button class="chip ${texture === x ? 'is-on' : ''}" data-texture="${x}">${x}</button>`).join('')}</div>
-          <p class="label mt-24">Type de couche — enregistre directement</p>
+          <p class="label mt-24">Type de couche</p>
           <div class="diaper-types mt-8">
-            <button class="dtype tone-slate" data-kind="wet"><span class="ic">${icon('drop', 30)}</span>Mouillée</button>
-            <button class="dtype tone-peach" data-kind="dirty"><span class="ic">${icon('stool', 30)}</span>Sale</button>
-            <button class="dtype tone-salmon" data-kind="mixed"><span class="ic">${icon('drop', 24)}${icon('stool', 24)}</span>Mixte</button>
-          </div>`;
+            <button class="dtype tone-slate ${kind === 'wet' ? 'is-on' : ''}" data-kind="wet" aria-pressed="${kind === 'wet'}"><span class="ic">${icon('drop', 30)}</span>Mouillée</button>
+            <button class="dtype tone-peach ${kind === 'dirty' ? 'is-on' : ''}" data-kind="dirty" aria-pressed="${kind === 'dirty'}"><span class="ic">${icon('stool', 30)}</span>Sale</button>
+            <button class="dtype tone-salmon ${kind === 'mixed' ? 'is-on' : ''}" data-kind="mixed" aria-pressed="${kind === 'mixed'}"><span class="ic">${icon('drop', 24)}${icon('stool', 24)}</span>Mixte</button>
+          </div>
+          <button class="btn btn-primary btn-block mt-16" data-act="save" ${kind ? '' : 'disabled'}>${icon('check', 18)} Valider${kind ? ' · ' + DIAPER[kind].toLowerCase() : ''}</button>`;
       };
       body.addEventListener('click', (e) => {
         const b = e.target.closest('button');
@@ -418,8 +419,8 @@ function openDiaper(c) {
         if (b.dataset.act === 'now') { diaperAt = null; draw(); }
         else if (b.dataset.color) { color = color === b.dataset.color ? null : b.dataset.color; draw(); }
         else if (b.dataset.texture) { texture = texture === b.dataset.texture ? null : b.dataset.texture; draw(); }
-        else if (b.dataset.kind) {
-          const kind = b.dataset.kind;
+        else if (b.dataset.kind) { kind = kind === b.dataset.kind ? null : b.dataset.kind; draw(); }
+        else if (b.dataset.act === 'save' && kind) {
           const ev = addEvent({ childId: c.id, type: 'diaper', kind, ...(diaperAt ? { at: diaperAt } : {}), ...(kind !== 'wet' ? { color, texture } : {}) });
           api.close();
           toast(`Couche ${DIAPER[kind].toLowerCase()} enregistrée${diaperAt ? ` à ${time(diaperAt)}` : ''}`, { action: 'Annuler', onAction: () => removeEvent(ev.id) });

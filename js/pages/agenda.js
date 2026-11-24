@@ -3,6 +3,7 @@ import { icon } from '../icons.js';
 import { esc, uid, time, startOfDay, dayKey, dayLabel, toLocalInput, openSheet, toast, seg, emptyState, DAY } from '../ui.js';
 import { hubHeader } from './hub.js';
 import { takePending } from '../premium/actions.js';
+import { choreDates, assignee, showTab as maisonTab } from './maison.js';
 
 /*
  * Agenda commun : rendez-vous, départs en vacances, fêtes de famille…
@@ -103,14 +104,13 @@ export function render(s) {
   const today = startOfDay();
   if (!month) month = monthStart(today);
   if (!selected) selected = today;
-  const evs = (s.agenda || []).filter((e) => catFilter === 'all' || catOfEvent(e, s) === catFilter);
-
   const first = new Date(month);
   const offset = (first.getDay() + 6) % 7; // semaine du lundi
   const gridStart = addDays(month, -offset);
   const inMonth = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
   const weeks = Math.ceil((offset + inMonth) / 7);
   const cells = Array.from({ length: weeks * 7 }, (_, i) => addDays(gridStart, i));
+  const evs = [...(s.agenda || []), ...choreEvents(s, cells[0], cells[cells.length - 1])].filter((e) => catFilter === 'all' || catOfEvent(e, s) === catFilter);
 
   const cell = (d0) => {
     const day = evs.filter((e) => covers(e, d0)).sort(byStart);
@@ -123,7 +123,7 @@ export function render(s) {
   };
 
   const dayEvs = evs.filter((e) => covers(e, selected)).sort(byStart);
-  const upcoming = evs.filter((e) => startOfDay(e.end ?? e.start) >= today && !covers(e, selected)).sort((a, b) => a.start - b.start).slice(0, 6);
+  const upcoming = evs.filter((e) => !e.chore && startOfDay(e.end ?? e.start) >= today && !covers(e, selected)).sort((a, b) => a.start - b.start).slice(0, 6);
   const mLabel = first.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
   const cats = enabledCats(s);
   if (catFilter !== 'all' && !cats.includes(catFilter)) catFilter = 'all';
@@ -159,7 +159,14 @@ export function render(s) {
     ${upcoming.length ? `<section class="section"><div class="section-head"><h2>À venir${catFilter !== 'all' ? ` · ${esc(CATS[catFilter].label)}` : ''}</h2></div>${upcoming.map(evCard).join('')}</section>` : ''}`;
 }
 
+/** Tâches de la maison (récurrentes) vues comme des événements « toute la journée » : partagées avec tous, non modifiables ici. */
+function choreEvents(s, from, to) {
+  if (!moduleOn(s, 'maison')) return [];
+  return (s.chores || []).flatMap((c) => choreDates(c, from, to).map((d) => ({ id: `chore:${c.id}:${d}`, chore: true, choreId: c.id, title: c.name, start: d, end: d, allDay: true, cat: 'maison', who: assignee(c) })));
+}
+
 function evCard(e) {
+  if (e.chore) return `<button class="card ev-card tone-peach" data-act="chore" data-id="${e.choreId}"><span class="ev-bar"></span><span class="ev-body"><b>${esc(e.title)}</b><small>Tâche de la maison${e.who ? ` · ${esc(e.who)}` : ''}${startOfDay() > e.start ? ' · en retard' : ''}</small></span>${icon('chevronRight', 16)}</button>`;
   const c = CATS[catOfEvent(e)], k = { tone: c.tone, label: c.label };
   const multi = startOfDay(e.start) !== startOfDay(e.end ?? e.start);
   return `
@@ -287,6 +294,7 @@ export function mount(el) {
     else if (a === 'next') { const m = new Date(month); m.setMonth(m.getMonth() + 1); month = startOfDay(m); store.refresh(); }
     else if (a === 'today') { selected = startOfDay(); month = monthStart(selected); store.refresh(); }
     else if (a === 'cat') { catFilter = b.dataset.v; store.refresh(); }
+    else if (a === 'chore') { maisonTab('chores'); location.hash = '#/maison'; }
     else if (a === 'add') openForm(null, selected);
     else if (a === 'open') openForm((store.state.agenda || []).find((x) => x.id === b.dataset.id));
   });

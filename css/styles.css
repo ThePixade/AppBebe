@@ -1062,3 +1062,4 @@ body:not([data-nav="on"]) .chat-fab { bottom: calc(env(safe-area-inset-bottom) +
 .chat-fab { transition: transform .15s, bottom .25s var(--ease, ease); }
 body:has(.feed-banner) .chat-fab { bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 70px); }
 body:has(.feed-banner)[data-chat="on"] .miniplayer { bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 132px); right: 16px; }
+.dtype.is-on { background: color-mix(in srgb, var(--tone) 28%, var(--surface-2)); border: 2px solid var(--tone); box-shadow: 0 0 0 3px color-mix(in srgb, var(--tone) 18%, transparent); }
