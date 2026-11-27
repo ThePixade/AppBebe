@@ -12,6 +12,7 @@ import * as home from './pages/home.js';
 import * as food from './pages/food.js';
 import * as parents from './pages/parents.js';
 import * as sleep from './pages/sleep.js';
+import * as routine from './pages/routine.js';
 import * as stats from './pages/stats.js';
 import * as plan from './pages/plan.js';
 import * as agenda from './pages/agenda.js';
@@ -23,7 +24,7 @@ import { applyUi } from './premium/ui.js';
 import { renderNav, mountNav } from './premium/nav.js';
 import { initChat } from './chat.js';
 
-const routes = { hub, maison, budget, sante, vacances, home, food, parents, sleep, stats, plan, agenda };
+const routes = { hub, maison, budget, sante, vacances, home, food, parents, sleep, routine, stats, plan, agenda };
 // Édition Premium : l'accueil devient le tableau de bord, et la page Apparence existe.
 if (PREMIUM) { routes.hub = dashboard; routes.perso = perso; }
 const scope = createScope();
@@ -96,6 +97,14 @@ function render() {
   updateNav(name, true);
   if (store.state.modulesNotice) setTimeout(openArrivalNotice, 450);
 }
+
+/* « Organiser l'accueil » (depuis Réglages ou Apparence) : on ouvre l'accueil directement en mode organisation. */
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('[data-go-edit]')) return;
+  try { sessionStorage.setItem('dash-edit', '1'); } catch { /* stockage indisponible */ }
+  closeSheet(true);
+  if (!location.hash || location.hash === '#/hub') setTimeout(render, 0); // déjà sur l'accueil : pas de changement d'adresse, on le réaffiche
+});
 
 /* Actions globales (en-tête partagé). */
 document.addEventListener('click', (e) => {

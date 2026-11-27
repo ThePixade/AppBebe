@@ -121,40 +121,82 @@ export function render(s) {
       <span class="ac-body"><span class="ac-title">${title}</span><span class="ac-meta">${meta}</span></span>
     </button>`;
 
-  return `
-    ${appHeader(s)}
-    ${babyTabs('home')}
-    <section class="hero">
-      <p class="eyebrow">${dayLabel()}</p>
-      <h1 class="title">La journée de ${esc(c.name)}</h1>
-    </section>
-
-    <a class="card stats" href="#/stats" aria-label="Résumé du jour, voir les statistiques">
+  const blocks = {
+    stats: `<a class="card stats" href="#/stats" aria-label="Résumé du jour, voir les statistiques">
       <div class="stat"><span class="stat-v num">${feeds.length}</span><span class="stat-l">Repas</span></div>
       <div class="stat"><span class="stat-v num">${ml}<small>ml</small></span><span class="stat-l">Lait</span></div>
       <div class="stat"><span class="stat-v num">${diapers}</span><span class="stat-l">Couches</span></div>
       <div class="stat"><span class="stat-v num" data-live="sleepTotal" data-base="${sleepMs}">${fmtDur(sleepMs + (sleeping ? Date.now() - Math.max(sleeping, t0) : 0)).replace('< 1 min', '0 min')}</span><span class="stat-l">Sommeil</span></div>
       <span class="stats-more">${icon('chart', 15)} Statistiques ${icon('chevronRight', 14)}</span>
-    </a>
-
-    <div class="org-row">${orgCard(s)}${moduleOn(s, 'agenda') ? agendaCard(s) : ''}</div>
-    ${agendaCardHtml(s, 'bebe', { title: 'Rendez-vous de Bébé' })}
-
-    <section class="action-grid" aria-label="Actions rapides">
-      ${card('feed', 'salmon', 'bottle', 'Repas', feedMeta, !!breast)}
-      ${card('diaper', 'peach', 'diaper', 'Couches', diaperMeta)}
-      ${card('sleep', 'slate', 'moon', 'Sommeil', sleepMeta, !!sleeping)}
-      ${card('growth', 'sage', 'growth', 'Croissance', growthMeta)}
-    </section>
-
-    <section class="section">
+    </a>`,
+    org: `<div class="org-row">${orgCard(s)}${moduleOn(s, 'agenda') ? agendaCard(s) : ''}</div>`,
+    rdv: agendaCardHtml(s, 'bebe', { title: 'Rendez-vous de Bébé' }),
+    feed: card('feed', 'salmon', 'bottle', 'Repas', feedMeta, !!breast),
+    diaper: card('diaper', 'peach', 'diaper', 'Couches', diaperMeta),
+    sleep: card('sleep', 'slate', 'moon', 'Sommeil', sleepMeta, !!sleeping),
+    growth: card('growth', 'sage', 'growth', 'Croissance', growthMeta),
+    today: `<section class="section">
       <div class="section-head"><h2>Aujourd'hui</h2><span class="small faint">${today.length} événement${today.length > 1 ? 's' : ''}</span></div>
       <div class="card timeline">
         ${today.length ? today.map((e) => eventRow(e)).join('') : emptyState('clock', 'Rien pour le moment', 'Les actions de la journée apparaîtront ici.')}
       </div>
       <button class="past-link" data-act="history">${icon('clock', 18)} Jours précédents</button>
+    </section>`,
+  };
+  // Blocs dans l'ordre choisi ; les cartes d'action voisines sont regroupées en grille.
+  let body = '', grid = '';
+  const flush = () => { if (grid) body += `<section class="action-grid" aria-label="Actions rapides">${grid}</section>`; grid = ''; };
+  for (const id of babyLayout(s)) {
+    if (BABY_CARDS.includes(id)) grid += blocks[id]; else { flush(); body += blocks[id]; }
+  }
+  flush();
+  return `
+    ${appHeader(s)}
+    ${babyTabs('home')}
+    <section class="hero">
+      <p class="eyebrow">${dayLabel()}</p>
+      <div class="row-between"><h1 class="title">La journée de ${esc(c.name)}</h1><button class="pill-btn" data-act="organize" aria-label="Organiser cette page">${icon('settings', 15)} Organiser</button></div>
     </section>
+    ${body}
     ${feedBanner(s)}`;
+}
+
+/* ---------- Organisation de la page Bébé (choix et ordre des blocs) ---------- */
+const BABY_CARDS = ['feed', 'diaper', 'sleep', 'growth'];
+export const BABY_BLOCKS = { stats: 'Résumé du jour', org: 'Stock & agenda', rdv: 'Rendez-vous de Bébé', feed: 'Carte Repas', diaper: 'Carte Couches', sleep: 'Carte Sommeil', growth: 'Carte Croissance', today: 'Chronologie du jour' };
+const BABY_DEFAULT = ['stats', 'org', 'rdv', 'feed', 'diaper', 'sleep', 'growth', 'today'];
+/** Blocs affichés, dans l'ordre choisi (les blocs masqués sont retirés ; les nouveaux blocs sont ajoutés à la fin). */
+function babyLayout(s, withHidden = false) {
+  const bh = s.babyHome || {}, hidden = bh.hidden || [];
+  const order = [...(bh.order || []).filter((id) => BABY_DEFAULT.includes(id)), ...BABY_DEFAULT.filter((id) => !(bh.order || []).includes(id))];
+  return withHidden ? order : order.filter((id) => !hidden.includes(id));
+}
+function openOrganize() {
+  openSheet({
+    title: 'Organiser la page Bébé', subtitle: 'Choisissez ce qui s’affiche et dans quel ordre',
+    onMount(body, api) {
+      const draw = () => {
+        const s = store.state, order = babyLayout(s, true), hidden = (s.babyHome?.hidden) || [];
+        body.innerHTML = `<div class="list-group">${order.map((id, i) => `
+          <div class="row-between nav-row" style="gap:8px"><label class="row grow" style="gap:12px"><label class="switch"><input type="checkbox" data-show="${id}" ${hidden.includes(id) ? '' : 'checked'}><span class="track"></span></label><span>${esc(BABY_BLOCKS[id])}</span></label>
+            <span class="row" style="gap:4px"><button class="icon-btn icon-btn-sm" data-mv="${id}" data-d="-1" ${i === 0 ? 'disabled' : ''} aria-label="Monter">${icon('chevronUp', 16)}</button><button class="icon-btn icon-btn-sm" data-mv="${id}" data-d="1" ${i === order.length - 1 ? 'disabled' : ''} aria-label="Descendre">${icon('chevronDown', 16)}</button></span></div>`).join('')}</div>
+          <div class="grid-2 mt-16"><button class="btn btn-ghost" data-reset>Rétablir</button><button class="btn btn-primary" data-ok>Terminé</button></div>`;
+      };
+      const save = (order, hidden) => { store.update((s) => { s.babyHome = { order, hidden }; }); draw(); };
+      body.addEventListener('change', (e) => {
+        const id = e.target.dataset?.show; if (!id) return;
+        const s = store.state, order = babyLayout(s, true), hidden = new Set(s.babyHome?.hidden || []);
+        e.target.checked ? hidden.delete(id) : hidden.add(id); save(order, [...hidden]);
+      });
+      body.addEventListener('click', (e) => {
+        const b = e.target.closest('button'); if (!b) return;
+        if (b.matches('[data-ok]')) return api.close();
+        if (b.matches('[data-reset]')) { store.update((s) => { s.babyHome = null; }); return draw(); }
+        if (b.dataset.mv) { const s = store.state, order = babyLayout(s, true), i = order.indexOf(b.dataset.mv), j = i + +b.dataset.d; if (j < 0 || j >= order.length) return; [order[i], order[j]] = [order[j], order[i]]; save(order, s.babyHome?.hidden || []); }
+      });
+      draw();
+    },
+  });
 }
 
 export function eventRow(e) {
@@ -193,7 +235,7 @@ export function mount(el, scope) {
     const b = e.target.closest('[data-act]');
     if (!b) return;
     const c = activeChild(store.state);
-    ({ feed: () => openFeed(c), diaper: () => openDiaper(c), sleep: () => toggleSleep(c), growth: () => openGrowth(c), event: () => openEvent(b.dataset.id), history: () => openHistory(c) })[b.dataset.act]?.();
+    ({ organize: () => openOrganize(), feed: () => openFeed(c), diaper: () => openDiaper(c), sleep: () => toggleSleep(c), growth: () => openGrowth(c), event: () => openEvent(b.dataset.id), history: () => openHistory(c) })[b.dataset.act]?.();
   });
   scope.onTick(() => {
     const s = store.state, c = activeChild(s);
@@ -217,9 +259,9 @@ function openFeed(c, initialMode) {
   let milk = feeding === 'breast' ? 'maternel' : feeding === 'formula' ? 'infantile' : lastBottle?.milk || 'infantile';
   let bottleAt = null; // null = maintenant
   const hint = lastBreast?.last === 'L' ? 'R' : 'L';
-  // Tétée oubliée : saisie après coup (début + minutes par côté)
+  // Ajouter une tétée après coup : saisie après coup (début + minutes par côté)
   let past = false;
-  // auto : le début est calculé (maintenant − durée) ; sinon la personne a choisi une date (tétée oubliée)
+  // auto : le début est calculé (maintenant − durée) ; sinon la personne a choisi une date (tétée ajoutée après coup)
   const pb = { at: Date.now(), auto: true, L: hint === 'L' ? 10 : 0, R: hint === 'R' ? 10 : 0, last: hint };
 
   openSheet({
@@ -250,7 +292,7 @@ function openFeed(c, initialMode) {
               <button class="btn btn-ghost" data-act="cancel" ${t ? '' : 'disabled'}>Annuler</button>
               <button class="btn btn-primary" data-act="save-breast" ${t ? '' : 'disabled'}>${icon('check', 20)} Terminer</button>
             </div>
-            ${t ? '' : `<button class="past-link" data-act="past">${icon('clock', 18)} Tétée oubliée ? L’ajouter après coup</button><button class="past-link" data-act="pref" data-v="manual">${icon('edit', 18)} Saisir la durée à la main</button>`}` : `
+            ${t ? '' : `<button class="past-link" data-act="past">${icon('clock', 18)} Ajouter une tétée</button><button class="past-link" data-act="pref" data-v="manual">${icon('edit', 18)} Saisir la durée à la main</button>`}` : `
             <div class="amount mt-20"><span class="amount-value num">${ml || '0'}</span><span class="amount-unit">ml</span></div>
             <div class="chips tone-salmon" style="justify-content:center">${[60, 90, 120, 150, 180, 210].map((v) => `<button class="chip ${+ml === v ? 'is-on' : ''}" data-act="preset" data-v="${v}">${v}</button>`).join('')}</div>
             <div class="keypad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => `<button class="key num" data-act="key" data-v="${n}">${n}</button>`).join('')}

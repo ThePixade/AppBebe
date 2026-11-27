@@ -10,7 +10,7 @@ import { PREMIUM } from './edition.js';
  *  - route : page d'entrée du module (#/route) ; routes : toutes les pages qui lui appartiennent.
  */
 export const MODULES = [
-  { id: 'baby',      label: 'Bébé',               desc: 'Repas, couches, sommeil, croissance, diversification, espace parents', icon: 'baby',     tone: 'salmon', ready: true,  route: 'home', routes: ['home', 'food', 'parents', 'sleep', 'stats', 'plan'] },
+  { id: 'baby',      label: 'Bébé',               desc: 'Repas, couches, sommeil, croissance, diversification, espace parents', icon: 'baby',     tone: 'salmon', ready: true,  route: 'home', routes: ['home', 'food', 'parents', 'sleep', 'routine', 'stats', 'plan'] },
   { id: 'agenda',    label: 'Agenda',             desc: 'Rendez-vous, fêtes et départs partagés en famille',                    icon: 'calendar', tone: 'slate',  ready: true,  route: 'agenda', routes: ['agenda'] },
   { id: 'finance',   label: 'Budget',             desc: 'Dépenses, budget du mois, qui doit quoi',                              icon: 'wallet',   tone: 'sage',   ready: true,  route: 'budget', routes: ['budget'] },
   { id: 'medical',   label: 'Santé',              desc: 'Carnet de santé de chacun, vaccins, ordonnances, rendez-vous médicaux', icon: 'stetho',   tone: 'brick',  ready: true,  route: 'sante', routes: ['sante'] },

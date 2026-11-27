@@ -13,6 +13,9 @@ const defaults = () => ({
   ui: null,               // personnalisation de l'affichage (édition Premium), synchronisée entre les appareils
   memo: '',               // mémo de la famille (accueil Premium), partagé
   modules: null,          // modules visibles sur CET appareil : null = pas encore choisi (jamais partagé)
+  routines: [],           // routine : [{ id, who: 'baby'|'Maman'|'Papa', time, title }] (partagé)
+  routineDone: {},        // routine cochée par jour : { 'AAAA-MM-JJ': { id: qui } } (partagé)
+  babyHome: null,         // organisation de la page Bébé (partagée) : { order: [...], hidden: [...] }
   modulesHint: '',        // dernière configuration de modules faite dans la famille (JSON, partagé) : simple point de départ
   modulesNotice: null,    // alerte d'arrivée à afficher une fois sur cet appareil
   meChosen: false,        // le rôle (Maman / Papa / Nounou) a été choisi sur cet appareil          // { baby, agenda, … } : null = choix des modules pas encore fait

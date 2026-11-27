@@ -2,7 +2,7 @@ import { store, partnerOf } from '../store.js';
 import { icon } from '../icons.js';
 import { newestFirst, esc, uid, startOfDay, dayKey, openSheet, toast, seg, emptyState, DAY, $ } from '../ui.js';
 import { openForm } from '../forms.js';
-import { agendaCardHtml } from './agenda.js';
+import { agendaCardHtml, colorPicker } from './agenda.js';
 import { hubHeader } from './hub.js';
 import { addShopping } from '../supplies.js';
 
@@ -25,7 +25,11 @@ const CHORE_PRESETS = [['Passer l\'aspirateur', 7], ['Sortir les poubelles', 3],
 const MEALS = [['lunch', 'Midi'], ['dinner', 'Soir']];
 
 const shopOf = (s) => s.lists.find((l) => l.kind === 'shop');
-const everyLabel = (n) => EVERY.find(([v]) => v === n)?.[1] || `Tous les ${n} jours`;
+const everyLabel = (n) => EVERY.find(([v]) => v === n)?.[1]
+  || (n % 30 === 0 ? `Tous les ${n / 30} mois` : n % 7 === 0 ? `Toutes les ${n / 7} semaines` : `Tous les ${n} jours`);
+const UNITS = [[1, 'jours'], [7, 'semaines'], [30, 'mois']];
+/** Fréquence personnalisée → { n, unit } (le plus grand multiple exact). */
+const splitEvery = (days) => { const u = [...UNITS].reverse().find(([d]) => days % d === 0) || UNITS[0]; return { n: days / u[0], unit: u[0] }; };
 
 /* ---------- Résumé pour le hub ---------- */
 export function maisonSummary(s) {
@@ -200,8 +204,10 @@ function choreForm(c = null) {
       <form class="js-form">
         ${c ? '' : `<div class="chips" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">${CHORE_PRESETS.map(([n, e]) => `<button type="button" class="pill-btn" data-preset="${esc(n)}" data-every="${e}">${esc(n)}</button>`).join('')}</div>`}
         <label class="field"><span>Tâche</span><input class="input" name="name" value="${esc(v.name)}" maxlength="60" placeholder="Ex. Passer l'aspirateur" required></label>
-        <label class="field"><span>Fréquence</span><select class="input" name="every">${EVERY.map(([n, l]) => `<option value="${n}" ${n === v.every ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+        <label class="field"><span>Fréquence</span><select class="input" name="every">${EVERY.map(([n, l]) => `<option value="${n}" ${n === v.every ? 'selected' : ''}>${l}</option>`).join('')}<option value="custom" ${EVERY.some(([n]) => n === v.every) ? '' : 'selected'}>Personnalisée…</option></select></label>
+        <div class="field js-custom" ${EVERY.some(([n]) => n === v.every) ? 'hidden' : ''}><span>Répéter tous les</span><div class="grid-2"><input class="input" type="number" name="evn" min="1" max="365" value="${splitEvery(v.every || 7).n}"><select class="input" name="evu">${UNITS.map(([d, l]) => `<option value="${d}" ${splitEvery(v.every || 7).unit === d ? 'selected' : ''}>${l}</option>`).join('')}</select></div></div>
         ${v.last ? '' : `<label class="field"><span>${c ? 'Prochaine fois' : 'Premier jour'}</span><input class="input" type="date" name="start" value="${dayKey(v.start ?? Date.now())}" required></label>`}
+        <div class="field"><span>Couleur dans le calendrier</span>${colorPicker(v.color || '', 'peach')}</div>
         <label class="field"><span>Qui s'en occupe</span><select class="input" name="who">
           <option value="" ${!v.who ? 'selected' : ''}>Tout le monde</option>
           <option value="tour" ${v.who === 'tour' ? 'selected' : ''}>À tour de rôle (Maman / Papa)</option>
@@ -214,6 +220,10 @@ function choreForm(c = null) {
         body.querySelector('[name=name]').value = b.dataset.preset;
         body.querySelector('[name=every]').value = b.dataset.every;
       }));
+      let color = v.color || '';
+      body.querySelectorAll('[data-pick=color] .swatch-btn').forEach((b) => b.addEventListener('click', () => { color = b.dataset.color; body.querySelectorAll('[data-pick=color] .swatch-btn').forEach((x) => x.classList.toggle('is-on', x === b)); }));
+      const everySel = body.querySelector('[name=every]'), custom = body.querySelector('.js-custom');
+      everySel.addEventListener('change', () => { custom.hidden = everySel.value !== 'custom'; });
       body.querySelector('[data-del]')?.addEventListener('click', () => {
         const copy = { ...c };
         store.update((s) => { s.chores = s.chores.filter((x) => x.id !== c.id); });
@@ -224,7 +234,8 @@ function choreForm(c = null) {
         e.preventDefault();
         const f = new FormData(e.target), name = String(f.get('name')).trim();
         if (!name) return;
-        const patch = { name, every: Number(f.get('every')), who: String(f.get('who')) };
+        const every = f.get('every') === 'custom' ? Math.max(1, Math.min(3650, Math.round(Number(f.get('evn')) || 1) * Number(f.get('evu')))) : Number(f.get('every'));
+        const patch = { name, every, color, who: String(f.get('who')) };
         if (f.get('start')) patch.start = startOfDay(new Date(String(f.get('start')) + 'T12:00'));
         store.update((s) => {
           if (c) { const x = s.chores.find((y) => y.id === c.id); if (x) { Object.assign(x, patch); if (patch.who === 'tour' && !x.turn) x.turn = s.me === 'Papa' ? 'Papa' : 'Maman'; } }

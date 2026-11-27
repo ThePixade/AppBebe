@@ -15,19 +15,6 @@ const MOODS = [
 ];
 
 const CHECKLISTS = {
-  Maman: {
-    title: 'Mon post-partum', icon: 'heart', tone: 'salmon',
-    items: [
-      ['epnp', 'Entretien postnatal précoce', 'Entre la 4ᵉ et la 8ᵉ semaine, avec une sage-femme ou un médecin'],
-      ['visite', 'Visite postnatale', 'Dans les 6 à 8 semaines après la naissance'],
-      ['perinee', 'Bilan & rééducation du périnée', 'Prescrite lors de la visite postnatale'],
-      ['cicatrice', 'Surveiller la cicatrice', 'Épisiotomie ou césarienne : rougeur, douleur, fièvre'],
-      ['lochies', 'Suivi des saignements', 'Signalez des saignements abondants ou malodorants'],
-      ['contraception', 'Faire le point contraception', 'Une ovulation peut revenir avant le retour de couches'],
-      ['abdos', 'Rééducation abdominale', 'Seulement après celle du périnée'],
-      ['repos', 'Dormir quand bébé dort', 'Au moins une sieste par jour, c’est un soin'],
-    ],
-  },
   Papa: {
     title: 'Mes démarches & relais', icon: 'check', tone: 'slate',
     items: [
@@ -58,7 +45,7 @@ export function render(s) {
   const moods = s.moods[who] || {};
   const todayMood = moods[dayKey()];
   const list = CHECKLISTS[who];
-  const done = list.items.filter(([id]) => s.checks[`${who}:${id}`]).length;
+  const done = (list?.items || []).filter(([id]) => s.checks[`${who}:${id}`]).length;
   const strip = Array.from({ length: 14 }, (_, i) => moods[dayKey(Date.now() - (13 - i) * DAY)]);
 
   return `
@@ -83,7 +70,7 @@ export function render(s) {
     ${moodSignal(moods) ? `
     <div class="notice tone-salmon mt-12">${icon('heart', 20)}<span><b>Vous traversez des jours difficiles.</b> C’est fréquent et ce n’est pas un échec. Parlez-en à votre sage-femme ou à votre médecin : le baby-blues et la dépression post-partum se soignent. En cas de détresse, le <b>3114</b> répond 24 h/24.</span></div>` : ''}
 
-    <section class="section">
+    ${list ? `    <section class="section">
       <div class="section-head tone-${list.tone}"><h2>${icon(list.icon, 20)} ${list.title}</h2><span class="badge">${done}/${list.items.length}</span></div>
       <div class="card" style="padding:4px 16px">
         ${list.items.map(([id, t, d]) => {
@@ -91,7 +78,7 @@ export function render(s) {
           return `<button class="check ${on ? 'is-done' : ''}" data-check="${id}" aria-pressed="${on}"><span class="check-box">${icon('check', 16)}</span><span class="check-text">${t}<small>${d}</small></span></button>`;
         }).join('')}
       </div>
-    </section>
+    </section>` : ''}
 
     ${who === 'Maman' ? breastToggle(s) + (usesBreast(s) && pumpEnabled(s) ? breastfeedingSection(s) : '') : relaySection(s)}
 

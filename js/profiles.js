@@ -155,7 +155,7 @@ export function openProfiles() {
         const cur = activeChild(s);
         const baby = !!s.modules?.baby;
         body.innerHTML = `
-          ${EDITION.premium ? `<a class="btn btn-primary btn-block" href="#/perso">${icon('palette', 18)} Apparence et personnalisation</a>` : ''}
+          ${EDITION.premium ? `<div class="grid-2"><a class="btn btn-primary" href="#/perso">${icon('palette', 18)} Apparence</a><a class="btn btn-ghost" href="#/hub" data-go-edit>${icon('settings', 18)} Organiser l'accueil</a></div>` : ''}
           <div class="field ${EDITION.premium ? 'mt-16' : ''}"><span>Mes modules <small class="faint">(propres à cet appareil)</small></span>${modulePickerHtml(s)}
             ${(() => { const h = hintOf(s); return h && JSON.stringify(Object.keys(h.modules).filter((k) => h.modules[k]).sort()) !== JSON.stringify(Object.keys(s.modules || {}).filter((k) => s.modules[k]).sort()) ? `<button class="btn btn-ghost btn-sm mt-8" data-use-hint>Reprendre la configuration ${h.by ? `de ${esc(h.by)}` : 'de la famille'}</button>` : ''; })()}
             <p class="small faint mt-8">Ce choix ne change rien pour les autres : chacun voit les modules qu'il veut, les données restent communes.</p></div>

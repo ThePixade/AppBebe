@@ -68,10 +68,11 @@ function wBaby(s, size) {
   const c = activeChild(s); if (!moduleOn(s, 'baby') || !c) return null;
   const t0 = startOfDay(), today = eventsOf(s, c.id).filter((e) => e.at >= t0), feeds = today.filter((e) => e.type === 'feed');
   const sleepMs = today.filter((e) => e.type === 'sleep').reduce((a, e) => a + (e.end - Math.max(e.at, t0)), 0), diapers = today.filter((e) => e.type === 'diaper').length;
-  const lf = lastOf(s, c.id, 'feed'), sleeping = s.timers?.sleep?.[c.id];
+  const lf = lastOf(s, c.id, 'feed'), ld = lastOf(s, c.id, 'diaper'), sleeping = s.timers?.sleep?.[c.id];
   return { title: `${esc(c.name)}`, more: ['#/home', 'Bébé'], html: `
     <div class="mini-stats" style="border-top:0;padding-top:0"><div><span class="faint">Repas</span><b class="num">${feeds.length}</b></div><div><span class="faint">Couches</span><b class="num">${diapers}</b></div><div><span class="faint">Sommeil</span><b class="num">${esc(fmtDur(sleepMs).replace('< 1 min', '0 min'))}</b></div></div>
     <p class="small muted mt-8">${sleeping ? `${icon('moon', 13)} Dort depuis ${esc(fmtDur(Date.now() - sleeping))}` : lf ? `Dernier repas ${esc(ago(lf.at))}` : 'Aucun repas noté'}</p>
+    <p class="small muted">${ld ? `Dernière couche ${esc(ago(ld.at))}${ld.kind ? ' · ' + esc({ wet: 'mouillée', dirty: 'sale', mixed: 'mixte' }[ld.kind] || '') : ''}` : 'Aucune couche notée'}</p>
     ${size !== 'S' ? `<div class="grid-3q mt-12"><button class="btn btn-ghost btn-sm" data-act="action" data-a="feed">${icon('bottle', 14)} Repas</button><button class="btn btn-ghost btn-sm" data-act="action" data-a="diaper">${icon('diaper', 14)} Couche</button><button class="btn btn-ghost btn-sm" data-act="action" data-a="sleep">${icon('moon', 14)} Sieste</button></div>` : ''}` };
 }
 
@@ -191,10 +192,9 @@ export function render(s) {
       <p class="small muted">Maintenez un bloc appuyé, puis faites-le glisser où vous voulez. Le bouton rouge masque un bloc, la pastille noire en change la taille.</p>
       <div class="grid-2 mt-12"><button class="btn btn-primary btn-sm" data-act="edit-done">${icon('check', 16)} Terminé</button><button class="btn btn-ghost btn-sm" data-act="w-reset">Rétablir par défaut</button></div>
     </div>
-    <div class="dash-bar"><button class="pill-btn" data-act="edit">${icon('settings', 15)} Organiser l'accueil</button><a class="pill-btn" href="#/perso">${icon('palette', 15)} Apparence</a></div>
     <div class="dash ${editing ? 'is-editing' : ''}">${shown.map(({ w, def, r }, i) => shell(w, def, r, i)).join('')}</div>
     <div class="org-tray card mt-16">${hidden.length ? `<p class="cat-title" style="padding-top:0">Blocs masqués : touchez pour les remettre</p><div class="chips">${hidden.map(({ w, def }) => `<button class="chip" data-act="w-show" data-id="${w.id}">${icon('plus', 13)} ${esc(def.label)}</button>`).join('')}</div>` : '<p class="small faint">Tous les blocs sont affichés.</p>'}</div>
-    ${!ui.tipSeen ? `<div class="notice tone-gold mt-16 dash-tip">${icon('sparkle', 18)}<span class="grow" style="flex:1"><b>Démo de la version Premium.</b> Maintenez un bloc appuyé pour le déplacer, ou touchez « Apparence » pour tout personnaliser : couleurs, polices, tailles, navigation.</span><button class="btn btn-sm" data-act="tip-close">OK</button></div>` : ''}`;
+    ${!ui.tipSeen ? `<div class="notice tone-gold mt-16 dash-tip">${icon('sparkle', 18)}<span class="grow" style="flex:1"><b>Démo de la version Premium.</b> Maintenez un bloc appuyé pour le déplacer, ou touchez la palette en haut pour tout personnaliser : couleurs, polices, tailles, navigation.</span><button class="btn btn-sm" data-act="tip-close">OK</button></div>` : ''}`;
 }
 
 /* --------------------------------------------------- animations de réarrangement */
@@ -301,6 +301,7 @@ export function mount(el) {
   document.body.classList.toggle('org-mode', editing);
   dash.querySelectorAll(':scope > .dw').forEach((n) => n.addEventListener('pointerdown', (e) => armPress(e, n, dash)));
   playFlip(dash);
+  try { if (sessionStorage.getItem('dash-edit')) { sessionStorage.removeItem('dash-edit'); setTimeout(() => setEditing(true), 80); } } catch { /* stockage indisponible */ }
   if (focusId) { dash.querySelector(`.dw[data-w="${focusId}"]`)?.focus({ preventScroll: true }); focusId = null; }
 
   let memoTimer = 0;

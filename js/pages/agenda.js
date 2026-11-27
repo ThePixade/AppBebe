@@ -32,6 +32,13 @@ export const CATS = {
   autre: { label: 'Autre', tone: 'pearl', icon: 'calendar', kind: 'other', allDay: false },
 };
 
+/** Couleurs au choix pour un événement ou une tâche (sinon : la couleur de sa catégorie). */
+export const COLORS = ['salmon', 'peach', 'gold', 'yellow', 'sage', 'mint', 'ocean', 'slate', 'lavender', 'rose', 'brick'];
+export const colorLabel = { salmon: 'Corail', peach: 'Pêche', gold: 'Or', yellow: 'Jaune', sage: 'Vert sauge', mint: 'Menthe', ocean: 'Bleu', slate: 'Ardoise', lavender: 'Lavande', rose: 'Rose', brick: 'Rouge' };
+export const toneOfEvent = (e, s) => (e.color && COLORS.includes(e.color) ? e.color : CATS[catOfEvent(e, s)].tone);
+/** Pastilles de choix de couleur ; `data-color=""` = couleur automatique. */
+export const colorPicker = (value, autoTone) => `<div class="color-pick" data-pick="color"><button type="button" class="swatch-btn tone-${autoTone} ${!value ? 'is-on' : ''}" data-color="" aria-label="Automatique" title="Automatique"><span>A</span></button>${COLORS.map((c) => `<button type="button" class="swatch-btn tone-${c} ${value === c ? 'is-on' : ''}" data-color="${c}" aria-label="${colorLabel[c]}" title="${colorLabel[c]}"></button>`).join('')}</div>`;
+
 /** Catégorie d'un événement ; déduite pour les anciens événements (créés avant les catégories). */
 export function catOfEvent(e, s = store.state) {
   if (e.cat && CATS[e.cat]) return e.cat;
@@ -118,7 +125,7 @@ export function render(s) {
     return `
       <button class="cal-day ${out ? 'is-out' : ''} ${d0 === today ? 'is-today' : ''} ${d0 === selected ? 'is-sel' : ''}" data-day="${d0}" aria-label="${esc(dayLabel(d0))}${day.length ? `, ${day.length} événement${day.length > 1 ? 's' : ''}` : ''}">
         <span class="cal-n">${new Date(d0).getDate()}</span>
-        <span class="cal-dots">${day.slice(0, 3).map((e) => `<i class="tone-${CATS[catOfEvent(e, s)].tone}"></i>`).join('')}</span>
+        <span class="cal-dots">${day.slice(0, 3).map((e) => `<i class="tone-${toneOfEvent(e, s)}"></i>`).join('')}</span>
       </button>`;
   };
 
@@ -162,12 +169,12 @@ export function render(s) {
 /** Tâches de la maison (récurrentes) vues comme des événements « toute la journée » : partagées avec tous, non modifiables ici. */
 function choreEvents(s, from, to) {
   if (!moduleOn(s, 'maison')) return [];
-  return (s.chores || []).flatMap((c) => choreDates(c, from, to).map((d) => ({ id: `chore:${c.id}:${d}`, chore: true, choreId: c.id, title: c.name, start: d, end: d, allDay: true, cat: 'maison', who: assignee(c) })));
+  return (s.chores || []).flatMap((c) => choreDates(c, from, to).map((d) => ({ id: `chore:${c.id}:${d}`, chore: true, choreId: c.id, title: c.name, start: d, end: d, allDay: true, cat: 'maison', color: c.color || '', who: assignee(c) })));
 }
 
 function evCard(e) {
-  if (e.chore) return `<button class="card ev-card tone-peach" data-act="chore" data-id="${e.choreId}"><span class="ev-bar"></span><span class="ev-body"><b>${esc(e.title)}</b><small>Tâche de la maison${e.who ? ` · ${esc(e.who)}` : ''}${startOfDay() > e.start ? ' · en retard' : ''}</small></span>${icon('chevronRight', 16)}</button>`;
-  const c = CATS[catOfEvent(e)], k = { tone: c.tone, label: c.label };
+  if (e.chore) return `<button class="card ev-card tone-${e.color || 'peach'}" data-act="chore" data-id="${e.choreId}"><span class="ev-bar"></span><span class="ev-body"><b>${esc(e.title)}</b><small>Tâche de la maison${e.who ? ` · ${esc(e.who)}` : ''}${startOfDay() > e.start ? ' · en retard' : ''}</small></span>${icon('chevronRight', 16)}</button>`;
+  const c = CATS[catOfEvent(e)], k = { tone: toneOfEvent(e), label: c.label };
   const multi = startOfDay(e.start) !== startOfDay(e.end ?? e.start);
   return `
     <button class="card ev-card tone-${k.tone}" data-act="open" data-id="${e.id}">
@@ -191,7 +198,7 @@ function openForm(existing, day) {
   const cats0 = enabledCats(store.state);
   const ev = existing ? { ...existing } : { title: '', allDay: false, start: nine, end: null, place: '', note: '' };
   const startCat = existing ? catOfEvent(existing) : (catFilter !== 'all' ? catFilter : 'autre');
-  const st = { cat: startCat, allDay: existing ? !!ev.allDay : CATS[startCat].allDay, start: ev.start, end: ev.end ?? null };
+  const st = { color: ev.color || '', cat: startCat, allDay: existing ? !!ev.allDay : CATS[startCat].allDay, start: ev.start, end: ev.end ?? null };
   const catList = existing && !cats0.includes(startCat) ? [...cats0, startCat] : cats0;
 
   const dateFields = () => st.allDay
@@ -211,6 +218,7 @@ function openForm(existing, day) {
         <div class="field"><span>Catégorie <small class="faint">(pour le retrouver dans le module)</small></span>
           <div class="chips mt-8" data-pick="cat">${catList.map((k) => `<button type="button" class="chip tone-${CATS[k].tone} ${k === st.cat ? 'is-on' : ''}" data-v="${k}">${esc(CATS[k].label)}</button>`).join('')}</div>
         </div>
+        <div class="field"><span>Couleur dans le calendrier</span>${colorPicker(st.color, CATS[st.cat].tone)}</div>
         <div class="field"><span>Durée</span>${seg('allday', [['0', 'Heure précise'], ['1', 'Toute la journée']], st.allDay ? '1' : '0')}</div>
         <div class="js-dates">${dateFields()}</div>
         <label class="field"><span>Lieu (optionnel)</span><input class="input" name="place" value="${esc(ev.place || '')}" maxlength="60"></label>
@@ -236,10 +244,15 @@ function openForm(existing, day) {
         }
       };
       body.querySelector('[data-close]')?.addEventListener('click', () => api.close());
+      body.querySelectorAll('[data-pick=color] .swatch-btn').forEach((b) => b.addEventListener('click', () => {
+        st.color = b.dataset.color;
+        body.querySelectorAll('[data-pick=color] .swatch-btn').forEach((x) => x.classList.toggle('is-on', x === b));
+      }));
       body.querySelectorAll('[data-pick=cat] .chip').forEach((b) => b.addEventListener('click', () => {
         st.cat = b.dataset.v;
         body.querySelectorAll('[data-pick=cat] .chip').forEach((x) => x.classList.toggle('is-on', x === b));
         form.className = `js-form tone-${CATS[st.cat].tone}`;
+        body.querySelector('[data-color=""]').className = `swatch-btn tone-${CATS[st.cat].tone} ${st.color ? '' : 'is-on'}`;
         if (isNew) { // les départs / fêtes sont plutôt sur la journée entière
           readDates(); st.allDay = CATS[st.cat].allDay;
           if (st.allDay) { st.start = startOfDay(st.start); st.end = st.end ? startOfDay(st.end) : null; }
@@ -267,7 +280,7 @@ function openForm(existing, day) {
         const f = new FormData(form);
         const title = String(f.get('title')).trim() || CATS[st.cat].label;
         if (st.end !== null && st.end < st.start) { err.textContent = 'La fin ne peut pas être avant le début.'; err.hidden = false; return; }
-        const data = { title, cat: st.cat, kind: CATS[st.cat].kind, allDay: st.allDay, start: st.start, end: st.end, place: String(f.get('place')).trim(), note: String(f.get('note')).trim() };
+        const data = { title, color: st.color, cat: st.cat, kind: CATS[st.cat].kind, allDay: st.allDay, start: st.start, end: st.end, place: String(f.get('place')).trim(), note: String(f.get('note')).trim() };
         store.update((s) => {
           if (isNew) s.agenda.push({ id: uid(), by: s.me, created: Date.now(), ...data });
           else { const x = s.agenda.find((y) => y.id === existing.id); if (x) Object.assign(x, data, { editedBy: s.me }); }

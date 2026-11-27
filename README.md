@@ -64,6 +64,12 @@ Application web progressive (PWA) installable sur téléphone, **sans serveur ni
 ## Discussion de famille (v0.8.0)
 Bouton flottant en bas à droite (appui long sur un message : copier, copier le lien, supprimer ; liens cliquables ; notifications désactivables) : un fil unique partagé par tous les profils, en direct (texte, emojis, photos, partage d'un élément : courses, rendez-vous, tâches, mémo), avec pastille de messages non lus. Les messages sont stockés sur le NAS par `chat.php` (fichier `appfamille-chat.php` + dossier `appfamille-chat-img`, 500 derniers messages). Sans NAS, le bouton n'apparaît pas.
 
+## Routine, page Bébé personnalisable, couleurs (v0.9.0)
+- Onglet **Routine** (Bébé / Maman / Papa) : étapes horaires à cocher au fil de la journée, routine type proposée.
+- Bouton **Organiser** sur la page Bébé : afficher/masquer et réordonner les blocs (partagé entre appareils).
+- **Couleur au choix** pour chaque événement et chaque tâche dans le calendrier ; **fréquence personnalisée** des tâches (jours, semaines, mois).
+- « Organiser l'accueil » et « Apparence » déplacés dans Réglages / palette ; widget Bébé : dernière couche ; « Ajouter une tétée » ; suppression de la checklist post-partum.
+
 ## Tâches dans l'agenda, couches avec validation (v0.8.6)
 Les tâches récurrentes de Maison apparaissent dans l'agenda de tout le monde (catégorie Maison, « Premier jour » réglable dans la tâche). Couche : on choisit le type puis on touche « Valider » (plus d'enregistrement au premier clic).
 

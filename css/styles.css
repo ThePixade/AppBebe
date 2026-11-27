@@ -99,6 +99,10 @@ body[data-page="sleep"] {
 .tone-gold   { --tone: var(--gold); }
 .tone-yellow { --tone: var(--yellow); }
 .tone-brick  { --tone: var(--brick); }
+.tone-lavender { --tone: #9C8CD8; }
+.tone-ocean  { --tone: #4F9BD9; }
+.tone-rose   { --tone: #E57FA6; }
+.tone-mint   { --tone: #4FBFA5; }
 
 /* ---------- Base ---------- */
 *, *::before, *::after { box-sizing: border-box; }
@@ -1063,3 +1067,15 @@ body:not([data-nav="on"]) .chat-fab { bottom: calc(env(safe-area-inset-bottom) +
 body:has(.feed-banner) .chat-fab { bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 70px); }
 body:has(.feed-banner)[data-chat="on"] .miniplayer { bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 132px); right: 16px; }
 .dtype.is-on { background: color-mix(in srgb, var(--tone) 28%, var(--surface-2)); border: 2px solid var(--tone); box-shadow: 0 0 0 3px color-mix(in srgb, var(--tone) 18%, transparent); }
+
+/* Choix de couleur (calendrier) */
+.color-pick { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+.swatch-btn { width: 34px; height: 34px; border-radius: 50%; background: var(--tone); display: grid; place-items: center; color: #fff; font-weight: 800; font-size: .78rem; border: 3px solid transparent; box-shadow: 0 0 0 1px var(--border); }
+.swatch-btn.is-on { border-color: var(--bg-elev); box-shadow: 0 0 0 3px var(--tone); }
+
+/* Routine */
+.routine-row { display: flex; align-items: center; gap: 6px; border-bottom: 1px solid var(--border); }
+.routine-row:last-child { border-bottom: 0; }
+.routine-row .check { flex: 1; }
+.routine-row.is-next { background: color-mix(in srgb, var(--accent, #E07F62) 8%, transparent); border-radius: 12px; }
+.subtabs a { font-size: .82rem; padding: 0 2px; }
