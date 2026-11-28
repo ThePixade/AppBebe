@@ -7,7 +7,7 @@ import { fridgeMl, takeFromFridge, giveBack } from '../milk.js';
 import { nextEventLine, agendaCardHtml } from './agenda.js';
 import { takePending } from '../premium/actions.js';
 import { babyTabs } from './babytabs.js';
-import { mountBaby, startOrganizing, orgBarHtml, orgTrayHtml, blockShell } from '../premium/dashboard.js';
+import { mountBaby, openBabyDetail, startOrganizing, orgBarHtml, orgTrayHtml, blockShell } from '../premium/dashboard.js';
 import { openGrowth } from './growth.js';
 import { openEvent, openHistory } from './edit.js';
 
@@ -124,9 +124,9 @@ export function render(s) {
 
   const blocks = {
     stats: `<a class="card stats" href="#/stats" aria-label="Résumé du jour, voir les statistiques">
-      <div class="stat"><span class="stat-v num">${feeds.length}</span><span class="stat-l">Repas</span></div>
+      <div class="stat" data-detail="feed"><span class="stat-v num">${feeds.length}</span><span class="stat-l">Repas</span></div>
       <div class="stat"><span class="stat-v num">${ml}<small>ml</small></span><span class="stat-l">Lait</span></div>
-      <div class="stat"><span class="stat-v num">${diapers}</span><span class="stat-l">Couches</span></div>
+      <div class="stat" data-detail="diaper"><span class="stat-v num">${diapers}</span><span class="stat-l">Couches</span></div>
       <div class="stat"><span class="stat-v num" data-live="sleepTotal" data-base="${sleepMs}">${fmtDur(sleepMs + (sleeping ? Date.now() - Math.max(sleeping, t0) : 0)).replace('< 1 min', '0 min')}</span><span class="stat-l">Sommeil</span></div>
       <span class="stats-more">${icon('chart', 15)} Statistiques ${icon('chevronRight', 14)}</span>
     </a>`,
@@ -215,6 +215,10 @@ export function mount(el, scope) {
   const banner = $('.feed-banner', el);
   if (banner) swipeDismiss(banner, () => { banner.remove(); store.update((s) => { s.bannerSeen = banner.dataset.id; }, { silent: true }); }, { baseTransform: 'translateX(-50%)' });
   el.addEventListener('click', (e) => {
+    const st = e.target.closest('[data-detail]');
+    if (st) { e.preventDefault(); openBabyDetail(st.dataset.detail); return; }
+    const bn = e.target.closest('.feed-banner');
+    if (bn?.dataset.id) { openEvent(bn.dataset.id); return; }
     const b = e.target.closest('[data-act]');
     if (!b) return;
     const c = activeChild(store.state);

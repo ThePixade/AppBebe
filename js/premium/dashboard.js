@@ -131,7 +131,7 @@ function wGoals(s) {
 
 function wActivity(s, size) {
   const rows = collectActivity(s, size === 'L' ? 10 : 6);
-  return { title: 'Activité récente', html: rows.length ? `<div class="list-group">${rows.map((r) => `<a class="entry" href="${r.href}"><span class="avatar-mini tone-${whoTone(r.by)}">${esc((r.by || '?')[0])}</span><span class="entry-body"><b style="font-weight:600"><span class="faint" style="font-weight:700">${esc(r.by || '')}</span> ${esc(r.text)}</b><small>${esc(ago(r.at))}</small></span></a>`).join('')}</div>` : empty('Aucune activité pour le moment.') };
+  return { title: 'Activité récente', html: rows.length ? `<div class="list-group">${rows.map((r) => `<button class="entry" data-act="activity" data-kind="${r.kind}" data-ref="${esc(r.ref || '')}" data-href="${r.href}"><span class="avatar-mini tone-${whoTone(r.by)}">${esc((r.by || '?')[0])}</span><span class="entry-body"><b style="font-weight:600"><span class="faint" style="font-weight:700">${esc(r.by || '')}</span> ${esc(r.text)}</b><small>${esc(ago(r.at))}</small></span></button>`).join('')}</div>` : empty('Aucune activité pour le moment.') };
 }
 
 function wMemo(s) {
@@ -374,13 +374,14 @@ export function mount(el) {
       case 'shop-toggle': store.update((s) => { const x = (s.lists.find((l) => l.kind === 'shop')?.items || []).find((it) => it.id === id); if (x) { x.done = true; x.doneBy = s.me; } }); break;
       case 'action': ACTIONS[b.dataset.a]?.run(); break;
       case 'baby-detail': openBabyDetail(b.dataset.k); break;
+      case 'activity': openActivity(b.dataset.kind, b.dataset.ref, b.dataset.href); break;
     }
   });
 }
 
 /* ---------- Détail « Repas » / « Couches » en popup ---------- */
 const KIND_FR = { wet: 'Mouillée', dirty: 'Sale', mixed: 'Mixte' };
-function openBabyDetail(kind) {
+export function openBabyDetail(kind) {
   const s = store.state, c = activeChild(s); if (!c) return;
   const feed = kind === 'feed', t0 = startOfDay();
   const all = eventsOf(s, c.id).filter((e) => e.type === kind), today = all.filter((e) => e.at >= t0), last = all[0];
@@ -402,6 +403,29 @@ function openBabyDetail(kind) {
       body.querySelector('[data-close]').addEventListener('click', () => api.close());
       body.querySelector('[data-add]').addEventListener('click', () => { api.close(); ACTIONS[kind]?.run(); });
       body.addEventListener('click', (e) => { const r = e.target.closest('[data-act="event"]'); if (r) { api.close(); setTimeout(() => openEvent(r.dataset.id), 260); } });
+    },
+  });
+}
+
+/* ---------- Détail d'une ligne de « Activité récente » en popup ---------- */
+function openActivity(kind, ref, href) {
+  const s = store.state, rows = collectActivity(s, 30), r = rows.find((x) => x.kind === kind && String(x.ref) === ref);
+  if (kind === 'event') return openEvent(ref);               // événements de bébé : fiche complète (modifier / supprimer)
+  if (!r) return;
+  const lines = [], add = (k, v) => { if (v) lines.push([k, v]); };
+  if (kind === 'expense') { const e = (s.expenses || []).find((x) => x.id === ref); if (e) { add('Montant', eur(e.amount)); add('Catégorie', catOf(e.cat)?.label); add('Note', e.note); add('Date', dayLabel(e.at)); } }
+  if (kind === 'dose') { const d = (s.doses || []).find((x) => x.id === ref), h = d && (s.health || []).find((x) => x.id === d.tid); add('Médicament', h?.title); add('Pour', (s.members || []).find((m) => m.id === (d?.memberId || h?.memberId))?.name); add('Heure', d && time(d.at)); }
+  if (kind === 'chore') { const c = (s.chores || []).find((x) => x.id === ref); add('Tâche', c?.name); add('Fait le', c?.last && `${dayLabel(c.last)} · ${time(c.last)}`); }
+  if (kind === 'agenda') { const e = (s.agenda || []).find((x) => x.id === ref); add('Titre', e?.title); add('Quand', e && `${dayLabel(e.start)}${e.allDay ? '' : ' · ' + time(e.start)}`); add('Lieu', e?.place); add('Note', e?.note); }
+  const dest = { expense: 'Voir le budget', dose: 'Voir la santé', chore: 'Voir les tâches', agenda: 'Voir l’agenda' }[kind] || 'Ouvrir';
+  openSheet({
+    title: r.text.replace(/^a /, '').replace(/^./, (c) => c.toUpperCase()), subtitle: `${r.by || '—'} · ${ago(r.at)} · ${time(r.at)}`,
+    content: `<div class="row tone-${whoTone(r.by)}" style="gap:12px"><span class="avatar-mini tone-${whoTone(r.by)}">${esc((r.by || '?')[0])}</span><p class="muted" style="margin:0"><b>${esc(r.by || '')}</b> ${esc(r.text)}</p></div>
+      ${lines.length ? `<div class="card list-group mt-12">${lines.map(([k, v]) => `<div class="entry"><span class="entry-body"><small>${esc(k)}</small><b>${esc(v)}</b></span></div>`).join('')}</div>` : ''}
+      <div class="grid-2 mt-16"><button class="btn btn-ghost" data-close>Fermer</button><button class="btn btn-primary" data-go>${esc(dest)}</button></div>`,
+    onMount(body, api) {
+      body.querySelector('[data-close]').addEventListener('click', () => api.close());
+      body.querySelector('[data-go]').addEventListener('click', () => { api.close(); location.hash = href || r.href; });
     },
   });
 }

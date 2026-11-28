@@ -41,8 +41,9 @@ export const DENSITIES = { compact: { label: 'Compacte', gutter: 12, pad: 12 }, 
 export const CARD_STYLES = { soft: 'Ombrées', outlined: 'Contours', flat: 'Plates' };
 
 export const DEFAULT_UI = {
-  accent: 'salmon', bgLight: 'cream', bgDark: 'navy', gradient: 'none', font: 'default', textScale: 100,
-  density: 'normal', radius: 'normal', cards: 'soft', contrast: false, reduceMotion: false,
+  // Édition « Design » : palette forêt / sable, très arrondie (le reste de l'identité est dans css/design.css)
+  accent: EDITION.design ? 'forest' : 'salmon', bgLight: EDITION.design ? 'sand' : 'cream', bgDark: EDITION.design ? 'forest' : 'navy', gradient: EDITION.design ? 'soft' : 'none', font: 'default', textScale: 100,
+  density: 'normal', radius: EDITION.design ? 'round' : 'normal', cards: EDITION.design ? 'flat' : 'soft', contrast: false, reduceMotion: false,
   familyName: '', familyEmoji: '',
   widgets: null,                      // [{ id, size: 'S'|'M'|'L', hidden }] : ordre de l'accueil
   nav: null,                          // modules de la barre du bas : null = automatique (3 premiers modules activés)

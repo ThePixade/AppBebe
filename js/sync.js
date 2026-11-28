@@ -31,6 +31,13 @@ const clone = (x) => (x === undefined ? undefined : JSON.parse(JSON.stringify(x)
 const eq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const pick = (s) => Object.fromEntries(SHARED.map((k) => [k, s[k]]));
+// L'apparence (« ui ») est propre à chaque édition sur le NAS : AppDesign écrit « uiDesign » pour ne pas écraser celle d'AppPre (et inversement).
+const wire = (o) => { if (!EDITION.design) return o; const { ui, ...rest } = o; return { ...rest, uiDesign: ui }; };
+const unwire = (o) => { if (!EDITION.design) return o; const { uiDesign, ui, ...rest } = o; return { ...rest, ui: uiDesign }; };
+const mine = () => wire(pick(store.state));
+// Clés que CETTE édition gère sur le NAS : les clés des autres éditions (ex. « uiDesign » vu d'AppPre) sont conservées telles quelles.
+const OWN = SHARED.map((k) => (EDITION.design && k === 'ui' ? 'uiDesign' : k));
+const own = (o) => (o && typeof o === 'object' ? Object.fromEntries(OWN.filter((k) => o[k] !== undefined).map((k) => [k, o[k]])) : o);
 const isIdArray = (v) => Array.isArray(v) && v.length > 0 && v.every((x) => isObj(x) && 'id' in x);
 const toMap = (a) => Object.fromEntries((Array.isArray(a) ? a : []).map((x) => [x.id, x]));
 
@@ -98,10 +105,13 @@ async function call(method, body, rev) {
   return { status: res.status, json };
 }
 
-function applyLocal(merged) {
-  if (eq(merged, pick(store.state))) return;
+function applyLocal(wired) {
+  const merged = unwire(wired), part = {};
+  for (const k of SHARED) if (merged[k] !== undefined) part[k] = merged[k];   // seules les données partagées touchent l'état local
+  const cur = pick(store.state);
+  if (SHARED.every((k) => eq(part[k], cur[k]) || part[k] === undefined)) return;
   applying = true;
-  try { store.update((s) => { Object.assign(s, clone(merged)); }); } finally { applying = false; }
+  try { store.update((s) => { Object.assign(s, clone(part)); }); } finally { applying = false; }
 }
 
 export async function syncNow() {
@@ -112,11 +122,12 @@ export async function syncNow() {
   try {
     let { json: remote } = await call('GET');
     for (let attempt = 0; attempt < 4; attempt++) {
-      const local = pick(store.state);
-      const merged = remote.data ? merge3(meta.base ?? undefined, local, remote.data, !meta.base) : local;
+      const local = mine();
+      const merged = own(remote.data ? merge3(own(meta.base) ?? undefined, local, own(remote.data), !meta.base) : local);
       applyLocal(merged);
-      if (eq(merged, remote.data)) { meta = { rev: remote.rev, base: clone(merged) }; break; }
-      const { status, json } = await call('POST', JSON.stringify(merged), remote.rev);
+      const full = remote.data ? { ...remote.data, ...merged } : merged;   // + clés des autres éditions, inchangées
+      if (eq(full, remote.data)) { meta = { rev: remote.rev, base: clone(merged) }; break; }
+      const { status, json } = await call('POST', JSON.stringify(full), remote.rev);
       if (status === 200) { meta = { rev: json.rev, base: clone(merged) }; break; }
       if (status === 409) { remote = json; continue; }
       throw new Error(`HTTP ${status}`);
@@ -148,7 +159,7 @@ export async function initSync() {
   }
   await syncNow();
   store.subscribe(() => {
-    if (applying || eq(pick(store.state), meta.base)) return; // rien de nouveau à envoyer
+    if (applying || eq(own(mine()), own(meta.base))) return; // rien de nouveau à envoyer
     clearTimeout(pushTimer);
     pushTimer = setTimeout(syncNow, 700);
   });

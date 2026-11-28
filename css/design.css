@@ -1,0 +1,75 @@
+/* =========================================================
+   Édition « Design » (…/appdesign/) : une autre identité visuelle pour comparer.
+   Univers « atelier nature » : titres en serif chaleureux, cartes plates sans bordure,
+   barre du bas flottante en pilule, boutons et onglets en pilules.
+   Tout est limité à html[data-edition="design"] : les autres éditions ne changent pas.
+   Les couleurs (forêt / sable) viennent du moteur d'apparence (réglable dans « Apparence »).
+   ========================================================= */
+
+html[data-edition="design"] {
+  --font-display: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --tabbar-h: 64px;
+}
+
+/* Typographie : titres et chiffres en serif */
+html[data-edition="design"] .title,
+html[data-edition="design"] .hub-brand b,
+html[data-edition="design"] .cal-title,
+html[data-edition="design"] .dw-head b,
+html[data-edition="design"] .stat-v,
+html[data-edition="design"] .amount-value,
+html[data-edition="design"] .section-head h2,
+html[data-edition="design"] .sheet h2 { font-family: var(--font-display); font-weight: 600; letter-spacing: -.01em; }
+html[data-edition="design"] .title { font-size: 2.05rem; line-height: 1.08; }
+html[data-edition="design"] .eyebrow { font-family: var(--font-display); font-style: italic; font-weight: 500; text-transform: none; letter-spacing: .01em; font-size: .92rem; color: var(--text-2); }
+
+/* Cartes : plates, sans bordure, ombre teintée d'accent */
+html[data-edition="design"] .card {
+  border: 0; border-radius: 26px;
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--text) 4%, transparent), 0 22px 40px -28px color-mix(in srgb, var(--salmon) 55%, transparent);
+}
+html[data-edition="design"] .action-card {
+  border: 0; border-radius: 26px;
+  background: color-mix(in srgb, var(--tone, var(--salmon)) 13%, var(--surface));
+  box-shadow: none;
+}
+html[data-edition="design"] .ac-icon { border-radius: 50%; }
+html[data-edition="design"] .dw.card { padding: 16px 18px 18px; }
+html[data-edition="design"] .dw-more { font-weight: 600; }
+
+/* Boutons, onglets, pastilles : en pilules */
+html[data-edition="design"] .btn,
+html[data-edition="design"] .pill-btn,
+html[data-edition="design"] .chip,
+html[data-edition="design"] .past-link { border-radius: 999px; }
+html[data-edition="design"] .seg { background: transparent; box-shadow: inset 0 0 0 1.5px var(--border-strong); border-radius: 999px; padding: 3px; }
+html[data-edition="design"] .seg button,
+html[data-edition="design"] .seg a { border-radius: 999px; }
+html[data-edition="design"] .seg button.is-on,
+html[data-edition="design"] .seg a.is-on { background: var(--salmon); color: var(--on-accent, #fff); box-shadow: none; }
+html[data-edition="design"] .btn-primary { background: var(--salmon); color: var(--on-accent, #fff); box-shadow: 0 10px 20px -12px var(--salmon); }
+html[data-edition="design"] .input { border-radius: 18px; }
+
+/* Barre du bas : pilule flottante */
+html[data-edition="design"] .appnav {
+  left: 14px; right: 14px; bottom: calc(env(safe-area-inset-bottom) + 10px); padding: 0 6px;
+  border: 0; border-radius: 32px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  box-shadow: 0 18px 40px -16px rgba(0, 0, 0, .35), 0 0 0 1px var(--border);
+}
+html[data-edition="design"] .appnav-inner { max-width: 520px; }
+html[data-edition="design"] .npb { font-weight: 600; gap: 2px; }
+html[data-edition="design"] .npb.is-active { color: var(--salmon); }
+html[data-edition="design"] .npb.is-active .i { transform: none; }
+html[data-edition="design"] .npb-plus { border-radius: 50%; transform: translateY(-10px); box-shadow: 0 14px 24px -10px var(--salmon); }
+html[data-edition="design"] body[data-nav="on"] .app { padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 64px); }
+
+/* Bouton de discussion et bannière : remontés au-dessus de la barre flottante */
+html[data-edition="design"] .chat-fab { bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 28px); }
+html[data-edition="design"] body:has(.feed-banner) .chat-fab { bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 84px); }
+html[data-edition="design"] .feed-banner { bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 26px); border-radius: 999px; border: 0; }
+
+/* Feuilles (popups) et calendrier */
+html[data-edition="design"] .sheet { border-radius: 30px 30px 0 0; }
+html[data-edition="design"] .cal-day.is-sel { background: var(--salmon); color: var(--on-accent, #fff); }
+html[data-edition="design"] .badge { border-radius: 999px; }

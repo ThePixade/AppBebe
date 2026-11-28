@@ -17,21 +17,24 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/design.css">
   <script>
     // Applique le thème (et, en édition Premium, la personnalisation enregistrée) avant le premier rendu : pas de flash.
     (function () {
-      var pre = /\/apppre(\/|$)/i.test(location.pathname) || /[?&]edition=pre/.test(location.search);
+      var des = /\/appdesign(\/|$)/i.test(location.pathname) || /[?&]edition=design/.test(location.search);
+      var pre = des || /\/apppre(\/|$)/i.test(location.pathname) || /[?&]edition=pre/.test(location.search);
       var t = 'auto';
-      try { t = (JSON.parse(localStorage.getItem(pre ? 'apppre:v1' : 'appfamille:v1')) || {}).theme || 'auto'; } catch (e) {}
+      try { t = (JSON.parse(localStorage.getItem(des ? 'appdesign:v1' : pre ? 'apppre:v1' : 'appfamille:v1')) || {}).theme || 'auto'; } catch (e) {}
       if (t === 'auto') { var h = new Date().getHours(); t = (h >= 19 || h < 8) ? 'dark' : 'light'; }
       document.documentElement.dataset.theme = t;
       if (pre) {
-        document.documentElement.dataset.edition = 'pre';
-        var m = document.querySelector('link[rel="manifest"]'); if (m) m.setAttribute('href', 'manifest-pre.webmanifest');
-        var i = document.querySelector('link[rel="apple-touch-icon"]'); if (i) i.setAttribute('href', 'icons/icon-pre-192.png');
-        document.title = 'AppFamille Premium';
-        var at = document.querySelector('meta[name="apple-mobile-web-app-title"]'); if (at) at.setAttribute('content', 'AppPre');
-        try { var css = localStorage.getItem('apppre:css'); if (css) { var st = document.createElement('style'); st.id = 'ui-override'; st.textContent = css; document.head.appendChild(st); } } catch (e) {}
+        document.documentElement.dataset.edition = des ? 'design' : 'pre';
+        var m = document.querySelector('link[rel="manifest"]'); if (m) m.setAttribute('href', des ? 'manifest-design.webmanifest' : 'manifest-pre.webmanifest');
+        var i = document.querySelector('link[rel="apple-touch-icon"]'); if (i) i.setAttribute('href', des ? 'icons/icon-design-192.png' : 'icons/icon-pre-192.png');
+        document.title = des ? 'AppFamille Design' : 'AppFamille Premium';
+        var at = document.querySelector('meta[name="apple-mobile-web-app-title"]'); if (at) at.setAttribute('content', des ? 'AppDesign' : 'AppPre');
+        if (des) { var f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap'; document.head.appendChild(f); }
+        try { var css = localStorage.getItem(des ? 'appdesign:css' : 'apppre:css'); if (css) { var st = document.createElement('style'); st.id = 'ui-override'; st.textContent = css; document.head.appendChild(st); } } catch (e) {}
       }
     })();
   </script>
