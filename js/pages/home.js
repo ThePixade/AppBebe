@@ -7,6 +7,7 @@ import { fridgeMl, takeFromFridge, giveBack } from '../milk.js';
 import { nextEventLine, agendaCardHtml } from './agenda.js';
 import { takePending } from '../premium/actions.js';
 import { babyTabs } from './babytabs.js';
+import { mountBaby, startOrganizing, orgBarHtml, orgTrayHtml, blockShell } from '../premium/dashboard.js';
 import { openGrowth } from './growth.js';
 import { openEvent, openHistory } from './edit.js';
 
@@ -143,13 +144,10 @@ export function render(s) {
       <button class="past-link" data-act="history">${icon('clock', 18)} Jours précédents</button>
     </section>`,
   };
-  // Blocs dans l'ordre choisi ; les cartes d'action voisines sont regroupées en grille.
-  let body = '', grid = '';
-  const flush = () => { if (grid) body += `<section class="action-grid" aria-label="Actions rapides">${grid}</section>`; grid = ''; };
-  for (const id of babyLayout(s)) {
-    if (BABY_CARDS.includes(id)) grid += blocks[id]; else { flush(); body += blocks[id]; }
-  }
-  flush();
+  // Blocs dans l'ordre / la taille choisis (mêmes gestes que l'accueil : appui long, glisser, masquer, redimensionner).
+  const shown = [], hidden = [];
+  for (const w of babyLayout(s)) { if (!blocks[w.id]) continue; (w.hidden ? hidden : shown).push(w); }
+  const body = `<div class="dash baby-dash">${shown.map((w, i) => blockShell({ id: w.id, label: BABY_BLOCKS[w.id], size: w.size, sizes: BABY_SIZES[w.id], html: blocks[w.id], i })).join('')}</div>`;
   return `
     ${appHeader(s)}
     ${babyTabs('home')}
@@ -157,47 +155,31 @@ export function render(s) {
       <p class="eyebrow">${dayLabel()}</p>
       <div class="row-between"><h1 class="title">La journée de ${esc(c.name)}</h1><button class="pill-btn" data-act="organize" aria-label="Organiser cette page">${icon('settings', 15)} Organiser</button></div>
     </section>
+    ${orgBarHtml('la page Bébé')}
     ${body}
+    ${orgTrayHtml(hidden.map((w) => ({ id: w.id, label: BABY_BLOCKS[w.id] })))}
     ${feedBanner(s)}`;
 }
 
-/* ---------- Organisation de la page Bébé (choix et ordre des blocs) ---------- */
-const BABY_CARDS = ['feed', 'diaper', 'sleep', 'growth'];
-export const BABY_BLOCKS = { stats: 'Résumé du jour', org: 'Stock & agenda', rdv: 'Rendez-vous de Bébé', feed: 'Carte Repas', diaper: 'Carte Couches', sleep: 'Carte Sommeil', growth: 'Carte Croissance', today: 'Chronologie du jour' };
-const BABY_DEFAULT = ['stats', 'org', 'rdv', 'feed', 'diaper', 'sleep', 'growth', 'today'];
-/** Blocs affichés, dans l'ordre choisi (les blocs masqués sont retirés ; les nouveaux blocs sont ajoutés à la fin). */
-function babyLayout(s, withHidden = false) {
-  const bh = s.babyHome || {}, hidden = bh.hidden || [];
-  const order = [...(bh.order || []).filter((id) => BABY_DEFAULT.includes(id)), ...BABY_DEFAULT.filter((id) => !(bh.order || []).includes(id))];
-  return withHidden ? order : order.filter((id) => !hidden.includes(id));
+/* ---------- Organisation de la page Bébé (même moteur que l'accueil) ---------- */
+export const BABY_BLOCKS = { stats: 'Résumé du jour', org: 'Stock & agenda', rdv: 'Rendez-vous de Bébé', feed: 'Repas', diaper: 'Couches', sleep: 'Sommeil', growth: 'Croissance', today: 'Chronologie du jour' };
+const BABY_SIZES = { stats: ['M'], org: ['M'], rdv: ['M'], feed: ['S', 'M'], diaper: ['S', 'M'], sleep: ['S', 'M'], growth: ['S', 'M'], today: ['M'] };
+const BABY_DEFAULT = [['stats', 'M'], ['org', 'M'], ['rdv', 'M'], ['feed', 'S'], ['diaper', 'S'], ['sleep', 'S'], ['growth', 'S'], ['today', 'M']];
+/** Disposition de la page Bébé : celle de l'utilisateur (ancien format { order, hidden } converti), complétée des blocs manquants. */
+function babyLayout(s) {
+  const bh = s.babyHome;
+  let lay = Array.isArray(bh) ? bh.map((w) => ({ ...w }))
+    : bh && bh.order ? bh.order.map((id) => ({ id, size: (BABY_DEFAULT.find(([d]) => d === id) || [])[1] || 'M', hidden: (bh.hidden || []).includes(id) })) : [];
+  lay = lay.filter((w) => BABY_SIZES[w.id]);
+  for (const [id, size] of BABY_DEFAULT) if (!lay.some((w) => w.id === id)) lay.push({ id, size, hidden: false });
+  return lay.map((w) => ({ ...w, size: BABY_SIZES[w.id].includes(w.size) ? w.size : BABY_SIZES[w.id][0] }));
 }
-function openOrganize() {
-  openSheet({
-    title: 'Organiser la page Bébé', subtitle: 'Choisissez ce qui s’affiche et dans quel ordre',
-    onMount(body, api) {
-      const draw = () => {
-        const s = store.state, order = babyLayout(s, true), hidden = (s.babyHome?.hidden) || [];
-        body.innerHTML = `<div class="list-group">${order.map((id, i) => `
-          <div class="row-between nav-row" style="gap:8px"><label class="row grow" style="gap:12px"><label class="switch"><input type="checkbox" data-show="${id}" ${hidden.includes(id) ? '' : 'checked'}><span class="track"></span></label><span>${esc(BABY_BLOCKS[id])}</span></label>
-            <span class="row" style="gap:4px"><button class="icon-btn icon-btn-sm" data-mv="${id}" data-d="-1" ${i === 0 ? 'disabled' : ''} aria-label="Monter">${icon('chevronUp', 16)}</button><button class="icon-btn icon-btn-sm" data-mv="${id}" data-d="1" ${i === order.length - 1 ? 'disabled' : ''} aria-label="Descendre">${icon('chevronDown', 16)}</button></span></div>`).join('')}</div>
-          <div class="grid-2 mt-16"><button class="btn btn-ghost" data-reset>Rétablir</button><button class="btn btn-primary" data-ok>Terminé</button></div>`;
-      };
-      const save = (order, hidden) => { store.update((s) => { s.babyHome = { order, hidden }; }); draw(); };
-      body.addEventListener('change', (e) => {
-        const id = e.target.dataset?.show; if (!id) return;
-        const s = store.state, order = babyLayout(s, true), hidden = new Set(s.babyHome?.hidden || []);
-        e.target.checked ? hidden.delete(id) : hidden.add(id); save(order, [...hidden]);
-      });
-      body.addEventListener('click', (e) => {
-        const b = e.target.closest('button'); if (!b) return;
-        if (b.matches('[data-ok]')) return api.close();
-        if (b.matches('[data-reset]')) { store.update((s) => { s.babyHome = null; }); return draw(); }
-        if (b.dataset.mv) { const s = store.state, order = babyLayout(s, true), i = order.indexOf(b.dataset.mv), j = i + +b.dataset.d; if (j < 0 || j >= order.length) return; [order[i], order[j]] = [order[j], order[i]]; save(order, s.babyHome?.hidden || []); }
-      });
-      draw();
-    },
-  });
-}
+const BABY_CTX = {
+  layout: babyLayout,
+  save: (lay, silent = false) => store.update((s) => { s.babyHome = lay.map(({ id, size, hidden }) => ({ id, size, hidden: !!hidden })); }, { silent }),
+  sizes: (id) => BABY_SIZES[id],
+  reset: () => store.update((s) => { s.babyHome = null; }),
+};
 
 export function eventRow(e) {
   const d = describe(e);
@@ -227,6 +209,7 @@ function feedBanner(s) {
 }
 
 export function mount(el, scope) {
+  mountBaby(el, BABY_CTX);
   const pa = takePending('home');
   if (pa) setTimeout(() => { const c0 = activeChild(store.state); if (c0) ({ feed: () => openFeed(c0), diaper: () => openDiaper(c0), sleep: () => toggleSleep(c0) })[pa]?.(); }, 60);
   const banner = $('.feed-banner', el);
@@ -235,7 +218,7 @@ export function mount(el, scope) {
     const b = e.target.closest('[data-act]');
     if (!b) return;
     const c = activeChild(store.state);
-    ({ organize: () => openOrganize(), feed: () => openFeed(c), diaper: () => openDiaper(c), sleep: () => toggleSleep(c), growth: () => openGrowth(c), event: () => openEvent(b.dataset.id), history: () => openHistory(c) })[b.dataset.act]?.();
+    ({ organize: () => startOrganizing(), feed: () => openFeed(c), diaper: () => openDiaper(c), sleep: () => toggleSleep(c), growth: () => openGrowth(c), event: () => openEvent(b.dataset.id), history: () => openHistory(c) })[b.dataset.act]?.();
   });
   scope.onTick(() => {
     const s = store.state, c = activeChild(s);

@@ -1,7 +1,7 @@
 import { showTab as maisonTab } from '../pages/maison.js';
 import { store, moduleOn, activeChild, eventsOf, lastOf } from '../store.js';
 import { icon } from '../icons.js';
-import { newestFirst, esc, eur, fmtNum, fmtDur, ago, time, dayLabel, dayKey, startOfDay, toast, DAY } from '../ui.js';
+import { openSheet, newestFirst, esc, eur, fmtNum, fmtDur, ago, time, dayLabel, dayKey, startOfDay, toast, DAY } from '../ui.js';
 import { hubHeader } from '../pages/hub.js';
 import { uiOf, setUi } from './ui.js';
 import { modInfo, enabledModules } from '../modules.js';
@@ -15,6 +15,8 @@ import { choreState, assignee, doneChore } from '../pages/maison.js';
 import { tripState, spent as tripSpent } from '../pages/vacances.js';
 import { addShopping } from '../supplies.js';
 import { ACTIONS, actionsFor } from './actions.js';
+import { eventRow } from '../pages/home.js';
+import { openEvent } from '../pages/edit.js';
 
 /*
  * Accueil « tableau de bord » (édition Premium) : des widgets qu'on déplace, redimensionne et masque,
@@ -24,6 +26,9 @@ import { ACTIONS, actionsFor } from './actions.js';
 let editing = false;
 let flipFrom = null;   // positions des blocs avant un changement : sert à animer le réarrangement
 let focusId = null;    // bloc à refocaliser après un réarrangement au clavier
+// Contexte d'organisation : l'accueil et la page Bébé partagent le même moteur (glisser, masquer, redimensionner).
+// { layout(s) → [{id,size,hidden}], save(lay, silent), sizes(id) → ['S','M'…], reset() }
+let ctx = null;
 const hourFr = (ts) => new Date(ts).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 const empty = (t) => `<p class="small faint" style="padding:4px 0 2px">${t}</p>`;
 
@@ -70,9 +75,9 @@ function wBaby(s, size) {
   const sleepMs = today.filter((e) => e.type === 'sleep').reduce((a, e) => a + (e.end - Math.max(e.at, t0)), 0), diapers = today.filter((e) => e.type === 'diaper').length;
   const lf = lastOf(s, c.id, 'feed'), ld = lastOf(s, c.id, 'diaper'), sleeping = s.timers?.sleep?.[c.id];
   return { title: `${esc(c.name)}`, more: ['#/home', 'Bébé'], html: `
-    <div class="mini-stats" style="border-top:0;padding-top:0"><div><span class="faint">Repas</span><b class="num">${feeds.length}</b></div><div><span class="faint">Couches</span><b class="num">${diapers}</b></div><div><span class="faint">Sommeil</span><b class="num">${esc(fmtDur(sleepMs).replace('< 1 min', '0 min'))}</b></div></div>
-    <p class="small muted mt-8">${sleeping ? `${icon('moon', 13)} Dort depuis ${esc(fmtDur(Date.now() - sleeping))}` : lf ? `Dernier repas ${esc(ago(lf.at))}` : 'Aucun repas noté'}</p>
-    <p class="small muted">${ld ? `Dernière couche ${esc(ago(ld.at))}${ld.kind ? ' · ' + esc({ wet: 'mouillée', dirty: 'sale', mixed: 'mixte' }[ld.kind] || '') : ''}` : 'Aucune couche notée'}</p>
+    <div class="mini-stats" style="border-top:0;padding-top:0"><button class="mini-hit" data-act="baby-detail" data-k="feed"><span class="faint">Repas</span><b class="num">${feeds.length}</b></button><button class="mini-hit" data-act="baby-detail" data-k="diaper"><span class="faint">Couches</span><b class="num">${diapers}</b></button><div><span class="faint">Sommeil</span><b class="num">${esc(fmtDur(sleepMs).replace('< 1 min', '0 min'))}</b></div></div>
+    <button class="hit-line mt-8" data-act="baby-detail" data-k="feed">${sleeping ? `${icon('moon', 13)} Dort depuis ${esc(fmtDur(Date.now() - sleeping))}` : lf ? `Dernier repas ${esc(ago(lf.at))}` : 'Aucun repas noté'}</button>
+    <button class="hit-line" data-act="baby-detail" data-k="diaper">${ld ? `Dernière couche ${esc(ago(ld.at))}${ld.kind ? ' · ' + esc({ wet: 'mouillée', dirty: 'sale', mixed: 'mixte' }[ld.kind] || '') : ''}` : 'Aucune couche notée'}</button>
     ${size !== 'S' ? `<div class="grid-3q mt-12"><button class="btn btn-ghost btn-sm" data-act="action" data-a="feed">${icon('bottle', 14)} Repas</button><button class="btn btn-ghost btn-sm" data-act="action" data-a="diaper">${icon('diaper', 14)} Couche</button><button class="btn btn-ghost btn-sm" data-act="action" data-a="sleep">${icon('moon', 14)} Sieste</button></div>` : ''}` };
 }
 
@@ -287,8 +292,8 @@ function beginDrag(el, dash, from) {
     const done = () => {
       ['position', 'left', 'top', 'width', 'height', 'zIndex', 'pointerEvents', 'margin', 'transition'].forEach((k) => { el.style[k] = ''; });
       ghost.replaceWith(el); el.classList.remove('is-drop'); document.body.classList.remove('dragging'); buzz(10);
-      const order = [...dash.querySelectorAll(':scope > .dw')].map((n) => n.dataset.w), lay = layoutOf(store.state), byId = Object.fromEntries(lay.map((w) => [w.id, w]));
-      save([...order.map((id) => byId[id]).filter(Boolean), ...lay.filter((w) => !order.includes(w.id))], true);
+      const order = [...dash.querySelectorAll(':scope > .dw')].map((n) => n.dataset.w), lay = ctx.layout(store.state), byId = Object.fromEntries(lay.map((w) => [w.id, w]));
+      ctx.save([...order.map((id) => byId[id]).filter(Boolean), ...lay.filter((w) => !order.includes(w.id))], true);
     };
     setTimeout(done, reduce ? 0 : 350);
   };
@@ -296,14 +301,55 @@ function beginDrag(el, dash, from) {
   place();
 }
 
-export function mount(el) {
+/** Moteur commun : glisser-déposer, clavier, masquer / redimensionner / rétablir. Retourne la fonction de nettoyage. */
+function mountOrganizer(el, c) {
+  ctx = c;
   const dash = el.querySelector('.dash');
   document.body.classList.toggle('org-mode', editing);
+  dash.classList.toggle('is-editing', editing);
   dash.querySelectorAll(':scope > .dw').forEach((n) => n.addEventListener('pointerdown', (e) => armPress(e, n, dash)));
   playFlip(dash);
-  try { if (sessionStorage.getItem('dash-edit')) { sessionStorage.removeItem('dash-edit'); setTimeout(() => setEditing(true), 80); } } catch { /* stockage indisponible */ }
   if (focusId) { dash.querySelector(`.dw[data-w="${focusId}"]`)?.focus({ preventScroll: true }); focusId = null; }
+  // clavier : en mode organisation, les flèches déplacent le bloc ciblé
+  dash.addEventListener('keydown', (e) => {
+    const n = e.target.closest?.('.dw'); if (!editing || !n || e.target !== n) return;
+    const d = { ArrowUp: -1, ArrowLeft: -1, ArrowDown: 1, ArrowRight: 1 }[e.key]; if (!d) return;
+    e.preventDefault();
+    const lay = ctx.layout(store.state), vis = lay.map((w, k) => k).filter((k) => !lay[k].hidden), i = lay.findIndex((w) => w.id === n.dataset.w), tgt = vis[vis.indexOf(i) + d];
+    if (tgt === undefined) return;
+    flipFrom = snapById(dash); focusId = n.dataset.w; [lay[i], lay[tgt]] = [lay[tgt], lay[i]]; ctx.save(lay);
+  });
+  el.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-act]'); if (!b) return;
+    const id = b.dataset.id, lay = ctx.layout(store.state), i = lay.findIndex((w) => w.id === id), keep = () => { flipFrom = snapById(dash); };
+    switch (b.dataset.act) {
+      case 'edit': setEditing(true); break;
+      case 'edit-done': setEditing(false); break;
+      case 'w-reset': keep(); ctx.reset(); break;
+      case 'w-hide': keep(); lay[i].hidden = true; ctx.save(lay); break;
+      case 'w-show': keep(); lay[i].hidden = false; ctx.save(lay); break;
+      case 'w-size': { keep(); const sz = ctx.sizes(id); lay[i].size = sz[(sz.indexOf(lay[i].size) + 1) % sz.length]; ctx.save(lay); break; }
+    }
+  });
+  try { if (sessionStorage.getItem('dash-edit') && c.canAutoEdit) { sessionStorage.removeItem('dash-edit'); setTimeout(() => setEditing(true), 80); } } catch { /* stockage indisponible */ }
+}
 
+/** Page Bébé : mêmes gestes que l'accueil. */
+export function mountBaby(el, c) { mountOrganizer(el, c); }
+export const startOrganizing = () => setEditing(true);
+
+/** Barre et bac « blocs masqués » affichés en mode organisation (communs à l'accueil et à Bébé). */
+export const orgBarHtml = (what) => `<div class="org-bar card" role="region" aria-label="Organisation"><p><b>Organisez ${what}</b></p><p class="small muted">Maintenez un bloc appuyé, puis faites-le glisser où vous voulez. Le bouton rouge masque un bloc, la pastille noire en change la taille.</p><div class="grid-2 mt-12"><button class="btn btn-primary btn-sm" data-act="edit-done">${icon('check', 16)} Terminé</button><button class="btn btn-ghost btn-sm" data-act="w-reset">Rétablir par défaut</button></div></div>`;
+export const orgTrayHtml = (hidden) => `<div class="org-tray card mt-16">${hidden.length ? `<p class="cat-title" style="padding-top:0">Blocs masqués : touchez pour les remettre</p><div class="chips">${hidden.map(({ id, label }) => `<button class="chip" data-act="w-show" data-id="${id}">${icon('plus', 13)} ${esc(label)}</button>`).join('')}</div>` : '<p class="small faint">Tous les blocs sont affichés.</p>'}</div>`;
+/** Enveloppe d'un bloc déplaçable (page Bébé). */
+export function blockShell({ id, label, size, sizes, html, i = 0 }) {
+  const badges = `<button class="dw-badge dw-hide" data-act="w-hide" data-id="${id}" aria-label="Masquer ${esc(label)}">${icon('minus', 14)}</button>${sizes.length > 1 ? `<button class="dw-badge dw-size" data-act="w-size" data-id="${id}" aria-label="Changer la taille de ${esc(label)}">${size}</button>` : ''}`;
+  return `<section class="dw dw-plain" data-w="${id}" data-size="${size}" style="--j:${-(i % 6) * 0.05}s" tabindex="${editing ? 0 : -1}" aria-label="${esc(label)}">${badges}${html}</section>`;
+}
+
+export function mount(el) {
+  mountOrganizer(el, { layout: layoutOf, save, sizes: (id) => WIDGETS[id].sizes, reset: () => setUi({ widgets: null }), canAutoEdit: true });
+  const dash = el.querySelector('.dash');
   let memoTimer = 0;
   el.addEventListener('input', (e) => {
     if (!e.target.matches('[data-memo]')) return;
@@ -315,33 +361,47 @@ export function mount(el) {
     const t = f.elements.text.value.trim(); if (!t) return;
     if (!addShopping(t)) toast(`« ${t} » est déjà dans la liste`);
   });
-  // clavier : en mode organisation, les flèches déplacent le bloc ciblé
-  dash.addEventListener('keydown', (e) => {
-    const n = e.target.closest?.('.dw'); if (!editing || !n || e.target !== n) return;
-    const d = { ArrowUp: -1, ArrowLeft: -1, ArrowDown: 1, ArrowRight: 1 }[e.key]; if (!d) return;
-    e.preventDefault();
-    const lay = layoutOf(store.state), vis = lay.map((w, k) => k).filter((k) => !lay[k].hidden), i = lay.findIndex((w) => w.id === n.dataset.w), tgt = vis[vis.indexOf(i) + d];
-    if (tgt === undefined) return;
-    flipFrom = snapById(dash); focusId = n.dataset.w; [lay[i], lay[tgt]] = [lay[tgt], lay[i]]; save(lay);
-  });
   el.addEventListener('click', (e) => {
     const more = e.target.closest('a.dw-more[data-tab]');
     if (more) maisonTab(more.dataset.tab);
     const b = e.target.closest('[data-act]'); if (!b) return;
-    const S = store.state, id = b.dataset.id, lay = layoutOf(S), i = lay.findIndex((w) => w.id === id), keep = () => { flipFrom = snapById(dash); };
+    const id = b.dataset.id;
     switch (b.dataset.act) {
-      case 'edit': setEditing(true); break;
-      case 'edit-done': setEditing(false); break;
       case 'tip-close': setUi({ tipSeen: true }); break;
-      case 'w-reset': keep(); setUi({ widgets: null }); break;
-      case 'w-hide': keep(); lay[i].hidden = true; save(lay); break;
-      case 'w-show': keep(); lay[i].hidden = false; save(lay); break;
-      case 'w-size': { keep(); const sz = WIDGETS[id].sizes; lay[i].size = sz[(sz.indexOf(lay[i].size) + 1) % sz.length]; save(lay); break; }
       case 'dose': takeDose(id, b.dataset.slot); break;
       case 'dose-adhoc': adhocDose(id); break;
       case 'chore': doneChore(id); break;
       case 'shop-toggle': store.update((s) => { const x = (s.lists.find((l) => l.kind === 'shop')?.items || []).find((it) => it.id === id); if (x) { x.done = true; x.doneBy = s.me; } }); break;
       case 'action': ACTIONS[b.dataset.a]?.run(); break;
+      case 'baby-detail': openBabyDetail(b.dataset.k); break;
     }
+  });
+}
+
+/* ---------- Détail « Repas » / « Couches » en popup ---------- */
+const KIND_FR = { wet: 'Mouillée', dirty: 'Sale', mixed: 'Mixte' };
+function openBabyDetail(kind) {
+  const s = store.state, c = activeChild(s); if (!c) return;
+  const feed = kind === 'feed', t0 = startOfDay();
+  const all = eventsOf(s, c.id).filter((e) => e.type === kind), today = all.filter((e) => e.at >= t0), last = all[0];
+  const ml = today.reduce((a, e) => a + (e.ml || 0), 0);
+  const lastTxt = !last ? 'Rien noté pour le moment.' : feed
+    ? `${last.kind === 'bottle' ? `Biberon${last.ml ? ` de ${last.ml} ml` : ''}${last.milk === 'maternel' ? ' (lait maternel)' : ''}` : 'Tétée'}`
+    : `${KIND_FR[last.kind] || 'Couche'}${last.color ? ` · ${last.color}` : ''}${last.texture ? ` · ${last.texture}` : ''}`;
+  openSheet({
+    title: feed ? 'Repas' : 'Couches', subtitle: c.name,
+    content: `
+      <div class="card tone-${feed ? 'salmon' : 'peach'}" style="padding:14px 16px"><p class="label" style="margin:0 0 4px">Dernier${feed ? '' : 'e'}</p>
+        <b style="font-size:1.1rem">${esc(lastTxt)}</b>
+        ${last ? `<p class="small muted" style="margin:4px 0 0">${esc(ago(last.at))} · ${esc(time(last.at))}${last.by ? ` · par ${esc(last.by)}` : ''}</p>` : ''}</div>
+      <div class="mini-stats mt-12"><div><span class="faint">Aujourd’hui</span><b class="num">${today.length}</b></div>${feed ? `<div><span class="faint">Lait</span><b class="num">${ml} ml</b></div>` : `<div><span class="faint">Sales / mixtes</span><b class="num">${today.filter((e) => e.kind !== 'wet').length}</b></div>`}</div>
+      <p class="label mt-16">Aujourd’hui</p>
+      <div class="card timeline">${today.length ? today.map((e) => eventRow(e)).join('') : '<p class="small faint" style="padding:12px">Rien aujourd’hui.</p>'}</div>
+      <div class="grid-2 mt-16"><button class="btn btn-ghost" data-close>Fermer</button><button class="btn btn-primary" data-add>${icon('plus', 18)} ${feed ? 'Ajouter un repas' : 'Ajouter une couche'}</button></div>`,
+    onMount(body, api) {
+      body.querySelector('[data-close]').addEventListener('click', () => api.close());
+      body.querySelector('[data-add]').addEventListener('click', () => { api.close(); ACTIONS[kind]?.run(); });
+      body.addEventListener('click', (e) => { const r = e.target.closest('[data-act="event"]'); if (r) { api.close(); setTimeout(() => openEvent(r.dataset.id), 260); } });
+    },
   });
 }

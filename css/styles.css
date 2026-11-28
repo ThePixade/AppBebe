@@ -1079,3 +1079,12 @@ body:has(.feed-banner)[data-chat="on"] .miniplayer { bottom: calc(var(--tabbar-h
 .routine-row .check { flex: 1; }
 .routine-row.is-next { background: color-mix(in srgb, var(--accent, #E07F62) 8%, transparent); border-radius: 12px; }
 .subtabs a { font-size: .82rem; padding: 0 2px; }
+.baby-dash .dw-plain > :not(.dw-badge) { min-width: 0; }
+.baby-dash .dw .action-card { width: 100%; }
+.baby-dash.is-editing .dw-plain > :not(.dw-badge) { pointer-events: none; }
+.baby-dash .dw-plain { padding: 0; }
+.baby-dash.is-editing .dw-plain { padding: 42px 10px 10px; }
+.mini-hit { text-align: left; background: none; padding: 0; color: inherit; display: block; }
+.hit-line { display: block; width: 100%; text-align: left; font-size: .875rem; color: var(--text-2); padding: 3px 0; }
+.hit-line:active, .mini-hit:active { opacity: .6; }
+.dw .mini-stats .mini-hit span { display: block; }

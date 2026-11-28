@@ -64,6 +64,9 @@ Application web progressive (PWA) installable sur téléphone, **sans serveur ni
 ## Discussion de famille (v0.8.0)
 Bouton flottant en bas à droite (appui long sur un message : copier, copier le lien, supprimer ; liens cliquables ; notifications désactivables) : un fil unique partagé par tous les profils, en direct (texte, emojis, photos, partage d'un élément : courses, rendez-vous, tâches, mémo), avec pastille de messages non lus. Les messages sont stockés sur le NAS par `chat.php` (fichier `appfamille-chat.php` + dossier `appfamille-chat-img`, 500 derniers messages). Sans NAS, le bouton n'apparaît pas.
 
+## Page Bébé organisable comme l'accueil, détails en popup (v0.9.1)
+Sur la page Bébé, « Organiser » (ou appui long sur un bloc) : glisser-déposer, masquer, changer la taille des cartes (mêmes gestes que l'accueil). Sur l'accueil Premium, toucher « Repas », « Couches » ou les lignes « Dernier repas / Dernière couche » ouvre un détail en popup (dernier, total du jour, liste, ajout).
+
 ## Routine, page Bébé personnalisable, couleurs (v0.9.0)
 - Onglet **Routine** (Bébé / Maman / Papa) : étapes horaires à cocher au fil de la journée, routine type proposée.
 - Bouton **Organiser** sur la page Bébé : afficher/masquer et réordonner les blocs (partagé entre appareils).
