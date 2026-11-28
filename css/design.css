@@ -1,75 +1,154 @@
 /* =========================================================
-   Édition « Design » (…/appdesign/) : une autre identité visuelle pour comparer.
-   Univers « atelier nature » : titres en serif chaleureux, cartes plates sans bordure,
-   barre du bas flottante en pilule, boutons et onglets en pilules.
+   Édition « Design » (…/appdesign/) — refonte complète : style « POP / affiche ».
+   Aplats de couleur vive, contours épais, ombres dures décalées, typographie grasse,
+   onglets et boutons carrés façon étiquettes, barre du bas pleine largeur en bloc.
    Tout est limité à html[data-edition="design"] : les autres éditions ne changent pas.
-   Les couleurs (forêt / sable) viennent du moteur d'apparence (réglable dans « Apparence »).
    ========================================================= */
 
 html[data-edition="design"] {
-  --font-display: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
-  --tabbar-h: 64px;
+  --font-display: "Bricolage Grotesque", "Arial Black", "Helvetica Neue", Arial, sans-serif;
+  --font: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --tabbar-h: 66px;
+  --bw: 2.5px;                      /* épaisseur des contours */
+  --r-sm: 6px; --r-md: 8px; --r-lg: 12px; --r-xl: 16px;
+}
+html[data-edition="design"][data-theme="light"] {
+  --ink: #15110D; --hs: #15110D;    /* encre : contours et ombres dures */
+  --on-fill: #15110D;
+  --fill-1: #FFD35C; --fill-2: #8FE0B0; --fill-3: #AFC0FF; --fill-4: #FFA98A; --fill-5: #86DDF2; --fill-6: #FFB3DE;
+  --border: #15110D; --border-strong: #15110D;
+  --text: #15110D; --text-2: #3D362E; --text-3: #6A6155;
+}
+html[data-edition="design"][data-theme="dark"] {
+  --ink: #F4EBD9; --hs: #F4EBD9;
+  --on-fill: #F7F1E4;
+  --fill-1: #6F5A12; --fill-2: #1E5C3E; --fill-3: #353F86; --fill-4: #7A3A22; --fill-5: #145466; --fill-6: #7A2F58;
+  --border: #F4EBD9; --border-strong: #F4EBD9;
+  --text: #F7F1E4; --text-2: #D8CFBD; --text-3: #A89F8E;
 }
 
-/* Typographie : titres et chiffres en serif */
+/* Fond pointillé façon papier millimétré */
+html[data-edition="design"] body {
+  background-image: radial-gradient(color-mix(in srgb, var(--ink) 16%, transparent) 1.3px, transparent 1.4px);
+  background-size: 18px 18px; background-attachment: fixed;
+}
+
+/* Typographie : titres massifs, étiquettes en capitales */
 html[data-edition="design"] .title,
 html[data-edition="design"] .hub-brand b,
 html[data-edition="design"] .cal-title,
 html[data-edition="design"] .dw-head b,
-html[data-edition="design"] .stat-v,
-html[data-edition="design"] .amount-value,
 html[data-edition="design"] .section-head h2,
-html[data-edition="design"] .sheet h2 { font-family: var(--font-display); font-weight: 600; letter-spacing: -.01em; }
-html[data-edition="design"] .title { font-size: 2.05rem; line-height: 1.08; }
-html[data-edition="design"] .eyebrow { font-family: var(--font-display); font-style: italic; font-weight: 500; text-transform: none; letter-spacing: .01em; font-size: .92rem; color: var(--text-2); }
-
-/* Cartes : plates, sans bordure, ombre teintée d'accent */
-html[data-edition="design"] .card {
-  border: 0; border-radius: 26px;
-  box-shadow: 0 1px 0 color-mix(in srgb, var(--text) 4%, transparent), 0 22px 40px -28px color-mix(in srgb, var(--salmon) 55%, transparent);
+html[data-edition="design"] .sheet-head h2,
+html[data-edition="design"] .amount-value,
+html[data-edition="design"] .stat-v { font-family: var(--font-display); font-weight: 800; letter-spacing: -.035em; }
+html[data-edition="design"] .title { font-size: 2.5rem; line-height: .98; text-transform: none; }
+html[data-edition="design"] .eyebrow {
+  display: inline-block; font-family: var(--font); font-weight: 700; font-size: .7rem; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--ink); background: var(--fill-1); border: var(--bw) solid var(--ink); padding: 3px 9px; transform: rotate(-1.5deg); margin-bottom: 8px;
 }
+html[data-edition="design"] .stat-v { font-size: 1.7rem; }
+html[data-edition="design"] .section-head h2 { font-size: 1.3rem; }
+
+/* Cartes : aplat, contour épais, ombre dure */
+html[data-edition="design"] .card,
+html[data-edition="design"] .list-group {
+  border: var(--bw) solid var(--ink); border-radius: var(--r-lg);
+  background: var(--surface); box-shadow: 4px 4px 0 var(--hs);
+}
+html[data-edition="design"] .card + .card { margin-top: 16px; }
+html[data-edition="design"] .dw.card { padding: 14px 16px 16px; }
+html[data-edition="design"] .dw .list-group { border: 0; box-shadow: none; background: none; }
+/* cartes de l'accueil et de Bébé : une couleur d'aplat chacune */
+html[data-edition="design"] .dash > .dw:nth-child(6n+1).card { background: var(--fill-1); }
+html[data-edition="design"] .dash > .dw:nth-child(6n+2).card { background: var(--fill-2); }
+html[data-edition="design"] .dash > .dw:nth-child(6n+3).card { background: var(--fill-3); }
+html[data-edition="design"] .dash > .dw:nth-child(6n+4).card { background: var(--fill-4); }
+html[data-edition="design"] .dash > .dw:nth-child(6n+5).card { background: var(--fill-5); }
+html[data-edition="design"] .dash > .dw:nth-child(6n+6).card { background: var(--fill-6); }
+html[data-edition="design"] .dash > .dw.card { color: var(--text); }
+html[data-edition="design"] .dash > .dw.card .faint,
+html[data-edition="design"] .dash > .dw.card .muted,
+html[data-edition="design"] .dash > .dw.card small { color: color-mix(in srgb, var(--text) 72%, transparent); }
+html[data-edition="design"] .dw-more { font-weight: 700; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 html[data-edition="design"] .action-card {
-  border: 0; border-radius: 26px;
-  background: color-mix(in srgb, var(--tone, var(--salmon)) 13%, var(--surface));
-  box-shadow: none;
+  border: var(--bw) solid var(--ink); border-radius: var(--r-lg); box-shadow: 4px 4px 0 var(--hs);
+  background: color-mix(in srgb, var(--tone, var(--salmon)) 46%, var(--surface));
 }
-html[data-edition="design"] .ac-icon { border-radius: 50%; }
-html[data-edition="design"] .dw.card { padding: 16px 18px 18px; }
-html[data-edition="design"] .dw-more { font-weight: 600; }
+html[data-edition="design"] .action-card:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--hs); }
+html[data-edition="design"] .ac-icon { border-radius: 8px; border: var(--bw) solid var(--ink); background: var(--surface); }
+html[data-edition="design"] .stats { background: var(--fill-1); }
+html[data-edition="design"] .entry { border-top-width: 1.5px; border-top-style: dashed; border-top-color: color-mix(in srgb, var(--ink) 40%, transparent); }
+html[data-edition="design"] .dot-ic, html[data-edition="design"] .avatar-mini { border-radius: 6px; border: 2px solid var(--ink); background: var(--surface); color: var(--ink); }
+html[data-edition="design"] .avatar { border: var(--bw) solid var(--ink); }
 
-/* Boutons, onglets, pastilles : en pilules */
+/* Boutons : rectangles à contour, ombre dure qui s'écrase au toucher */
 html[data-edition="design"] .btn,
 html[data-edition="design"] .pill-btn,
-html[data-edition="design"] .chip,
-html[data-edition="design"] .past-link { border-radius: 999px; }
-html[data-edition="design"] .seg { background: transparent; box-shadow: inset 0 0 0 1.5px var(--border-strong); border-radius: 999px; padding: 3px; }
-html[data-edition="design"] .seg button,
-html[data-edition="design"] .seg a { border-radius: 999px; }
-html[data-edition="design"] .seg button.is-on,
-html[data-edition="design"] .seg a.is-on { background: var(--salmon); color: var(--on-accent, #fff); box-shadow: none; }
-html[data-edition="design"] .btn-primary { background: var(--salmon); color: var(--on-accent, #fff); box-shadow: 0 10px 20px -12px var(--salmon); }
-html[data-edition="design"] .input { border-radius: 18px; }
-
-/* Barre du bas : pilule flottante */
-html[data-edition="design"] .appnav {
-  left: 14px; right: 14px; bottom: calc(env(safe-area-inset-bottom) + 10px); padding: 0 6px;
-  border: 0; border-radius: 32px;
-  background: color-mix(in srgb, var(--surface) 92%, transparent);
-  box-shadow: 0 18px 40px -16px rgba(0, 0, 0, .35), 0 0 0 1px var(--border);
+html[data-edition="design"] .icon-btn {
+  border: var(--bw) solid var(--ink); border-radius: var(--r-md); box-shadow: 3px 3px 0 var(--hs);
+  background: var(--surface); color: var(--ink); font-weight: 700; transition: transform .08s, box-shadow .08s;
 }
-html[data-edition="design"] .appnav-inner { max-width: 520px; }
-html[data-edition="design"] .npb { font-weight: 600; gap: 2px; }
-html[data-edition="design"] .npb.is-active { color: var(--salmon); }
-html[data-edition="design"] .npb.is-active .i { transform: none; }
-html[data-edition="design"] .npb-plus { border-radius: 50%; transform: translateY(-10px); box-shadow: 0 14px 24px -10px var(--salmon); }
-html[data-edition="design"] body[data-nav="on"] .app { padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 64px); }
+html[data-edition="design"] .btn:active, html[data-edition="design"] .pill-btn:active, html[data-edition="design"] .icon-btn:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--hs); }
+html[data-edition="design"] .btn-primary { background: var(--salmon); color: #15110D; }
+html[data-edition="design"] .btn-ghost { background: var(--surface); }
+html[data-edition="design"] .btn-danger { background: #FF7A66; color: #15110D; }
+html[data-edition="design"] .icon-btn-sm { border: 2px solid var(--ink); box-shadow: 2px 2px 0 var(--hs); background: var(--surface); }
+html[data-edition="design"] .pill-btn.is-on { background: var(--ink); color: var(--bg); }
+html[data-edition="design"] .chip { border: 2px solid var(--ink); border-radius: 6px; background: var(--surface); color: var(--ink); font-weight: 700; }
+html[data-edition="design"] .chip.is-on { background: var(--fill-1); color: var(--on-fill); box-shadow: 2px 2px 0 var(--hs); }
+html[data-edition="design"] .badge, html[data-edition="design"] .dot-badge { border: 2px solid var(--ink); border-radius: 6px; background: var(--fill-1); color: var(--on-fill); font-weight: 800; }
+html[data-edition="design"] .past-link { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 
-/* Bouton de discussion et bannière : remontés au-dessus de la barre flottante */
-html[data-edition="design"] .chat-fab { bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 28px); }
-html[data-edition="design"] body:has(.feed-banner) .chat-fab { bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 84px); }
-html[data-edition="design"] .feed-banner { bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 26px); border-radius: 999px; border: 0; }
+/* Onglets : bloc carré, l'actif est plein */
+html[data-edition="design"] .seg { background: var(--surface); border: var(--bw) solid var(--ink); border-radius: var(--r-md); padding: 0; gap: 0; overflow: hidden; box-shadow: 3px 3px 0 var(--hs); }
+html[data-edition="design"] .seg button,
+html[data-edition="design"] .seg a { border-radius: 0; height: 44px; font-weight: 700; color: var(--ink); border-right: 2px solid var(--ink); }
+html[data-edition="design"] .seg > :last-child { border-right: 0; }
+html[data-edition="design"] .seg button.is-on,
+html[data-edition="design"] .seg a.is-on { background: var(--ink); color: var(--bg); box-shadow: none; }
 
-/* Feuilles (popups) et calendrier */
-html[data-edition="design"] .sheet { border-radius: 30px 30px 0 0; }
-html[data-edition="design"] .cal-day.is-sel { background: var(--salmon); color: var(--on-accent, #fff); }
-html[data-edition="design"] .badge { border-radius: 999px; }
+/* Champs et interrupteurs */
+html[data-edition="design"] .input { border: var(--bw) solid var(--ink); border-radius: var(--r-md); background: var(--surface); }
+html[data-edition="design"] .input:focus { box-shadow: 3px 3px 0 var(--salmon); border-color: var(--ink); }
+html[data-edition="design"] .switch .track { border: 2px solid var(--ink); border-radius: 6px; background: var(--surface); }
+html[data-edition="design"] .switch .track::after { border-radius: 3px; background: var(--ink); }
+html[data-edition="design"] .switch input:checked + .track { background: var(--fill-2); }
+html[data-edition="design"] .switch input:checked + .track::after { background: var(--ink); }
+html[data-edition="design"] .check-box { border: 2px solid var(--ink); border-radius: 5px; background: var(--surface); }
+html[data-edition="design"] .check.is-done .check-box { background: var(--fill-2); color: var(--ink); }
+
+/* En-tête : marque en étiquette */
+html[data-edition="design"] .ob-logo-sm { border-radius: 8px; border: var(--bw) solid var(--ink); background: var(--fill-1); color: var(--ink); box-shadow: 3px 3px 0 var(--hs); transform: rotate(-4deg); }
+html[data-edition="design"] .hub-brand b { font-size: 1.15rem; }
+
+/* Barre du bas : bloc pleine largeur, étiquettes en capitales, onglet actif plein */
+html[data-edition="design"] .appnav {
+  left: 0; right: 0; bottom: 0; padding: 0 0 env(safe-area-inset-bottom);
+  border: 0; border-top: var(--bw) solid var(--ink); border-radius: 0; background: var(--surface); box-shadow: none;
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+html[data-edition="design"] .appnav-inner { max-width: none; padding: 0; gap: 0; justify-content: stretch; }
+html[data-edition="design"] .npb { text-transform: uppercase; letter-spacing: .06em; font-size: .6rem; font-weight: 800; color: var(--text-2); border-right: 2px solid var(--ink); border-radius: 0; }
+html[data-edition="design"] .npb:last-child { border-right: 0; }
+html[data-edition="design"] .npb.is-active { background: var(--fill-1); color: var(--on-fill); }
+html[data-edition="design"] .npb.is-active .i { transform: none; color: var(--on-fill); }
+html[data-edition="design"] .npb-plus { width: 62px; height: 62px; margin: -22px 8px 0; border: var(--bw) solid var(--ink); border-radius: 10px; background: var(--salmon); color: #15110D; transform: rotate(-4deg); box-shadow: 4px 4px 0 var(--hs); }
+html[data-edition="design"] body[data-nav="on"] .app { padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 40px); }
+
+/* Discussion, bannière, popups */
+html[data-edition="design"] .chat-fab { border: var(--bw) solid var(--ink); border-radius: 10px; background: var(--fill-5); color: #15110D; box-shadow: 4px 4px 0 var(--hs); bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 18px); transform: rotate(3deg); }
+html[data-edition="design"] body:has(.feed-banner) .chat-fab { bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 76px); }
+html[data-edition="design"] .chat-badge { border-radius: 5px; border: 2px solid var(--ink); }
+html[data-edition="design"] .feed-banner { border: var(--bw) solid var(--ink); border-radius: var(--r-md); background: var(--fill-2); color: var(--text); box-shadow: 3px 3px 0 var(--hs); -webkit-backdrop-filter: none; backdrop-filter: none; bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 14px); }
+html[data-edition="design"] .chat-bubble { border: 2px solid var(--ink); border-radius: 10px; box-shadow: 2px 2px 0 var(--hs); }
+html[data-edition="design"] .chat-msg.is-mine .chat-bubble { background: var(--fill-1); color: var(--on-fill); }
+html[data-edition="design"] .sheet { border: var(--bw) solid var(--ink); border-bottom: 0; border-radius: 16px 16px 0 0; box-shadow: 0 -6px 0 var(--hs); }
+html[data-edition="design"] .sheet-handle { background: var(--ink); height: 6px; border-radius: 0; width: 46px; }
+html[data-edition="design"] .toast { border: var(--bw) solid var(--ink); border-radius: var(--r-md); box-shadow: 3px 3px 0 var(--hs); background: var(--fill-1); color: var(--on-fill); }
+
+/* Calendrier */
+html[data-edition="design"] .cal-day { border-radius: 4px; }
+html[data-edition="design"] .cal-day.is-sel { background: var(--fill-1); border: 2px solid var(--ink); color: var(--on-fill); }
+html[data-edition="design"] .cal-day.is-today .cal-n { background: var(--ink); color: var(--bg); border-radius: 4px; }
+html[data-edition="design"] .ev-card { border-left-width: 8px; }
