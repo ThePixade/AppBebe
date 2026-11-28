@@ -71,7 +71,7 @@ function load() {
  * AppBébé d'origine et, pour l'édition Premium, AppFamille.
  */
 function migrateLegacy() {
-  const sources = EDITION.design ? ['apppre:v1', 'appfamille:v1', LEGACY_KEY] : EDITION.premium ? ['appfamille:v1', LEGACY_KEY] : [LEGACY_KEY];
+  const sources = EDITION.premium ? ['appfamille:v1', LEGACY_KEY] : [LEGACY_KEY];
   for (const k of sources) {
     try {
       const raw = localStorage.getItem(k); if (!raw) continue;

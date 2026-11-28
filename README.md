@@ -64,8 +64,8 @@ Application web progressive (PWA) installable sur téléphone, **sans serveur ni
 ## Discussion de famille (v0.8.0)
 Bouton flottant en bas à droite (appui long sur un message : copier, copier le lien, supprimer ; liens cliquables ; notifications désactivables) : un fil unique partagé par tous les profils, en direct (texte, emojis, photos, partage d'un élément : courses, rendez-vous, tâches, mémo), avec pastille de messages non lus. Les messages sont stockés sur le NAS par `chat.php` (fichier `appfamille-chat.php` + dossier `appfamille-chat-img`, 500 derniers messages). Sans NAS, le bouton n'apparaît pas.
 
-## Édition Design (v0.10.1) : AppDesign
-Dossier `appdesign` : mêmes fonctions et mêmes données qu'AppPre, avec une identité visuelle entièrement différente, le style « Pop / affiche » (`css/design.css`) : aplats de couleur vive, contours épais, ombres dures décalées, typographie grasse (Bricolage Grotesque / Space Grotesk), onglets et boutons carrés, barre du bas pleine largeur en capitales, fond pointillé. Clair et sombre. Son apparence est enregistrée à part sur le NAS (clé `uiDesign`) : elle n'écrase pas celle d'AppPre. Les lignes d'« Activité récente » ouvrent un détail en popup ; sur AppFamille, toucher « Repas » / « Couches » du résumé ou la bannière d'activité ouvre aussi un popup.
+## Activité récente et popups (v0.10.2)
+Les lignes d'« Activité récente » (AppPre) ouvrent un détail en popup ; sur AppFamille, toucher « Repas » / « Couches » du résumé ou la bannière d'activité ouvre aussi un popup. (L'édition de test « AppDesign » a été retirée : on garde le design d'origine.)
 
 ## Page Bébé organisable comme l'accueil, détails en popup (v0.9.1)
 Sur la page Bébé, « Organiser » (ou appui long sur un bloc) : glisser-déposer, masquer, changer la taille des cartes (mêmes gestes que l'accueil). Sur l'accueil Premium, toucher « Repas », « Couches » ou les lignes « Dernier repas / Dernière couche » ouvre un détail en popup (dernier, total du jour, liste, ajout).

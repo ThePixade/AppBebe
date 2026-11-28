@@ -9,7 +9,7 @@ import { EDITION } from '../edition.js';
 
 export const ACCENTS = {
   salmon: { label: 'Saumon', light: '#DE7F63', dark: '#EFA690' }, ocean: { label: 'Océan', light: '#3480C4', dark: '#86BDEB' },
-  forest: { label: 'Forêt', light: '#3F9468', dark: '#8FCFA8' }, pop: { label: 'Pop', light: '#FF6A3D', dark: '#FF8A65' }, lavender: { label: 'Lavande', light: '#7C64C0', dark: '#B8A6EA' },
+  forest: { label: 'Forêt', light: '#3F9468', dark: '#8FCFA8' }, lavender: { label: 'Lavande', light: '#7C64C0', dark: '#B8A6EA' },
   gold: { label: 'Or', light: '#BD861A', dark: '#EBC36E' }, rose: { label: 'Rose', light: '#D2538A', dark: '#F0A0BF' },
   graphite: { label: 'Graphite', light: '#4A5468', dark: '#BDC5D8' },
 };
@@ -18,7 +18,6 @@ export const BG_LIGHT = {
   white: { label: 'Blanc', bg: '#FFFFFF', elev: '#FFFFFF', surface: '#F6F7F9', surface2: '#ECEEF2', seg: '#EEF0F4' },
   mist: { label: 'Brume', bg: '#EAF0F7', elev: '#F4F8FC', surface: '#FFFFFF', surface2: '#E1EAF4', seg: '#DDE7F2' },
   sand: { label: 'Sable', bg: '#F2EADD', elev: '#FBF6EE', surface: '#FFFDF9', surface2: '#EBE0CF', seg: '#E8DCC8' },
-  pop: { label: 'Pop', bg: '#FFF1D6', elev: '#FFFFFF', surface: '#FFFFFF', surface2: '#FFE3AE', seg: '#FFE3AE' },
   mint: { label: 'Menthe', bg: '#E9F3EE', elev: '#F4FAF7', surface: '#FFFFFF', surface2: '#DCEBE3', seg: '#D5E6DC' },
 };
 export const BG_DARK = {
@@ -26,7 +25,6 @@ export const BG_DARK = {
   black: { label: 'Noir', bg: '#000000', elev: '#0B0B0D', surface: '#121216', surface2: '#1B1B21', seg: '#0A0A0C', segOn: '#26262E' },
   graphite: { label: 'Graphite', bg: '#1C1C1E', elev: '#232326', surface: '#2A2A2E', surface2: '#343439', seg: '#19191B', segOn: '#3B3B41' },
   forest: { label: 'Forêt', bg: '#12201A', elev: '#172A21', surface: '#1C3227', surface2: '#24402F', seg: '#101C16', segOn: '#2C4D3A' },
-  ink: { label: 'Encre', bg: '#16120E', elev: '#1E1913', surface: '#221C15', surface2: '#2E261C', seg: '#120F0B', segOn: '#3A3024' },
   plum: { label: 'Prune', bg: '#1F1A2E', elev: '#261F38', surface: '#2D2542', surface2: '#382E52', seg: '#1B1629', segOn: '#43376A' },
 };
 export const FONTS = {
@@ -43,9 +41,8 @@ export const DENSITIES = { compact: { label: 'Compacte', gutter: 12, pad: 12 }, 
 export const CARD_STYLES = { soft: 'Ombrées', outlined: 'Contours', flat: 'Plates' };
 
 export const DEFAULT_UI = {
-  // Édition « Design » : palette pop (orange vif sur crème / encre), angles droits (le reste de l'identité est dans css/design.css)
-  accent: EDITION.design ? 'pop' : 'salmon', bgLight: EDITION.design ? 'pop' : 'cream', bgDark: EDITION.design ? 'ink' : 'navy', gradient: 'none', font: 'default', textScale: 100,
-  density: 'normal', radius: EDITION.design ? 'sharp' : 'normal', cards: 'soft', contrast: false, reduceMotion: false,
+  accent: 'salmon', bgLight: 'cream', bgDark: 'navy', gradient: 'none', font: 'default', textScale: 100,
+  density: 'normal', radius: 'normal', cards: 'soft', contrast: false, reduceMotion: false,
   familyName: '', familyEmoji: '',
   widgets: null,                      // [{ id, size: 'S'|'M'|'L', hidden }] : ordre de l'accueil
   nav: null,                          // modules de la barre du bas : null = automatique (3 premiers modules activés)
